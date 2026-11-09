@@ -4,6 +4,7 @@ import SwiftUI
 
 /// Handles both text-to-speech (reading emails aloud) and
 /// speech-to-text (voice commands / dictation).
+/// Voice selection, rate, pitch and volume are driven by VoicePreferences.
 @MainActor
 final class SpeechService: NSObject, ObservableObject {
 
@@ -12,11 +13,21 @@ final class SpeechService: NSObject, ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
     @Published var isSpeaking = false
 
-    func speak(_ text: String, rate: Float = AVSpeechUtteranceDefaultSpeechRate) {
+    /// Live preferences — updated by VoiceSettingsView without restarting the service.
+    var preferences: VoicePreferences = VoicePreferencesStore.shared.current
+
+    func speak(_ text: String) {
+        speak(text, prefs: preferences)
+    }
+
+    func speak(_ text: String, prefs: VoicePreferences) {
         synthesizer.stopSpeaking(at: .immediate)
         let utterance = AVSpeechUtterance(string: text)
-        utterance.rate = rate
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate   = prefs.rate
+        utterance.pitchMultiplier = prefs.pitch
+        utterance.volume = prefs.volume
+        utterance.voice  = AVSpeechSynthesisVoice(identifier: prefs.voiceIdentifier)
+                        ?? AVSpeechSynthesisVoice(language: "en-US")
         isSpeaking = true
         synthesizer.speak(utterance)
     }

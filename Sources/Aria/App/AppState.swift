@@ -26,6 +26,9 @@ final class AppState: ObservableObject {
     @Published var showAgentPanel = false
     @Published var showAccountSetup = false
 
+    // MARK: - Onboarding
+    @Published var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: "aria.onboardingComplete")
+
     // MARK: - Services (lazy singletons)
     let speech = SpeechService()
     let agent  = AIAgentService()

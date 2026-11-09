@@ -17,8 +17,10 @@
 		51AADD3120BE6A40C32007E4 /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0F1038C8DB27047245921C /* OutlookService.swift */; };
 		5530D4249EDBF8C6F2EA2F1A /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA2110D91E23ACCC25B57E6 /* ComposeView.swift */; };
 		5569486ED6BB9D6CB7C4D640 /* GmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86CE98D76286E20CFD7B78A /* GmailService.swift */; };
+		59635723F48653FC45E36237 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADC31B3A3A13D0209E88EA41 /* OnboardingView.swift */; };
 		5980D98EBADAC47AAFFC3C04 /* EmailAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10FA522FB016EE0EA9EF851 /* EmailAccount.swift */; };
 		7DABAF59D21EE0CBB798FF30 /* AccessibilityLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C05524DAF4AF0020A14569 /* AccessibilityLabels.swift */; };
+		9C2DF2E0460EB99DCDD25FDF /* VoicePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9422FD6FDD6545F69EA753E /* VoicePreferences.swift */; };
 		9D1E6B011CE8D4173DEF96FB /* EmailThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7669D681B223A1D3995A6EF /* EmailThread.swift */; };
 		9DDCF5AFAE83F2CE96D54A69 /* EmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1857E9BB8006A573DF3479 /* EmailService.swift */; };
 		A4073CAF1B9C01ABC29B694B /* AriaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D46A77FE14DD260DC4D490 /* AriaApp.swift */; };
@@ -38,6 +40,7 @@
 		EE5D9A55F69CC0A9378B68F4 /* EmailListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9790F4DD3365B23C94FD1C2 /* EmailListView.swift */; };
 		F4B15321507B8F50BDACAA92 /* MacMailImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245882DD42430E1697FDC30A /* MacMailImporter.swift */; };
 		F9C1A21F6834897D40D36FBD /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0598F0506D6E38AA7CACE29 /* AppState.swift */; };
+		FC380E41CEC01B0F61CBBA62 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCB64741AA5A86A00C341B2 /* VoiceSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,7 +75,10 @@
 		9CDBDEE37C7A98EB3ADD86AE /* Aria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aria.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7669D681B223A1D3995A6EF /* EmailThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailThread.swift; sourceTree = "<group>"; };
 		A92061927A1F0A48CF5BB6C8 /* Aria.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Aria.entitlements; sourceTree = "<group>"; };
+		A9422FD6FDD6545F69EA753E /* VoicePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicePreferences.swift; sourceTree = "<group>"; };
 		A9790F4DD3365B23C94FD1C2 /* EmailListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailListView.swift; sourceTree = "<group>"; };
+		ABCB64741AA5A86A00C341B2 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
+		ADC31B3A3A13D0209E88EA41 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B10FA522FB016EE0EA9EF851 /* EmailAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAccount.swift; sourceTree = "<group>"; };
 		B3A5933B598D6C709A54A600 /* AriaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AriaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD4E1AC5A37E9CAEED20AD81 /* AriaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaError.swift; sourceTree = "<group>"; };
@@ -126,7 +132,9 @@
 				0B281D7860E473F3C233445D /* EmailDetailView.swift */,
 				A9790F4DD3365B23C94FD1C2 /* EmailListView.swift */,
 				3FC13FFF5BD0A6A87E08C05C /* LinkReaderView.swift */,
+				ADC31B3A3A13D0209E88EA41 /* OnboardingView.swift */,
 				C416D1D450D84DDFF1DA1641 /* SidebarView.swift */,
+				ABCB64741AA5A86A00C341B2 /* VoiceSettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -192,6 +200,7 @@
 				FAF8711FA49FAA14F71AEFF0 /* EmailMessage.swift */,
 				8A53A2D1006A22BFEAAA964A /* EmailMessage+Helpers.swift */,
 				A7669D681B223A1D3995A6EF /* EmailThread.swift */,
+				A9422FD6FDD6545F69EA753E /* VoicePreferences.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -331,11 +340,14 @@
 				AAD7479A9361244338DA078E /* KeychainService.swift in Sources */,
 				BE60FBED23D9B27A2D5988A3 /* LinkReaderView.swift in Sources */,
 				F4B15321507B8F50BDACAA92 /* MacMailImporter.swift in Sources */,
+				59635723F48653FC45E36237 /* OnboardingView.swift in Sources */,
 				51AADD3120BE6A40C32007E4 /* OutlookService.swift in Sources */,
 				B47E914AEF0B7DB0F2736D55 /* SidebarView.swift in Sources */,
 				CC4A9ABD8EE8028A27F58F82 /* SpeechService.swift in Sources */,
 				D92281674695AE3A7E337822 /* UnsubscribeService.swift in Sources */,
 				29F9CCE590D661C79FF3AEE0 /* VoiceCommandHandler.swift in Sources */,
+				9C2DF2E0460EB99DCDD25FDF /* VoicePreferences.swift in Sources */,
+				FC380E41CEC01B0F61CBBA62 /* VoiceSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
