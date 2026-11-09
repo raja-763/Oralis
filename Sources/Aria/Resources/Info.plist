@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Aria</string>
+    <key>CFBundleDisplayName</key>
+    <string>Aria</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.aria.app</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSMainStoryboardFile</key>
+    <string></string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Aria uses the microphone so you can control your email by voice.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Aria uses speech recognition so you can read, reply to, and manage emails hands-free.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Aria reads your contacts to autocomplete email addresses.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Aria reads your calendar so you can manage meeting invites by voice.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Aria imports accounts from macOS Mail with your permission.</string>
+</dict>
+</plist>

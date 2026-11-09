@@ -1,0 +1,577 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		074049DF04CFC32C069840AB /* HTMLLinkExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DEF0371EF90B8ED6F70E24 /* HTMLLinkExtractor.swift */; };
+		12A1B9F40BFD823517EC4476 /* AriaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4E1AC5A37E9CAEED20AD81 /* AriaError.swift */; };
+		1382301521B7B26737074134 /* BatchActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4978F82F35BCADB4904E75D5 /* BatchActionBar.swift */; };
+		2401BDF0010F8A0ACAA49EEC /* AIAgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B7ED6997D92F7A22BC6EDB /* AIAgentService.swift */; };
+		29F9CCE590D661C79FF3AEE0 /* VoiceCommandHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB9962DB3312AF4EEC82417 /* VoiceCommandHandler.swift */; };
+		2B17F675942186D9DD144F6B /* AriaCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2707D3EB9C1396F3D2188F4A /* AriaCommands.swift */; };
+		449688394A63870CDF70995F /* IMAPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9B149936ED08CF4D206EDC /* IMAPService.swift */; };
+		51AADD3120BE6A40C32007E4 /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0F1038C8DB27047245921C /* OutlookService.swift */; };
+		5530D4249EDBF8C6F2EA2F1A /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA2110D91E23ACCC25B57E6 /* ComposeView.swift */; };
+		5569486ED6BB9D6CB7C4D640 /* GmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86CE98D76286E20CFD7B78A /* GmailService.swift */; };
+		5980D98EBADAC47AAFFC3C04 /* EmailAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10FA522FB016EE0EA9EF851 /* EmailAccount.swift */; };
+		7DABAF59D21EE0CBB798FF30 /* AccessibilityLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C05524DAF4AF0020A14569 /* AccessibilityLabels.swift */; };
+		9D1E6B011CE8D4173DEF96FB /* EmailThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7669D681B223A1D3995A6EF /* EmailThread.swift */; };
+		9DDCF5AFAE83F2CE96D54A69 /* EmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1857E9BB8006A573DF3479 /* EmailService.swift */; };
+		A4073CAF1B9C01ABC29B694B /* AriaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D46A77FE14DD260DC4D490 /* AriaApp.swift */; };
+		A908835046079236FAFBFC45 /* AgentMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9124E8C10F757D62769788CC /* AgentMessage.swift */; };
+		AAD7479A9361244338DA078E /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D23778EA6D35DE7DEC055D /* KeychainService.swift */; };
+		AF1AB21C545CDE1E9DA1717D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCD3283478FCEEDEF4AC0C7 /* ContentView.swift */; };
+		B47E914AEF0B7DB0F2736D55 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C416D1D450D84DDFF1DA1641 /* SidebarView.swift */; };
+		BB8D5F89673B9DA1FA96E816 /* EmailMessage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A53A2D1006A22BFEAAA964A /* EmailMessage+Helpers.swift */; };
+		BE60FBED23D9B27A2D5988A3 /* LinkReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC13FFF5BD0A6A87E08C05C /* LinkReaderView.swift */; };
+		CC4A9ABD8EE8028A27F58F82 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C896E7B1A0093A824BD3B3 /* SpeechService.swift */; };
+		CE48D8B0CEB1470FDABFF065 /* AccountSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73557D0E9339CC2B8AB7857F /* AccountSetupView.swift */; };
+		CEE1D1D7DAB231CEA4224DBE /* EmailDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B281D7860E473F3C233445D /* EmailDetailView.swift */; };
+		D345AAE6E4EA4D8FA8D66129 /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E263B49373F8BE816A36AEB8 /* AgentPanelView.swift */; };
+		D92281674695AE3A7E337822 /* UnsubscribeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDBFCBDA1F3455D1880C2254 /* UnsubscribeService.swift */; };
+		E90080525670FEC2F85FE907 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A78806E3BFCF93E9A65995 /* CalendarService.swift */; };
+		EC9B835451BC647D51263936 /* EmailMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF8711FA49FAA14F71AEFF0 /* EmailMessage.swift */; };
+		EE5D9A55F69CC0A9378B68F4 /* EmailListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9790F4DD3365B23C94FD1C2 /* EmailListView.swift */; };
+		F4B15321507B8F50BDACAA92 /* MacMailImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245882DD42430E1697FDC30A /* MacMailImporter.swift */; };
+		F9C1A21F6834897D40D36FBD /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0598F0506D6E38AA7CACE29 /* AppState.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		10A5AD8DA720999943061DC0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 84880BA6D29A6239877AD004 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CAE722123C010788DE868C61;
+			remoteInfo = Aria;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0B281D7860E473F3C233445D /* EmailDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailDetailView.swift; sourceTree = "<group>"; };
+		14A78806E3BFCF93E9A65995 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
+		245882DD42430E1697FDC30A /* MacMailImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacMailImporter.swift; sourceTree = "<group>"; };
+		2707D3EB9C1396F3D2188F4A /* AriaCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaCommands.swift; sourceTree = "<group>"; };
+		37D46A77FE14DD260DC4D490 /* AriaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaApp.swift; sourceTree = "<group>"; };
+		3FC13FFF5BD0A6A87E08C05C /* LinkReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkReaderView.swift; sourceTree = "<group>"; };
+		4978F82F35BCADB4904E75D5 /* BatchActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchActionBar.swift; sourceTree = "<group>"; };
+		4D9B149936ED08CF4D206EDC /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
+		4EB9962DB3312AF4EEC82417 /* VoiceCommandHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandHandler.swift; sourceTree = "<group>"; };
+		56162E64B00A1F3E691A0841 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		63B7ED6997D92F7A22BC6EDB /* AIAgentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAgentService.swift; sourceTree = "<group>"; };
+		6E1857E9BB8006A573DF3479 /* EmailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailService.swift; sourceTree = "<group>"; };
+		73557D0E9339CC2B8AB7857F /* AccountSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSetupView.swift; sourceTree = "<group>"; };
+		79DEF0371EF90B8ED6F70E24 /* HTMLLinkExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLLinkExtractor.swift; sourceTree = "<group>"; };
+		7CA2110D91E23ACCC25B57E6 /* ComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeView.swift; sourceTree = "<group>"; };
+		8A53A2D1006A22BFEAAA964A /* EmailMessage+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EmailMessage+Helpers.swift"; sourceTree = "<group>"; };
+		9124E8C10F757D62769788CC /* AgentMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentMessage.swift; sourceTree = "<group>"; };
+		91C05524DAF4AF0020A14569 /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
+		9CDBDEE37C7A98EB3ADD86AE /* Aria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aria.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7669D681B223A1D3995A6EF /* EmailThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailThread.swift; sourceTree = "<group>"; };
+		A92061927A1F0A48CF5BB6C8 /* Aria.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Aria.entitlements; sourceTree = "<group>"; };
+		A9790F4DD3365B23C94FD1C2 /* EmailListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailListView.swift; sourceTree = "<group>"; };
+		B10FA522FB016EE0EA9EF851 /* EmailAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAccount.swift; sourceTree = "<group>"; };
+		B3A5933B598D6C709A54A600 /* AriaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AriaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD4E1AC5A37E9CAEED20AD81 /* AriaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaError.swift; sourceTree = "<group>"; };
+		BDCD3283478FCEEDEF4AC0C7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C416D1D450D84DDFF1DA1641 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		C5C896E7B1A0093A824BD3B3 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		D6D23778EA6D35DE7DEC055D /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		DD0F1038C8DB27047245921C /* OutlookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlookService.swift; sourceTree = "<group>"; };
+		E0598F0506D6E38AA7CACE29 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		E263B49373F8BE816A36AEB8 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
+		E86CE98D76286E20CFD7B78A /* GmailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailService.swift; sourceTree = "<group>"; };
+		EDBFCBDA1F3455D1880C2254 /* UnsubscribeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsubscribeService.swift; sourceTree = "<group>"; };
+		FAF8711FA49FAA14F71AEFF0 /* EmailMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailMessage.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		118776252AE01FFE92BA7745 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				6F72256F7A4DE5AEEBC088B4 /* AriaTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		20847683D6A1F79CE9A270E3 /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				91C05524DAF4AF0020A14569 /* AccessibilityLabels.swift */,
+				4EB9962DB3312AF4EEC82417 /* VoiceCommandHandler.swift */,
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		2B8BFC05C6B9A31A6AC9E9DA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9CDBDEE37C7A98EB3ADD86AE /* Aria.app */,
+				B3A5933B598D6C709A54A600 /* AriaTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		32503C901BB3343DB8535E22 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				73557D0E9339CC2B8AB7857F /* AccountSetupView.swift */,
+				E263B49373F8BE816A36AEB8 /* AgentPanelView.swift */,
+				4978F82F35BCADB4904E75D5 /* BatchActionBar.swift */,
+				7CA2110D91E23ACCC25B57E6 /* ComposeView.swift */,
+				BDCD3283478FCEEDEF4AC0C7 /* ContentView.swift */,
+				0B281D7860E473F3C233445D /* EmailDetailView.swift */,
+				A9790F4DD3365B23C94FD1C2 /* EmailListView.swift */,
+				3FC13FFF5BD0A6A87E08C05C /* LinkReaderView.swift */,
+				C416D1D450D84DDFF1DA1641 /* SidebarView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5366687AAB38CFE73D83413E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				63B7ED6997D92F7A22BC6EDB /* AIAgentService.swift */,
+				BD4E1AC5A37E9CAEED20AD81 /* AriaError.swift */,
+				14A78806E3BFCF93E9A65995 /* CalendarService.swift */,
+				6E1857E9BB8006A573DF3479 /* EmailService.swift */,
+				E86CE98D76286E20CFD7B78A /* GmailService.swift */,
+				79DEF0371EF90B8ED6F70E24 /* HTMLLinkExtractor.swift */,
+				4D9B149936ED08CF4D206EDC /* IMAPService.swift */,
+				D6D23778EA6D35DE7DEC055D /* KeychainService.swift */,
+				245882DD42430E1697FDC30A /* MacMailImporter.swift */,
+				DD0F1038C8DB27047245921C /* OutlookService.swift */,
+				C5C896E7B1A0093A824BD3B3 /* SpeechService.swift */,
+				EDBFCBDA1F3455D1880C2254 /* UnsubscribeService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		6F72256F7A4DE5AEEBC088B4 /* AriaTests */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = AriaTests;
+			sourceTree = "<group>";
+		};
+		72C372E8AA7587BA87634E5C /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E0598F0506D6E38AA7CACE29 /* AppState.swift */,
+				37D46A77FE14DD260DC4D490 /* AriaApp.swift */,
+				2707D3EB9C1396F3D2188F4A /* AriaCommands.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9DFB538E1023D995CFE4224E /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				E27ECBC0C9BFAFF997100EF1 /* Aria */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		9E5EC5B626FEDC304AA5E92F /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A92061927A1F0A48CF5BB6C8 /* Aria.entitlements */,
+				56162E64B00A1F3E691A0841 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A57869CD0AA9089E996AAE63 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9124E8C10F757D62769788CC /* AgentMessage.swift */,
+				B10FA522FB016EE0EA9EF851 /* EmailAccount.swift */,
+				FAF8711FA49FAA14F71AEFF0 /* EmailMessage.swift */,
+				8A53A2D1006A22BFEAAA964A /* EmailMessage+Helpers.swift */,
+				A7669D681B223A1D3995A6EF /* EmailThread.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A8A1ABB386043F85335C45DF = {
+			isa = PBXGroup;
+			children = (
+				9DFB538E1023D995CFE4224E /* Sources */,
+				118776252AE01FFE92BA7745 /* Tests */,
+				2B8BFC05C6B9A31A6AC9E9DA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E27ECBC0C9BFAFF997100EF1 /* Aria */ = {
+			isa = PBXGroup;
+			children = (
+				20847683D6A1F79CE9A270E3 /* Accessibility */,
+				72C372E8AA7587BA87634E5C /* App */,
+				A57869CD0AA9089E996AAE63 /* Models */,
+				9E5EC5B626FEDC304AA5E92F /* Resources */,
+				5366687AAB38CFE73D83413E /* Services */,
+				32503C901BB3343DB8535E22 /* Views */,
+			);
+			path = Aria;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		75F76BCF81012C5551B22C7D /* AriaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 993EAB0A84693DFD02C0A403 /* Build configuration list for PBXNativeTarget "AriaTests" */;
+			buildPhases = (
+				892EDAEE05206DD688D58B4C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4F77C5DF2796CD1EA7B46437 /* PBXTargetDependency */,
+			);
+			name = AriaTests;
+			packageProductDependencies = (
+			);
+			productName = AriaTests;
+			productReference = B3A5933B598D6C709A54A600 /* AriaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CAE722123C010788DE868C61 /* Aria */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CF155AEA52373DE160837B33 /* Build configuration list for PBXNativeTarget "Aria" */;
+			buildPhases = (
+				E2B3D21FB25021625C927281 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Aria;
+			packageProductDependencies = (
+			);
+			productName = Aria;
+			productReference = 9CDBDEE37C7A98EB3ADD86AE /* Aria.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		84880BA6D29A6239877AD004 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					75F76BCF81012C5551B22C7D = {
+						ProvisioningStyle = Automatic;
+					};
+					CAE722123C010788DE868C61 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7EBA1A629C0F68ED2E47746C /* Build configuration list for PBXProject "Aria" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = A8A1ABB386043F85335C45DF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2B8BFC05C6B9A31A6AC9E9DA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CAE722123C010788DE868C61 /* Aria */,
+				75F76BCF81012C5551B22C7D /* AriaTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		892EDAEE05206DD688D58B4C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2B3D21FB25021625C927281 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2401BDF0010F8A0ACAA49EEC /* AIAgentService.swift in Sources */,
+				7DABAF59D21EE0CBB798FF30 /* AccessibilityLabels.swift in Sources */,
+				CE48D8B0CEB1470FDABFF065 /* AccountSetupView.swift in Sources */,
+				A908835046079236FAFBFC45 /* AgentMessage.swift in Sources */,
+				D345AAE6E4EA4D8FA8D66129 /* AgentPanelView.swift in Sources */,
+				F9C1A21F6834897D40D36FBD /* AppState.swift in Sources */,
+				A4073CAF1B9C01ABC29B694B /* AriaApp.swift in Sources */,
+				2B17F675942186D9DD144F6B /* AriaCommands.swift in Sources */,
+				12A1B9F40BFD823517EC4476 /* AriaError.swift in Sources */,
+				1382301521B7B26737074134 /* BatchActionBar.swift in Sources */,
+				E90080525670FEC2F85FE907 /* CalendarService.swift in Sources */,
+				5530D4249EDBF8C6F2EA2F1A /* ComposeView.swift in Sources */,
+				AF1AB21C545CDE1E9DA1717D /* ContentView.swift in Sources */,
+				5980D98EBADAC47AAFFC3C04 /* EmailAccount.swift in Sources */,
+				CEE1D1D7DAB231CEA4224DBE /* EmailDetailView.swift in Sources */,
+				EE5D9A55F69CC0A9378B68F4 /* EmailListView.swift in Sources */,
+				BB8D5F89673B9DA1FA96E816 /* EmailMessage+Helpers.swift in Sources */,
+				EC9B835451BC647D51263936 /* EmailMessage.swift in Sources */,
+				9DDCF5AFAE83F2CE96D54A69 /* EmailService.swift in Sources */,
+				9D1E6B011CE8D4173DEF96FB /* EmailThread.swift in Sources */,
+				5569486ED6BB9D6CB7C4D640 /* GmailService.swift in Sources */,
+				074049DF04CFC32C069840AB /* HTMLLinkExtractor.swift in Sources */,
+				449688394A63870CDF70995F /* IMAPService.swift in Sources */,
+				AAD7479A9361244338DA078E /* KeychainService.swift in Sources */,
+				BE60FBED23D9B27A2D5988A3 /* LinkReaderView.swift in Sources */,
+				F4B15321507B8F50BDACAA92 /* MacMailImporter.swift in Sources */,
+				51AADD3120BE6A40C32007E4 /* OutlookService.swift in Sources */,
+				B47E914AEF0B7DB0F2736D55 /* SidebarView.swift in Sources */,
+				CC4A9ABD8EE8028A27F58F82 /* SpeechService.swift in Sources */,
+				D92281674695AE3A7E337822 /* UnsubscribeService.swift in Sources */,
+				29F9CCE590D661C79FF3AEE0 /* VoiceCommandHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4F77C5DF2796CD1EA7B46437 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CAE722123C010788DE868C61 /* Aria */;
+			targetProxy = 10A5AD8DA720999943061DC0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		17D4A0F59942549B2792C18B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		5F53E19A80E46FC4C88BB16E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Aria/Resources/Aria.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aria.app;
+				PRODUCT_NAME = Aria;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		5F832A146A26112711FC2162 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Aria/Resources/Aria.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aria.app;
+				PRODUCT_NAME = Aria;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		8A8183C2F72F4E37524224C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aria.AriaTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aria.app/Contents/MacOS/Aria";
+			};
+			name = Release;
+		};
+		8F2D8A7B72C720C6CC8F1256 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aria.AriaTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aria.app/Contents/MacOS/Aria";
+			};
+			name = Debug;
+		};
+		92A3232B93B8E97993CCEBB9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7EBA1A629C0F68ED2E47746C /* Build configuration list for PBXProject "Aria" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				17D4A0F59942549B2792C18B /* Debug */,
+				92A3232B93B8E97993CCEBB9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		993EAB0A84693DFD02C0A403 /* Build configuration list for PBXNativeTarget "AriaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F2D8A7B72C720C6CC8F1256 /* Debug */,
+				8A8183C2F72F4E37524224C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CF155AEA52373DE160837B33 /* Build configuration list for PBXNativeTarget "Aria" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5F832A146A26112711FC2162 /* Debug */,
+				5F53E19A80E46FC4C88BB16E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 84880BA6D29A6239877AD004 /* Project object */;
+}
