@@ -40,7 +40,7 @@ struct AgentPanelView: View {
                                 Image(systemName: "waveform.circle")
                                     .font(.system(size: 40))
                                     .foregroundStyle(.secondary)
-                                Text("Say or type something to start.\nTry: "Read my latest emails" or "Delete all spam".")
+                                Text("Say or type something to start.\nTry: \"Read my latest emails\" or \"Delete all spam\".")
                                     .multilineTextAlignment(.center)
                                     .foregroundStyle(.secondary)
                                     .font(.callout)
@@ -109,7 +109,7 @@ struct AgentPanelView: View {
                     } label: {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.title3)
-                            .foregroundStyle(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                     }
                     .buttonStyle(.plain)
                     .disabled(isThinking)

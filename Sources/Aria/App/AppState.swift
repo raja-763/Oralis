@@ -108,9 +108,9 @@ final class AppState: ObservableObject {
     // MARK: - Accessibility announcements
 
     func announce(_ message: String) {
-        NSAccessibility.post(element: NSApp, notification: .announcementRequested,
-                             userInfo: [NSAccessibilityAnnouncementKey: message,
-                                        NSAccessibilityPriorityKey: NSAccessibilityPriorityLevel.high.rawValue])
+        NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
+                             userInfo: [NSAccessibility.NotificationUserInfoKey.announcement: message,
+                                        NSAccessibility.NotificationUserInfoKey.priority: NSAccessibilityPriorityLevel.high.rawValue])
         speech.speak(message)
     }
 }

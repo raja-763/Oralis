@@ -78,7 +78,7 @@ struct VoiceSettingsView: View {
                     .font(.callout)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.accentColor)
+            .foregroundStyle(Color.accentColor)
             .padding(10)
             .accessibilityLabel("Open System Settings to download additional voices")
         }

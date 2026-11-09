@@ -143,7 +143,7 @@ struct OnboardingStepShell<Content: View>: View {
             // Icon
             Image(systemName: icon)
                 .font(.system(size: 56, weight: .light))
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
                 .accessibilityHidden(true)
 
             // Heading
@@ -220,9 +220,9 @@ struct WelcomeStep: View {
         }
         .onAppear {
             // Post VoiceOver announcement
-            NSAccessibility.post(element: NSApp,
+            NSAccessibility.post(element: NSApp as Any,
                                  notification: .announcementRequested,
-                                 userInfo: [NSAccessibilityAnnouncementKey: OnboardingStep.welcome.spokenIntro])
+                                 userInfo: [NSAccessibility.NotificationUserInfoKey.announcement: OnboardingStep.welcome.spokenIntro])
         }
     }
 }
@@ -235,7 +235,7 @@ struct FeaturePill: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .frame(width: 28)
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
                 .accessibilityHidden(true)
             Text(text)
                 .font(.body)
@@ -328,7 +328,7 @@ struct VoiceSetupStep: View {
                     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.universalaccess")!)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
                 .font(.callout)
                 .accessibilityLabel("Open System Settings to download additional high-quality voices")
             }
@@ -421,7 +421,7 @@ struct AddAccountStep: View {
                         ForEach(appState.accounts) { acc in
                             HStack {
                                 Image(systemName: acc.provider.iconName)
-                                    .foregroundStyle(.accentColor)
+                                    .foregroundStyle(Color.accentColor)
                                     .accessibilityHidden(true)
                                 VStack(alignment: .leading) {
                                     Text(acc.displayName).fontWeight(.medium)
@@ -438,7 +438,7 @@ struct AddAccountStep: View {
                         }
                         Button("Add another account") { showSetup = true }
                             .buttonStyle(.plain)
-                            .foregroundStyle(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                     }
                 } else {
                     HStack(spacing: 20) {
@@ -446,7 +446,7 @@ struct AddAccountStep: View {
                             VStack(spacing: 6) {
                                 Image(systemName: p.iconName)
                                     .font(.largeTitle)
-                                    .foregroundStyle(.accentColor)
+                                    .foregroundStyle(Color.accentColor)
                                     .accessibilityHidden(true)
                                 Text(p.rawValue)
                                     .font(.caption)
@@ -496,7 +496,7 @@ struct MailImportStep: View {
                     ForEach(importable, id: \.emailAddress) { config in
                         HStack {
                             Image(systemName: config.provider.iconName)
-                                .foregroundStyle(.accentColor)
+                                .foregroundStyle(Color.accentColor)
                                 .accessibilityHidden(true)
                             VStack(alignment: .leading) {
                                 Text(config.displayName).fontWeight(.medium)
@@ -617,12 +617,12 @@ struct FeatureTourStep: View {
     @State private var currentTip = 0
 
     let tips: [(icon: String, title: String, description: String)] = [
-        ("mic.fill",          "Talk to Aria",          "Press ⌘⌥L or click the mic. Say "Read my latest email", "Delete all spam", or "Unsubscribe from this list.""),
-        ("trash.fill",        "Bulk actions",          "Select emails with the spacebar, then say "Delete selected" or "Archive selected". Works on hundreds at once."),
-        ("link",              "Voice link reader",     "When reading an email, say "Read links" to hear every link. Say a link's name to open it."),
-        ("bell.slash.fill",   "Unsubscribe by voice",  "Say "Unsubscribe" on any promotional email. Aria finds the unsubscribe method and handles it for you."),
-        ("calendar.badge.checkmark", "Meeting invites", "Say "Accept" or "Decline" on any calendar invite. Aria adds it to Calendar and can read the meeting link."),
-        ("person.badge.plus", "Multiple accounts",     "Add as many Gmail, Outlook, iCloud, or IMAP accounts as you like from Settings › Accounts."),
+        ("mic.fill",          "Talk to Aria",          "Press ⌘⌥L or click the mic. Say \"Read my latest email\", \"Delete all spam\", or \"Unsubscribe from this list.\""),
+        ("trash.fill",        "Bulk actions",          "Select emails with the spacebar, then say \"Delete selected\" or \"Archive selected\". Works on hundreds at once."),
+        ("link",              "Voice link reader",     "When reading an email, say \"Read links\" to hear every link. Say a link's name to open it."),
+        ("bell.slash.fill",   "Unsubscribe by voice",  "Say \"Unsubscribe\" on any promotional email. Aria finds the unsubscribe method and handles it for you."),
+        ("calendar.badge.checkmark", "Meeting invites", "Say \"Accept\" or \"Decline\" on any calendar invite. Aria adds it to Calendar and can read the meeting link."),
+        ("person.badge.plus", "Multiple accounts",     "Add as many Gmail, Outlook, iCloud, or IMAP accounts as you like from Settings > Accounts."),
     ]
 
     var body: some View {
@@ -641,7 +641,7 @@ struct FeatureTourStep: View {
                 VStack(spacing: 14) {
                     Image(systemName: tip.icon)
                         .font(.system(size: 44))
-                        .foregroundStyle(.accentColor)
+                        .foregroundStyle(Color.accentColor)
                         .accessibilityHidden(true)
                     Text(tip.title)
                         .font(.title2.weight(.semibold))
@@ -723,7 +723,7 @@ struct TipRow: View {
         HStack {
             Text(key)
                 .font(.system(.body, design: .monospaced).weight(.semibold))
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
                 .frame(width: 80, alignment: .leading)
             Text(value)
                 .foregroundStyle(.secondary)

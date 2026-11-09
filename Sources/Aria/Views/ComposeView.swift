@@ -8,18 +8,18 @@ struct ComposeView: View {
     @State private var to    = ""
     @State private var cc    = ""
     @State private var subject = ""
-    @State private var body  = ""
+    @State private var messageBody = ""
     @State private var isSending = false
     @FocusState private var focusedField: Field?
 
-    enum Field: Hashable { case to, cc, subject, body }
+    enum Field: Hashable { case to, cc, subject, message }
 
     init(replyTo: EmailMessage? = nil) {
         self.replyTo = replyTo
         if let msg = replyTo {
             _to      = State(initialValue: msg.from.address)
             _subject = State(initialValue: "Re: \(msg.subject)")
-            _body    = State(initialValue: "\n\n---\nOn \(msg.date.formatted()), \(msg.from.display) wrote:\n\(msg.bodyPlain.prefix(500))")
+            _messageBody = State(initialValue: "\n\n---\nOn \(msg.date.formatted()), \(msg.from.display) wrote:\n\(msg.bodyPlain.prefix(500))")
         }
     }
 
@@ -65,13 +65,13 @@ struct ComposeView: View {
             .frame(maxHeight: 180)
 
             // Body
-            TextEditor(text: $body)
-                .focused($focusedField, equals: .body)
+            TextEditor(text: $messageBody)
+                .focused($focusedField, equals: .message)
                 .padding(8)
                 .accessibilityLabel("Message body")
         }
         .frame(minWidth: 600, minHeight: 480)
-        .onAppear { focusedField = to.isEmpty ? .to : .body }
+        .onAppear { focusedField = to.isEmpty ? .to : .message }
     }
 
     private func send() async {
@@ -81,7 +81,7 @@ struct ComposeView: View {
             to: [EmailAddress(name: "", address: to)],
             cc: cc.isEmpty ? [] : [EmailAddress(name: "", address: cc)],
             subject: subject,
-            body: body,
+            body: messageBody,
             replyToMessageID: replyTo?.remoteID
         )
         let service = EmailServiceFactory.service(for: acc)

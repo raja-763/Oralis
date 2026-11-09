@@ -109,7 +109,7 @@ struct AccountSetupView: View {
         VStack(spacing: 20) {
             Image(systemName: provider.iconName)
                 .font(.system(size: 48))
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
 
             Text("Sign in to \(provider.rawValue)")
                 .font(.title3.weight(.semibold))
@@ -233,7 +233,7 @@ struct AccountSetupView: View {
                         }
                         Spacer()
                         Text("Import")
-                            .foregroundStyle(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                     }
                     .padding()
                     .background(Color.secondary.opacity(0.08))
