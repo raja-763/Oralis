@@ -2,6 +2,8 @@
 
 **Voice-first, accessibility-first email for macOS.**
 
+> Inspired by [Lumin](https://www.luminemail.com/) — the accessible iOS email app. Oralis brings that same voice-first philosophy to the Mac.
+
 Oralis is a native macOS email client built from the ground up for screen reader users. Talk to an AI assistant to manage your inbox hands-free — read emails aloud, delete spam in bulk, unsubscribe from mailing lists, accept meeting invites, and open links — all by voice or keyboard, with full VoiceOver support throughout.
 
 ---
