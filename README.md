@@ -66,18 +66,16 @@ A 7-step, VoiceOver-guided setup walks you through choosing a voice, connecting 
 
 ## Keyboard shortcuts
 
-| Shortcut | Action |
-|---|---|
-| ⌘⌥L | Start / stop listening |
-| ⌘⌥A | Toggle AI assistant panel |
-| ⌘A | Select all emails |
-| ⌘⌫ | Delete selected emails |
-| Space | Toggle selection on focused email |
-| ⌘R | Reply |
-| ⌘⌥R | Read email aloud / stop |
-| ⌘⌥U | Unsubscribe from focused email |
-| ⌘F | Search inbox |
-| ⌘, | Open Settings |
+- **⌘⌥L** — Start / stop listening
+- **⌘⌥A** — Toggle AI assistant panel
+- **⌘A** — Select all emails
+- **⌘⌫** — Delete selected emails
+- **Space** — Toggle selection on focused email
+- **⌘R** — Reply
+- **⌘⌥R** — Read email aloud / stop
+- **⌘⌥U** — Unsubscribe from focused email
+- **⌘F** — Search inbox
+- **⌘,** — Open Settings
 
 ---
 
@@ -136,13 +134,11 @@ Build and run the **Oralis** scheme in Xcode. The first launch will trigger perm
 
 ## Supported email providers
 
-| Provider | Auth method | Notes |
-|---|---|---|
-| Gmail | OAuth 2.0 | Full Gmail API v1 |
-| Outlook / Exchange | OAuth 2.0 | Microsoft Graph API |
-| iCloud | OAuth 2.0 | iCloud Mail |
-| Yahoo | Password + App Password | IMAP |
-| Any IMAP / SMTP | Password | Generic provider |
+- **Gmail** — OAuth 2.0 via Gmail API v1
+- **Outlook / Exchange** — OAuth 2.0 via Microsoft Graph API
+- **iCloud** — OAuth 2.0
+- **Yahoo** — Password + App Password (IMAP)
+- **Any IMAP / SMTP** — Password, generic provider
 
 ---
 
