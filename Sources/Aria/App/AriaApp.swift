@@ -16,6 +16,17 @@ struct OralisApp: App {
                 ContentView()
                     .environmentObject(appState)
                     .frame(minWidth: 900, minHeight: 600)
+                    .sheet(isPresented: Binding(
+                        get: { appState.accounts.isEmpty && appState.showAccountSetup },
+                        set: { appState.showAccountSetup = $0 }
+                    )) {
+                        AccountSetupView().environmentObject(appState)
+                    }
+                    .onAppear {
+                        if appState.accounts.isEmpty {
+                            appState.showAccountSetup = true
+                        }
+                    }
             }
         }
         .windowStyle(.titleBar)

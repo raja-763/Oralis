@@ -15,6 +15,7 @@
 		211ADB3FFEFDAB755DCE6FBE /* EmailThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */; };
 		241DAA507DB357E4460E1250 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB6112205F262C145049272 /* TalkView.swift */; };
 		2C3D5A7D102DC0E4816A04B3 /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A7A62047B9B70E38C1871 /* UpdateChecker.swift */; };
+		390F257FB1E6F94428633196 /* MailImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF88CA2798080A5025B2EFE /* MailImportService.swift */; };
 		404B17E98626A7B92A4AD2DF /* UnsubscribeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847A4DE5D3726D5685D3A674 /* UnsubscribeService.swift */; };
 		4EC2BD537F978A7D43101E16 /* AriaCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910922000A23ACBDA99E7A28 /* AriaCommands.swift */; };
 		4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */; };
@@ -37,6 +38,7 @@
 		9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E4D88FF2F5352F0163877F /* OAuthService.swift */; };
 		A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B426503A313C3A254962417 /* OutlookService.swift */; };
 		BA2605FE9760B3914F34E3F9 /* FloatingPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */; };
+		CA4E597E246A30EAFCDABA14 /* IMAPSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */; };
 		CA974A5086A68E8818C38394 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDA1A5D66AA254F1357E694 /* SidebarView.swift */; };
 		D28A27044BBFBBCA71AC66E5 /* EmailMessage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */; };
 		D3350C0B8CA28A348AA7259F /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486023F7D5013E7C5AB1C317 /* VoiceSettingsView.swift */; };
@@ -99,8 +101,10 @@
 		C207A038822F464D5BCBD081 /* AriaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaError.swift; sourceTree = "<group>"; };
 		C7D0ADD133572698316C1596 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		D693EAF40AB9F5180FA996EE /* GmailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailService.swift; sourceTree = "<group>"; };
+		DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPSetupView.swift; sourceTree = "<group>"; };
 		E2DD5A277FE8D4D213F7BF43 /* Oralis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Oralis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6E88C7DED40B575C7878421 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		ECF88CA2798080A5025B2EFE /* MailImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailImportService.swift; sourceTree = "<group>"; };
 		F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelView.swift; sourceTree = "<group>"; };
 		F4D86ADF7D928FB7F81452DB /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
 		FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
@@ -132,6 +136,7 @@
 				F4D86ADF7D928FB7F81452DB /* IMAPService.swift */,
 				4E35DFB71D63E45E01E94B4C /* KeychainService.swift */,
 				84E094D3F57113A33060225A /* MacMailImporter.swift */,
+				ECF88CA2798080A5025B2EFE /* MailImportService.swift */,
 				56E4D88FF2F5352F0163877F /* OAuthService.swift */,
 				8B426503A313C3A254962417 /* OutlookService.swift */,
 				06E8FD170FE17CEACAA514CF /* SpeechService.swift */,
@@ -171,6 +176,7 @@
 				15F3040059CDFB27A236FC1F /* EmailDetailView.swift */,
 				39DB0035F8E4610C24DB7AF9 /* EmailListView.swift */,
 				F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */,
+				DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */,
 				6D73BC94AC72EECEE503BB2B /* LinkReaderView.swift */,
 				E6E88C7DED40B575C7878421 /* OnboardingView.swift */,
 				5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */,
@@ -349,9 +355,11 @@
 				03A70F072ABF88BE1EA8FF45 /* GmailService.swift in Sources */,
 				E78D754B14778AFFA54B5300 /* HTMLLinkExtractor.swift in Sources */,
 				0BDE5CD1CBB6E97328E80644 /* IMAPService.swift in Sources */,
+				CA4E597E246A30EAFCDABA14 /* IMAPSetupView.swift in Sources */,
 				98F381252AB13A723A68625B /* KeychainService.swift in Sources */,
 				8993D4EA7C3D44C48B25BCC8 /* LinkReaderView.swift in Sources */,
 				0A8B10D649C648690A0FFF1B /* MacMailImporter.swift in Sources */,
+				390F257FB1E6F94428633196 /* MailImportService.swift in Sources */,
 				E13964DEE27E074364690F0C /* MenuBarController.swift in Sources */,
 				9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */,
 				FFBC2D700FD38BBF34CABC7A /* OnboardingView.swift in Sources */,
