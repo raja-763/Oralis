@@ -61,4 +61,12 @@ final class KeychainService {
     static func loadRefreshToken(for accountID: UUID) -> String? {
         KeychainService.shared.load(key: "oauth.refresh.\(accountID)")
     }
+
+    static func savePassword(_ password: String, for accountID: UUID) {
+        KeychainService.shared.save(key: "imap.password.\(accountID)", value: password)
+    }
+
+    static func loadPassword(for accountID: UUID) -> String? {
+        KeychainService.shared.load(key: "imap.password.\(accountID)")
+    }
 }
