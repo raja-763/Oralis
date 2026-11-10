@@ -49,7 +49,36 @@ final class UpdateChecker: ObservableObject {
     }
 
     func openDownloadPage() {
+        // Open release page — user drags the new app to Applications
         NSWorkspace.shared.open(releaseURL ?? releasesPage)
+    }
+
+    // Downloads the DMG to ~/Downloads and opens it in Finder.
+    @Published var isDownloading = false
+    @Published var downloadProgress: Double = 0
+
+    func downloadUpdate() async {
+        guard let dmgURL = releaseURL, dmgURL.pathExtension == "dmg" else {
+            openDownloadPage()
+            return
+        }
+
+        isDownloading = true
+        downloadProgress = 0
+
+        let dest = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Downloads/Oralis-\(latestVersion ?? "latest").dmg")
+
+        do {
+            let (tempURL, _) = try await URLSession.shared.download(from: dmgURL)
+            try? FileManager.default.moveItem(at: tempURL, to: dest)
+            NSWorkspace.shared.activateFileViewerSelecting([dest])
+            downloadProgress = 1
+        } catch {
+            // Fall back to browser
+            openDownloadPage()
+        }
+        isDownloading = false
     }
 
     // Returns true if `remote` version string is greater than `local`.

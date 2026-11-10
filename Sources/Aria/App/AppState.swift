@@ -25,6 +25,7 @@ final class AppState: ObservableObject {
     @Published var navigationPath = NavigationPath()
     @Published var showAgentPanel = false
     @Published var showAccountSetup = false
+    @Published var showIMAPSetup = false
 
     // MARK: - Onboarding
     @Published var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: "oralis.onboardingComplete")
@@ -108,11 +109,17 @@ final class AppState: ObservableObject {
     // MARK: - Voice + Agent (Talk screen)
 
     func startListening() {
+        guard selectedAccount != nil else {
+            announce("No email account connected. Open Settings to add one.")
+            return
+        }
         isAgentListening = true
         speech.onFinalResult = { [weak self] text in
             Task { @MainActor [weak self] in
-                self?.isAgentListening = false
-                self?.sendAgentMessage(text)
+                guard let self else { return }
+                self.isAgentListening = false
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+                self.sendAgentMessage(text)
             }
         }
         try? speech.startListening()
@@ -124,7 +131,9 @@ final class AppState: ObservableObject {
     }
 
     func sendAgentMessage(_ text: String) {
-        let userMsg = AgentMessage(role: .user, content: text)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let userMsg = AgentMessage(role: .user, content: trimmed)
         agentMessages.append(userMsg)
 
         let context = EmailAgentContext(
@@ -134,7 +143,7 @@ final class AppState: ObservableObject {
         Task {
             do {
                 let response = try await agent.send(
-                    userMessage: text,
+                    userMessage: trimmed,
                     history: agentMessages.dropLast(),
                     context: context
                 )

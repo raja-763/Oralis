@@ -37,9 +37,7 @@ enum EmailServiceFactory {
         switch account.provider {
         case .gmail:   return GmailService(account: account)
         case .outlook: return OutlookService(account: account)
-        case .icloud:  return IMAPService(account: account)
-        case .yahoo:   return IMAPService(account: account)
-        case .imap:    return IMAPService(account: account)
+        default:       return IMAPService(account: account)
         }
     }
 }

@@ -1,309 +1,241 @@
 import SwiftUI
+import AuthenticationServices
 
+/// Account setup sheet — OAuth sign-in for all providers.
 struct AccountSetupView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var oauth = OAuthService()
 
-    @State private var step: SetupStep = .choose
-    @State private var provider: EmailProvider = .gmail
-    @State private var displayName = ""
-    @State private var emailAddress = ""
-    @State private var password = ""
-    @State private var imapHost = ""
-    @State private var imapPort = "993"
-    @State private var smtpHost = ""
-    @State private var smtpPort = "587"
-    @State private var importedAccounts: [MacMailImporter.MailAccountConfig] = []
-
-    enum SetupStep { case choose, oauth, manual, importing }
+    @State private var signingIn = false
+    @State private var error: String?
 
     var body: some View {
         VStack(spacing: 0) {
-            // Title
-            Text("Add Email Account")
-                .font(.title2.weight(.semibold))
-                .padding()
-                .accessibilityAddTraits(.isHeader)
+            // ── Header ──────────────────────────────────────────────────
+            VStack(spacing: 10) {
+                Image(systemName: "envelope.badge.shield.half.filled.fill")
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundStyle(.tint)
+                    .accessibilityHidden(true)
+                    .padding(.top, 32)
 
-            Divider()
-
-            switch step {
-            case .choose:  chooseView
-            case .oauth:   oauthView
-            case .manual:  manualView
-            case .importing: importView
-            }
-        }
-        .frame(width: 520)
-        .onAppear { importedAccounts = MacMailImporter.importAccounts() }
-    }
-
-    // MARK: - Step: Choose provider
-
-    @ViewBuilder private var chooseView: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Choose your email provider:")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
-
-            // macOS Mail import (if accounts exist)
-            if !importedAccounts.isEmpty {
-                Button {
-                    step = .importing
-                } label: {
-                    HStack {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .font(.title2)
-                        VStack(alignment: .leading) {
-                            Text("Import from macOS Mail")
-                                .fontWeight(.semibold)
-                            Text("\(importedAccounts.count) account(s) found")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                    }
-                    .padding()
-                    .background(Color.accentColor.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Import \(importedAccounts.count) account(s) from macOS Mail")
-            }
-
-            ForEach(EmailProvider.allCases) { p in
-                Button {
-                    provider = p
-                    step = p.supportsOAuth ? .oauth : .manual
-                } label: {
-                    HStack {
-                        Image(systemName: p.iconName)
-                            .font(.title2)
-                            .frame(width: 32)
-                        Text(p.rawValue)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                    }
-                    .padding()
-                    .background(Color.secondary.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(p.rawValue). \(p.supportsOAuth ? "Sign in with your account." : "Enter IMAP and SMTP settings.")")
-            }
-        }
-        .padding()
-
-        Spacer()
-        HStack {
-            Button("Cancel") { dismiss() }
-            Spacer()
-        }
-        .padding()
-    }
-
-    // MARK: - Step: OAuth
-
-    @ViewBuilder private var oauthView: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                Image(systemName: provider.iconName)
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.accentColor)
-
-                Text("Sign in to \(provider.rawValue)")
-                    .font(.title3.weight(.semibold))
+                Text("Add Email Account")
+                    .font(.title2.weight(.bold))
                     .accessibilityAddTraits(.isHeader)
 
-                // Step 1: open browser
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Step 1 — Open sign-in page")
-                        .font(.headline)
-                    Text(provider.oauthInstructions)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Button("Open \(provider.rawValue) in Browser") {
-                        if let url = provider.signInURL {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .accessibilityLabel("Open \(provider.rawValue) sign-in page in your default browser")
-                }
-                .padding()
-                .background(Color.secondary.opacity(0.07))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                // Step 2: enter details
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Step 2 — Enter your details")
-                        .font(.headline)
-
-                    TextField("Your name", text: $displayName)
-                        .textFieldStyle(.roundedBorder)
-                        .accessibilityLabel("Your name")
-
-                    TextField("Email address (e.g. you@gmail.com)", text: $emailAddress)
-                        .textFieldStyle(.roundedBorder)
-                        .accessibilityLabel("Email address")
-
-                    SecureField(provider.passwordLabel, text: $password)
-                        .textFieldStyle(.roundedBorder)
-                        .accessibilityLabel(provider.passwordLabel)
-
-                    Text(provider.passwordHint)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding()
-                .background(Color.secondary.opacity(0.07))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                Text("Your password is stored only in the macOS Keychain — never on any server.")
-                    .font(.caption)
+                Text("Sign in securely — Oralis never stores your password.")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 8)
             }
-            .padding(24)
-        }
 
-        HStack {
-            Button("Back") { step = .choose }
-            Spacer()
-            Button("Cancel") { dismiss() }
-            Button("Add Account") {
-                let key = "oralis.token.\(UUID().uuidString)"
-                KeychainService.shared.save(key: key, value: password)
-                let acc = EmailAccount(
-                    displayName: displayName.isEmpty ? emailAddress : displayName,
-                    emailAddress: emailAddress,
-                    provider: provider,
-                    imapHost: provider.defaultIMAPHost,
-                    imapPort: 993,
-                    smtpHost: provider.defaultSMTPHost,
-                    smtpPort: 587,
-                    keychainToken: key
-                )
-                appState.addAccount(acc)
-                appState.announce("\(emailAddress) added.")
-                dismiss()
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(emailAddress.isEmpty || password.isEmpty)
-            .accessibilityLabel("Add \(provider.rawValue) account")
-        }
-        .padding()
-    }
+            Divider().padding(.vertical, 12)
 
-    // MARK: - Step: Manual IMAP
-
-    @ViewBuilder private var manualView: some View {
-        Form {
-            Section("Account Info") {
-                TextField("Your name", text: $displayName)
-                    .accessibilityLabel("Display name")
-                TextField("Email address", text: $emailAddress)
-                    .accessibilityLabel("Email address")
-                SecureField("Password", text: $password)
-                    .accessibilityLabel("Password")
-            }
-            Section("Incoming (IMAP)") {
-                TextField("imap.example.com", text: $imapHost)
-                    .accessibilityLabel("IMAP host")
-                TextField("993", text: $imapPort)
-                    .accessibilityLabel("IMAP port")
-            }
-            Section("Outgoing (SMTP)") {
-                TextField("smtp.example.com", text: $smtpHost)
-                    .accessibilityLabel("SMTP host")
-                TextField("587", text: $smtpPort)
-                    .accessibilityLabel("SMTP port")
-            }
-        }
-        .formStyle(.grouped)
-
-        HStack {
-            Button("Back") { step = .choose }
-            Spacer()
-            Button("Cancel") { dismiss() }
-            Button("Add Account") {
-                let key = "aria.imap.\(UUID().uuidString)"
-                KeychainService.shared.save(key: key, value: password)
-                let account = EmailAccount(
-                    displayName: displayName.isEmpty ? emailAddress : displayName,
-                    emailAddress: emailAddress,
-                    provider: provider,
-                    imapHost: imapHost,
-                    imapPort: Int(imapPort) ?? 993,
-                    smtpHost: smtpHost,
-                    smtpPort: Int(smtpPort) ?? 587,
-                    keychainToken: key
-                )
-                appState.addAccount(account)
-                appState.announce("Account \(emailAddress) added.")
-                dismiss()
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(emailAddress.isEmpty || imapHost.isEmpty)
-        }
-        .padding()
-    }
-
-    // MARK: - Step: Import from macOS Mail
-
-    @ViewBuilder private var importView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Found these accounts in macOS Mail:")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
-
-            ForEach(importedAccounts, id: \.emailAddress) { config in
-                Button {
-                    let account = EmailAccount(
-                        displayName: config.displayName,
-                        emailAddress: config.emailAddress,
-                        provider: config.provider,
-                        imapHost: config.imapHost,
-                        imapPort: config.imapPort,
-                        smtpHost: config.smtpHost,
-                        smtpPort: config.smtpPort,
-                        importedFromMailApp: true
-                    )
-                    appState.addAccount(account)
-                    appState.announce("\(config.emailAddress) imported.")
-                    dismiss()
-                } label: {
-                    HStack {
-                        Image(systemName: config.provider.iconName)
-                        VStack(alignment: .leading) {
-                            Text(config.displayName)
-                                .fontWeight(.medium)
-                            Text(config.emailAddress)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Text("Import")
-                            .foregroundStyle(Color.accentColor)
-                    }
-                    .padding()
-                    .background(Color.secondary.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            // ── Provider buttons ────────────────────────────────────────
+            if signingIn {
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .controlSize(.large)
+                        .accessibilityLabel("Signing in, please wait")
+                    Text("Opening sign-in page…")
+                        .foregroundStyle(.secondary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                VStack(spacing: 12) {
+                    ProviderSignInButton(
+                        label: "Sign in with Google",
+                        subtitle: "Gmail, Google Workspace",
+                        icon: "envelope.fill",
+                        tint: Color(red: 0.85, green: 0.26, blue: 0.21)
+                    ) { await signIn(provider: .gmail) }
+
+                    ProviderSignInButton(
+                        label: "Sign in with Microsoft",
+                        subtitle: "Outlook, Hotmail, Live",
+                        icon: "envelope.fill",
+                        tint: Color(red: 0.0, green: 0.47, blue: 0.84)
+                    ) { await signIn(provider: .outlook) }
+
+                    ProviderSignInButton(
+                        label: "Sign in with Yahoo",
+                        subtitle: "Yahoo Mail",
+                        icon: "envelope.fill",
+                        tint: Color(red: 0.40, green: 0.0, blue: 0.73)
+                    ) { await signIn(provider: .yahoo) }
+
+                    ProviderSignInButton(
+                        label: "Other IMAP Account",
+                        subtitle: "Any email with IMAP support",
+                        icon: "server.rack",
+                        tint: .secondary
+                    ) { await signIn(provider: .custom) }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
+            }
+
+            if let error {
+                Text(error)
+                    .font(.callout)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 8)
+            }
+
+            Divider().padding(.vertical, 8)
+
+            // ── Footer ──────────────────────────────────────────────────
+            HStack {
+                Image(systemName: "lock.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                Text("Credentials stored securely in macOS Keychain. Never sent to Oralis servers.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
+
+            Button("Cancel", role: .cancel) { dismiss() }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Import \(config.emailAddress) from macOS Mail")
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 20)
+                .accessibilityLabel("Cancel adding account")
+        }
+        .frame(width: 420)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    // MARK: - Sign-in
+
+    private func signIn(provider: EmailProvider) async {
+        signingIn = true
+        error = nil
+        do {
+            switch provider {
+            case .gmail:
+                guard !OAuthService.Config.googleClientID.isEmpty else {
+                    throw OAuthSetupError.missingClientID("Google")
+                }
+                let tokens = try await oauth.signInWithGoogle()
+                let (name, email) = try await oauth.fetchGoogleUserInfo(accessToken: tokens.accessToken)
+                let account = EmailAccount(
+                    id: UUID(),
+                    displayName: name,
+                    emailAddress: email,
+                    provider: .gmail,
+                    imapHost: "imap.gmail.com",
+                    imapPort: 993,
+                    smtpHost: "smtp.gmail.com",
+                    smtpPort: 587,
+                    useOAuth: true
+                )
+                KeychainService.saveOAuthTokens(tokens, for: account.id)
+                appState.addAccount(account)
+                dismiss()
+
+            case .outlook:
+                guard !OAuthService.Config.microsoftClientID.isEmpty else {
+                    throw OAuthSetupError.missingClientID("Microsoft")
+                }
+                let tokens = try await oauth.signInWithMicrosoft()
+                let (name, email) = try await oauth.fetchMicrosoftUserInfo(accessToken: tokens.accessToken)
+                let account = EmailAccount(
+                    id: UUID(),
+                    displayName: name,
+                    emailAddress: email,
+                    provider: .outlook,
+                    imapHost: "outlook.office365.com",
+                    imapPort: 993,
+                    smtpHost: "smtp.office365.com",
+                    smtpPort: 587,
+                    useOAuth: true
+                )
+                KeychainService.saveOAuthTokens(tokens, for: account.id)
+                appState.addAccount(account)
+                dismiss()
+
+            default:
+                // For Yahoo and custom IMAP, fall back to manual entry
+                appState.showIMAPSetup = true
+                dismiss()
+            }
+        } catch OAuthSetupError.missingClientID(let provider) {
+            error = "\(provider) sign-in is not configured yet. See Settings > About for setup instructions."
+        } catch {
+            if (error as NSError).domain == ASWebAuthenticationSessionErrorDomain,
+               (error as NSError).code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
+                // User cancelled — no error shown
+            } else {
+                self.error = error.localizedDescription
             }
         }
-        .padding()
+        signingIn = false
+    }
+}
 
-        Spacer()
-        HStack {
-            Button("Back") { step = .choose }
-            Spacer()
-            Button("Cancel") { dismiss() }
+// MARK: - Provider button
+
+struct ProviderSignInButton: View {
+    let label: String
+    let subtitle: String
+    let icon: String
+    let tint: Color
+    let action: () async -> Void
+
+    var body: some View {
+        Button {
+            Task { await action() }
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(tint.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(tint)
+                }
+                .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.secondary.opacity(0.07))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .padding()
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(label). \(subtitle)")
+    }
+}
+
+// MARK: - Errors
+
+enum OAuthSetupError: LocalizedError {
+    case missingClientID(String)
+    var errorDescription: String? {
+        switch self {
+        case .missingClientID(let p): return "\(p) client ID not configured."
+        }
     }
 }

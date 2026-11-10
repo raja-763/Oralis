@@ -8,13 +8,14 @@ enum EmailProvider: String, Codable, CaseIterable, Identifiable {
     case icloud     = "iCloud"
     case yahoo      = "Yahoo"
     case imap       = "IMAP / SMTP"
+    case custom     = "Custom"
 
     var id: String { rawValue }
 
     var supportsOAuth: Bool {
         switch self {
         case .gmail, .outlook, .icloud: return true
-        case .yahoo, .imap:             return false
+        default:                        return false
         }
     }
 
@@ -24,29 +25,27 @@ enum EmailProvider: String, Codable, CaseIterable, Identifiable {
         case .outlook: return URL(string: "https://account.microsoft.com/security")
         case .icloud:  return URL(string: "https://appleid.apple.com/account/manage")
         case .yahoo:   return URL(string: "https://login.yahoo.com/account/security")
-        case .imap:    return nil
+        default:       return nil
         }
     }
 
     var oauthInstructions: String {
         switch self {
         case .gmail:
-            return "Gmail requires an App Password. Click the button to open your Google Account, then go to Security > 2-Step Verification > App passwords. Create one named \"Oralis\" and paste it below."
+            return "Sign in with your Google account."
         case .outlook:
-            return "Open your Microsoft account security page and generate an App Password for Oralis, then enter it below."
+            return "Sign in with your Microsoft account."
         case .icloud:
-            return "Open your Apple ID page, go to Sign-In and Security > App-Specific Passwords and generate one for Oralis, then enter it below."
-        case .yahoo:
-            return "Open your Yahoo Account security page and generate an App Password for Oralis, then enter it below."
-        case .imap:
+            return "Sign in with your Apple ID."
+        default:
             return "Enter your server details and password below."
         }
     }
 
     var passwordLabel: String {
         switch self {
-        case .imap: return "Password"
-        default:    return "App Password"
+        case .imap, .custom: return "Password"
+        default:             return "App Password"
         }
     }
 
@@ -56,7 +55,7 @@ enum EmailProvider: String, Codable, CaseIterable, Identifiable {
             return "App Password looks like: xxxx xxxx xxxx xxxx (16 letters, spaces optional)"
         case .outlook, .icloud, .yahoo:
             return "Use an App Password, not your main account password."
-        case .imap:
+        default:
             return "Your regular IMAP account password."
         }
     }
@@ -67,7 +66,7 @@ enum EmailProvider: String, Codable, CaseIterable, Identifiable {
         case .outlook: return "outlook.office365.com"
         case .icloud:  return "imap.mail.me.com"
         case .yahoo:   return "imap.mail.yahoo.com"
-        case .imap:    return ""
+        default:       return ""
         }
     }
 
@@ -77,7 +76,7 @@ enum EmailProvider: String, Codable, CaseIterable, Identifiable {
         case .outlook: return "smtp.office365.com"
         case .icloud:  return "smtp.mail.me.com"
         case .yahoo:   return "smtp.mail.yahoo.com"
-        case .imap:    return ""
+        default:       return ""
         }
     }
 
@@ -87,7 +86,7 @@ enum EmailProvider: String, Codable, CaseIterable, Identifiable {
         case .outlook: return "envelope.badge.fill"
         case .icloud:  return "icloud.fill"
         case .yahoo:   return "y.circle.fill"
-        case .imap:    return "server.rack"
+        default:       return "server.rack"
         }
     }
 }
@@ -109,6 +108,7 @@ struct EmailAccount: Identifiable, Codable, Equatable {
 
     // OAuth credential reference stored in Keychain (not serialised here)
     var keychainToken: String   // key used to retrieve token from Keychain
+    var useOAuth: Bool
 
     // macOS Mail import flag
     var importedFromMailApp: Bool
@@ -124,6 +124,7 @@ struct EmailAccount: Identifiable, Codable, Equatable {
         smtpPort: Int = 587,
         useSSL: Bool = true,
         keychainToken: String = "",
+        useOAuth: Bool = false,
         importedFromMailApp: Bool = false
     ) {
         self.id = id
@@ -136,6 +137,7 @@ struct EmailAccount: Identifiable, Codable, Equatable {
         self.smtpPort = smtpPort
         self.useSSL = useSSL
         self.keychainToken = keychainToken
+        self.useOAuth = useOAuth
         self.importedFromMailApp = importedFromMailApp
     }
 

@@ -34,6 +34,7 @@
 		9AF695C6B6547CF4D165F2F4 /* AriaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C55CDA7447317DA86881E95 /* AriaApp.swift */; };
 		9C535C65D4DC6F0422C250F9 /* AIAgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E300725C38559A5E24ADF4C /* AIAgentService.swift */; };
 		9FAA26DC72B517576E37A5F0 /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */; };
+		9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E4D88FF2F5352F0163877F /* OAuthService.swift */; };
 		A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B426503A313C3A254962417 /* OutlookService.swift */; };
 		CA974A5086A68E8818C38394 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDA1A5D66AA254F1357E694 /* SidebarView.swift */; };
 		D28A27044BBFBBCA71AC66E5 /* EmailMessage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */; };
@@ -72,6 +73,7 @@
 		4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EmailMessage+Helpers.swift"; sourceTree = "<group>"; };
 		4E35DFB71D63E45E01E94B4C /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		510646DB5B4BDD204A4BD0A1 /* VoicePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicePreferences.swift; sourceTree = "<group>"; };
+		56E4D88FF2F5352F0163877F /* OAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthService.swift; sourceTree = "<group>"; };
 		5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailThread.swift; sourceTree = "<group>"; };
 		5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		5F63247427F1C4045E214CE9 /* Oralis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Oralis.entitlements; sourceTree = "<group>"; };
@@ -126,6 +128,7 @@
 				F4D86ADF7D928FB7F81452DB /* IMAPService.swift */,
 				4E35DFB71D63E45E01E94B4C /* KeychainService.swift */,
 				84E094D3F57113A33060225A /* MacMailImporter.swift */,
+				56E4D88FF2F5352F0163877F /* OAuthService.swift */,
 				8B426503A313C3A254962417 /* OutlookService.swift */,
 				06E8FD170FE17CEACAA514CF /* SpeechService.swift */,
 				847A4DE5D3726D5685D3A674 /* UnsubscribeService.swift */,
@@ -342,6 +345,7 @@
 				98F381252AB13A723A68625B /* KeychainService.swift in Sources */,
 				8993D4EA7C3D44C48B25BCC8 /* LinkReaderView.swift in Sources */,
 				0A8B10D649C648690A0FFF1B /* MacMailImporter.swift in Sources */,
+				9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */,
 				FFBC2D700FD38BBF34CABC7A /* OnboardingView.swift in Sources */,
 				A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */,
 				4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */,

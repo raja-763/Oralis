@@ -44,4 +44,21 @@ final class KeychainService {
         ]
         SecItemDelete(query as CFDictionary)
     }
+
+    // MARK: - OAuth helpers
+
+    static func saveOAuthTokens(_ tokens: OAuthTokens, for accountID: UUID) {
+        let keychain = KeychainService.shared
+        keychain.save(key: "oauth.access.\(accountID)",  value: tokens.accessToken)
+        keychain.save(key: "oauth.refresh.\(accountID)", value: tokens.refreshToken)
+        keychain.save(key: "oauth.expiry.\(accountID)",  value: String(tokens.expiresAt.timeIntervalSince1970))
+    }
+
+    static func loadAccessToken(for accountID: UUID) -> String? {
+        KeychainService.shared.load(key: "oauth.access.\(accountID)")
+    }
+
+    static func loadRefreshToken(for accountID: UUID) -> String? {
+        KeychainService.shared.load(key: "oauth.refresh.\(accountID)")
+    }
 }

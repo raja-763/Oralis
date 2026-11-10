@@ -1,81 +1,83 @@
 import SwiftUI
 
 /// Full-screen voice interface — the main screen of Oralis.
-/// Users talk to Oralis here to manage their email entirely by voice.
+/// Voice-only: press the mic, speak, Oralis responds.
 struct TalkView: View {
     @EnvironmentObject var appState: AppState
-    @State private var inputText = ""
-    @FocusState private var inputFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
-            // ── Header ──────────────────────────────────────────────
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Oralis")
-                        .font(.title2.weight(.bold))
-                        .accessibilityAddTraits(.isHeader)
-                    if let acc = appState.selectedAccount {
-                        Text(acc.emailAddress)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("No account connected")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    }
-                }
-                Spacer()
-                // Account switcher if multiple accounts
-                if appState.accounts.count > 1 {
-                    Menu {
-                        ForEach(appState.accounts) { acc in
-                            Button(acc.emailAddress) {
-                                appState.selectedAccount = acc
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "person.2.fill")
-                            .accessibilityLabel("Switch account")
-                    }
-                    .menuStyle(.borderlessButton)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
-            .background(.bar)
-
+            header
             Divider()
-
-            // ── Conversation ─────────────────────────────────────────
-            ScrollViewReader { proxy in
-                ScrollView {
-                    if appState.agentMessages.isEmpty {
-                        emptyState
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 60)
-                    } else {
-                        LazyVStack(spacing: 12) {
-                            ForEach(appState.agentMessages) { msg in
-                                MessageBubble(message: msg)
-                            }
-                        }
-                        .padding(16)
-                    }
-                }
-                .onChange(of: appState.agentMessages.count) { _, _ in
-                    if let last = appState.agentMessages.last {
-                        withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
-                    }
-                }
-            }
-
+            conversationArea
             Divider()
-
-            // ── Input bar ────────────────────────────────────────────
-            inputBar
+            micBar
         }
         .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Oralis")
+                    .font(.title2.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                if let acc = appState.selectedAccount {
+                    Text(acc.emailAddress)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No account — open Settings to add one")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+            Spacer()
+            if appState.accounts.count > 1 {
+                Menu {
+                    ForEach(appState.accounts) { acc in
+                        Button(acc.emailAddress) {
+                            appState.selectedAccount = acc
+                        }
+                    }
+                } label: {
+                    Image(systemName: "person.2.fill")
+                        .accessibilityLabel("Switch account")
+                }
+                .menuStyle(.borderlessButton)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .background(.bar)
+    }
+
+    // MARK: - Conversation area
+
+    private var conversationArea: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                if appState.agentMessages.isEmpty {
+                    emptyState
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(appState.agentMessages) { msg in
+                            MessageBubble(message: msg)
+                        }
+                    }
+                    .padding(16)
+                }
+            }
+            .onChange(of: appState.agentMessages.count) { _, _ in
+                if let last = appState.agentMessages.last {
+                    withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
+                }
+            }
+        }
     }
 
     // MARK: - Empty state
@@ -83,15 +85,16 @@ struct TalkView: View {
     private var emptyState: some View {
         VStack(spacing: 20) {
             Image(systemName: "waveform.circle")
-                .font(.system(size: 64, weight: .ultraLight))
+                .font(.system(size: 72, weight: .ultraLight))
                 .foregroundStyle(.tertiary)
                 .accessibilityHidden(true)
 
             VStack(spacing: 8) {
                 Text("Talk to Oralis")
                     .font(.title3.weight(.semibold))
-                Text("Press the mic or type a command below.")
+                Text("Press the mic and ask anything about your email.")
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -106,11 +109,30 @@ struct TalkView: View {
         .accessibilityElement(children: .contain)
     }
 
-    // MARK: - Input bar
+    // MARK: - Mic bar (voice only — no text input)
 
-    private var inputBar: some View {
-        HStack(spacing: 10) {
-            // Mic button
+    private var micBar: some View {
+        VStack(spacing: 10) {
+            // Status label
+            Group {
+                if appState.isAgentListening {
+                    HStack(spacing: 6) {
+                        Image(systemName: "waveform")
+                            .symbolEffect(.variableColor.iterative)
+                            .accessibilityHidden(true)
+                        Text("Listening…")
+                            .fontWeight(.medium)
+                            .foregroundStyle(.red)
+                    }
+                } else {
+                    Text(appState.agentMessages.isEmpty ? "Tap the mic to speak" : "Tap the mic to respond")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.subheadline)
+            .frame(height: 22)
+
+            // Big mic button
             Button {
                 if appState.isAgentListening {
                     appState.stopListening()
@@ -121,73 +143,28 @@ struct TalkView: View {
                 ZStack {
                     Circle()
                         .fill(appState.isAgentListening ? Color.red : Color.accentColor)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 72, height: 72)
+                        .shadow(
+                            color: appState.isAgentListening ? .red.opacity(0.4) : .accentColor.opacity(0.3),
+                            radius: appState.isAgentListening ? 16 : 6
+                        )
                     Image(systemName: appState.isAgentListening ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 26, weight: .semibold))
                         .foregroundStyle(.white)
                 }
             }
             .buttonStyle(.plain)
             .keyboardShortcut("L", modifiers: [.command, .option])
-            .accessibilityLabel(appState.isAgentListening ? "Stop listening" : "Start listening — shortcut Command Option L")
-            .help(appState.isAgentListening ? "Stop (⌘⌥L)" : "Start listening (⌘⌥L)")
-
-            // Transcription / text input
-            ZStack(alignment: .leading) {
-                if inputText.isEmpty {
-                    Text(appState.isAgentListening ? "Listening…" : "Type a command or press the mic")
-                        .foregroundStyle(.tertiary)
-                        .padding(.horizontal, 10)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
-                TextField("", text: $inputText, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .lineLimit(1...4)
-                    .padding(.horizontal, 10)
-                    .focused($inputFocused)
-                    .accessibilityLabel("Type your command here")
-                    .onSubmit { sendText() }
-            }
-            .padding(.vertical, 10)
-            .background(Color.secondary.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 22))
-
-            // Send button
-            Button(action: sendText) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(inputText.isEmpty ? Color.secondary.opacity(0.3) : Color.accentColor)
-            }
-            .buttonStyle(.plain)
-            .disabled(inputText.isEmpty && !appState.isAgentListening)
-            .keyboardShortcut(.return, modifiers: .command)
-            .accessibilityLabel("Send")
+            .accessibilityLabel(appState.isAgentListening
+                                ? "Stop listening — Oralis heard you. Command Option L."
+                                : "Start listening. Command Option L.")
+            .help(appState.isAgentListening ? "Stop (⌘⌥L)" : "Listen (⌘⌥L)")
+            .scaleEffect(appState.isAgentListening ? 1.1 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: appState.isAgentListening)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity)
         .background(.bar)
-        // Mirror live transcription into the text field
-        .onReceive(appState.speech.$transcribedText) { text in
-            if appState.isAgentListening && !text.isEmpty {
-                inputText = text
-            }
-        }
-        // Send when listening stops with captured text
-        .onReceive(appState.speech.$isListening) { listening in
-            if !listening && !inputText.isEmpty {
-                sendText()
-            }
-        }
-    }
-
-    // MARK: - Actions
-
-    private func sendText() {
-        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        inputText = ""
-        appState.sendAgentMessage(text)
     }
 }
 
@@ -195,7 +172,6 @@ struct TalkView: View {
 
 struct MessageBubble: View {
     let message: AgentMessage
-
     var isUser: Bool { message.role == .user }
 
     var body: some View {
@@ -216,7 +192,7 @@ struct MessageBubble: View {
                 .foregroundStyle(isUser ? .white : .primary)
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .textSelection(.enabled)
-                .accessibilityLabel(isUser ? "You: \(message.content)" : "Oralis: \(message.content)")
+                .accessibilityLabel(isUser ? "You said: \(message.content)" : "Oralis: \(message.content)")
 
             if isUser {
                 Image(systemName: "person.circle.fill")
