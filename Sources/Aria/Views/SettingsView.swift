@@ -185,18 +185,25 @@ struct AccountDetailRow: View {
 // MARK: - Voice detail
 
 struct VoiceDetailView: View {
-    @State private var isExpanded = true
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                DetailHeader(
-                    title: "Voice & Reading",
-                    subtitle: "Customize how Oralis listens and reads your email aloud."
-                )
-                VoiceSettingsView()
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Voice & Reading")
+                    .font(.title2.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                Text("Customize how Oralis listens and reads your email aloud.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
             .padding(24)
+            .padding(.bottom, 0)
+
+            Divider()
+
+            VoiceSettingsView()
+                .environmentObject(appState)
         }
     }
 }

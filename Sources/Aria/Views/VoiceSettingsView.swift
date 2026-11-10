@@ -27,97 +27,134 @@ struct VoiceSettingsView: View {
     }
 
     var body: some View {
-        HSplitView {
-            // Left: voice list
-            voiceListPanel
-                .frame(minWidth: 260, maxWidth: 320)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // ── Voice picker ────────────────────────────────────
+                voicePickerSection
 
-            // Right: controls + preview
-            VStack(alignment: .leading, spacing: 0) {
-                controlsPanel
                 Divider()
+
+                // ── Sliders + toggles ───────────────────────────────
+                controlsInline
+
+                Divider()
+
+                // ── Preview ─────────────────────────────────────────
                 previewPanel
             }
+            .padding(24)
         }
-        .frame(minWidth: 700, minHeight: 480)
-        .navigationTitle("Voice Settings")
         .onDisappear { save() }
     }
 
-    // MARK: - Voice list
+    // MARK: - Voice picker (flat list — no nested HSplitView)
 
-    private var voiceListPanel: some View {
-        VStack(spacing: 0) {
-            // Quality filter
-            Picker("Show", selection: $filterQuality) {
-                ForEach(FilterQuality.allCases) { q in
-                    Text(q.rawValue).tag(q)
+    private var voicePickerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Voice")
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                // Quality filter
+                Picker("Filter", selection: $filterQuality) {
+                    ForEach(FilterQuality.allCases) { q in
+                        Text(q.rawValue).tag(q)
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
-            .padding(10)
-            .accessibilityLabel("Filter voices by quality")
-
-            Divider()
-
-            List(filteredVoices, selection: $selectedVoiceID) { voice in
-                VoiceRow(voice: voice, isSelected: voice.id == selectedVoiceID)
-                    .tag(voice.id)
-            }
-            .listStyle(.sidebar)
-            .onChange(of: selectedVoiceID) { _, id in
-                prefs.voiceIdentifier = id
-                previewVoice(id: id)
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .accessibilityLabel("Filter voices by quality")
             }
 
-            Divider()
+            // Voice menu — accessible popup, no trapped List
+            Menu {
+                ForEach(filteredVoices) { voice in
+                    Button {
+                        selectedVoiceID = voice.id
+                        prefs.voiceIdentifier = voice.id
+                        previewVoice(id: voice.id)
+                    } label: {
+                        HStack {
+                            Text(voice.name)
+                            if voice.id == selectedVoiceID {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(filteredVoices.first(where: { $0.id == selectedVoiceID })?.name ?? "Choose a voice")
+                            .fontWeight(.medium)
+                        Text(filteredVoices.first(where: { $0.id == selectedVoiceID })?.language ?? "")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.secondary.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .accessibilityLabel("Selected voice: \(filteredVoices.first(where: { $0.id == selectedVoiceID })?.name ?? "none"). Tap to change.")
+
             Button {
                 NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.universalaccess")!)
             } label: {
-                Label("Download more voices…", systemImage: "arrow.down.circle")
+                Label("Download more voices in System Settings…", systemImage: "arrow.down.circle")
                     .font(.callout)
             }
             .buttonStyle(.plain)
             .foregroundStyle(Color.accentColor)
-            .padding(10)
             .accessibilityLabel("Open System Settings to download additional voices")
         }
     }
 
-    // MARK: - Controls
+    // MARK: - Controls (inline, no Form with grouped style that traps focus)
 
-    private var controlsPanel: some View {
-        Form {
-            Section("Speed") {
-                LabeledSlider(
-                    label: "Reading speed",
-                    value: $prefs.rate,
-                    range: AVSpeechUtteranceMinimumSpeechRate...AVSpeechUtteranceMaximumSpeechRate,
-                    leftLabel: "Slow", rightLabel: "Fast"
-                )
-                .onChange(of: prefs.rate) { _, _ in previewCurrentSettings() }
-            }
+    private var controlsInline: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Adjustments")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
-            Section("Pitch") {
-                LabeledSlider(
-                    label: "Voice pitch",
-                    value: $prefs.pitch,
-                    range: 0.5...2.0,
-                    leftLabel: "Low", rightLabel: "High"
-                )
-                .onChange(of: prefs.pitch) { _, _ in previewCurrentSettings() }
-            }
+            LabeledSlider(
+                label: "Reading speed",
+                value: $prefs.rate,
+                range: AVSpeechUtteranceMinimumSpeechRate...AVSpeechUtteranceMaximumSpeechRate,
+                leftLabel: "Slow", rightLabel: "Fast"
+            )
+            .onChange(of: prefs.rate) { _, _ in previewCurrentSettings() }
 
-            Section("Volume") {
-                LabeledSlider(
-                    label: "Volume",
-                    value: $prefs.volume,
-                    range: 0.1...1.0,
-                    leftLabel: "Quiet", rightLabel: "Loud"
-                )
-            }
+            LabeledSlider(
+                label: "Voice pitch",
+                value: $prefs.pitch,
+                range: 0.5...2.0,
+                leftLabel: "Low", rightLabel: "High"
+            )
+            .onChange(of: prefs.pitch) { _, _ in previewCurrentSettings() }
 
-            Section("Reading options") {
+            LabeledSlider(
+                label: "Volume",
+                value: $prefs.volume,
+                range: 0.1...1.0,
+                leftLabel: "Quiet", rightLabel: "Loud"
+            )
+
+            Divider()
+
+            Text("Reading Options")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+
+            VStack(spacing: 14) {
                 Toggle("Read new emails automatically", isOn: $prefs.autoReadNewEmails)
                     .accessibilityLabel("Automatically read each email aloud when you open it")
                 Toggle("Include sender name", isOn: $prefs.readSenderName)
@@ -128,7 +165,6 @@ struct VoiceSettingsView: View {
                     .accessibilityLabel("Speak a summary after bulk delete, archive, or unsubscribe")
             }
         }
-        .formStyle(.grouped)
         .onChange(of: prefs) { _, _ in save() }
     }
 
