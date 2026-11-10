@@ -1,0 +1,11 @@
+name = "oralis-proxy"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# Rate limit: max requests per device per day
+DAILY_LIMIT = "150"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

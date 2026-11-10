@@ -34,7 +34,6 @@ struct OnboardingView: View {
                     case .voiceSetup:   VoiceSetupStep(advance: advance)
                     case .addAccount:   AddAccountStep(advance: advance)
                     case .mailImport:   MailImportStep(advance: advance)
-                    case .agentSetup:   AgentSetupStep(advance: advance)
                     case .featureTour:  FeatureTourStep(advance: advance)
                     case .ready:        ReadyStep(finish: finish)
                     }
@@ -77,7 +76,7 @@ struct OnboardingView: View {
 // MARK: - Steps enum
 
 enum OnboardingStep: Int, CaseIterable, Identifiable {
-    case welcome, voiceSetup, addAccount, mailImport, agentSetup, featureTour, ready
+    case welcome, voiceSetup, addAccount, mailImport, featureTour, ready
 
     var id: Int { rawValue }
     var index: Int { rawValue }
@@ -96,10 +95,8 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
             return "Now let's connect your email. You can add Gmail, Outlook, iCloud, Yahoo, or any IMAP account."
         case .mailImport:
             return "I found some accounts already set up in macOS Mail. Would you like to import them?"
-        case .agentSetup:
-            return "To use the AI assistant, enter your Anthropic API key. This is stored only on your Mac in the secure Keychain."
         case .featureTour:
-            return "Here is a quick tour of what Aria can do."
+            return "Here is a quick tour of what Oralis can do."
         case .ready:
             return "You are all set! Press Get Started to open your inbox."
         }

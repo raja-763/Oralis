@@ -5,13 +5,21 @@ import Foundation
 @MainActor
 final class AIAgentService: ObservableObject {
 
-    // Set your API key in Keychain under key "oralis.anthropic.key"
-    private var apiKey: String {
-        KeychainService.shared.load(key: "oralis.anthropic.key") ?? ""
-    }
+    // All requests go through the Oralis proxy — no API key needed in the app.
+    // After deploying the Cloudflare Worker, replace this URL with your worker URL.
+    private let proxyURL = URL(string: "https://oralis-proxy.REPLACE_WITH_YOUR_SUBDOMAIN.workers.dev/v1/messages")!
 
-    private let model = "claude-opus-4-5"
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    // Model is forced to Haiku by the proxy for cost efficiency.
+    // This field is still sent but overridden server-side.
+    private let model = "claude-haiku-4-5"
+
+    // Stable device identifier used for per-device rate limiting.
+    private var deviceID: String {
+        if let stored = UserDefaults.standard.string(forKey: "oralis.deviceID") { return stored }
+        let id = UUID().uuidString
+        UserDefaults.standard.set(id, forKey: "oralis.deviceID")
+        return id
+    }
 
     // System prompt that tells the agent about its email capabilities
     private let systemPrompt = """
@@ -43,8 +51,6 @@ final class AIAgentService: ObservableObject {
         history: [AgentMessage],
         context: EmailAgentContext
     ) async throws -> AgentResponse {
-        guard !apiKey.isEmpty else { throw OralisError.missingAPIKey }
-
         let messages = buildMessages(history: history, userMessage: userMessage, context: context)
         let body = try JSONEncoder().encode(ClaudeRequest(
             model: model,
@@ -53,11 +59,10 @@ final class AIAgentService: ObservableObject {
             messages: messages
         ))
 
-        var req = URLRequest(url: endpoint)
+        var req = URLRequest(url: proxyURL)
         req.httpMethod = "POST"
-        req.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
         req.httpBody = body
 
         let (data, response) = try await URLSession.shared.data(for: req)
