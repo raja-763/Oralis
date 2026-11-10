@@ -107,10 +107,16 @@ final class AppState: ObservableObject {
 
     // MARK: - Accessibility announcements
 
+    // Posts to VoiceOver only. TTS is only used when the user explicitly
+    // requests read-aloud (email detail view, voice command responses).
     func announce(_ message: String) {
         NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
                              userInfo: [NSAccessibility.NotificationUserInfoKey.announcement: message,
                                         NSAccessibility.NotificationUserInfoKey.priority: NSAccessibilityPriorityLevel.high.rawValue])
+    }
+
+    // Call this only for explicit user-requested read-aloud.
+    func readAloud(_ message: String) {
         speech.speak(message)
     }
 }

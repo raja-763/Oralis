@@ -24,9 +24,9 @@ enum A11y {
     enum Agent {
         static let openMic    = "Start voice input"
         static let closeMic   = "Stop voice input"
-        static let send       = "Send message to Aria"
+        static let send       = "Send message to Oralis"
         static let inputHint  = "Type a message or press the microphone button to speak"
-        static let thinking   = "Aria is thinking"
+        static let thinking   = "Oralis is thinking"
     }
 
     enum Compose {

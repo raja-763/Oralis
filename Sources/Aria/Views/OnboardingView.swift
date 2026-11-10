@@ -47,23 +47,11 @@ struct OnboardingView: View {
             }
         }
         .frame(minWidth: 680, minHeight: 540)
-        .onAppear {
-            // Auto-read the first step
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                appState.speech.speak(OnboardingStep.welcome.spokenIntro)
-            }
-        }
     }
 
     private func advance() {
         withAnimation(.easeInOut(duration: 0.3)) {
             step = step.next ?? step
-        }
-        // Read the new step aloud
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            if let next = step.spokenIntro as String?, !next.isEmpty {
-                appState.speech.speak(next)
-            }
         }
     }
 
@@ -88,7 +76,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     var spokenIntro: String {
         switch self {
         case .welcome:
-            return "Welcome to Aria, your voice-first email assistant. I will guide you through setup. Everything can be done by voice or keyboard."
+            return "Welcome to Oralis, your voice-first email assistant. I will guide you through setup. Everything can be done by voice or keyboard."
         case .voiceSetup:
             return "Let's choose a voice for me. Pick the one that sounds best to you, then adjust the speed and pitch."
         case .addAccount:
@@ -201,7 +189,7 @@ struct WelcomeStep: View {
     var body: some View {
         OnboardingStepShell(
             icon: "waveform.circle.fill",
-            title: "Welcome to Aria",
+            title: "Welcome to Oralis",
             subtitle: "A voice-first email assistant, built for screen reader users.",
             primaryLabel: "Get Started",
             primaryAction: advance
@@ -406,7 +394,7 @@ struct AddAccountStep: View {
         OnboardingStepShell(
             icon: "envelope.badge.fill",
             title: "Connect Your Email",
-            subtitle: "Aria supports Gmail, Outlook, iCloud, Yahoo, and any IMAP provider.",
+            subtitle: "Oralis supports Gmail, Outlook, iCloud, Yahoo, and any IMAP provider.",
             primaryLabel: appState.accounts.isEmpty ? "Add My First Account" : "Continue",
             primaryAction: { appState.accounts.isEmpty ? (showSetup = true) : advance() },
             skipLabel: "Skip for now",
@@ -483,7 +471,7 @@ struct MailImportStep: View {
             OnboardingStepShell(
                 icon: "arrow.down.circle.fill",
                 title: "Import from Mail",
-                subtitle: "Aria found \(importable.count) account\(importable.count == 1 ? "" : "s") already on your Mac. Import them in one tap.",
+                subtitle: "Oralis found \(importable.count) account\(importable.count == 1 ? "" : "s") already on your Mac. Import them in one tap.",
                 primaryLabel: imported ? "Continue" : "Import All",
                 primaryAction: { imported ? advance() : importAll() },
                 skipLabel: "Skip",
@@ -538,7 +526,7 @@ struct MailImportStep: View {
             }
         }
         imported = true
-        appState.speech.speak("Imported \(importable.count) account\(importable.count == 1 ? "" : "s") successfully.")
+        appState.announce("Imported \(importable.count) account\(importable.count == 1 ? "" : "s") successfully.")
     }
 }
 
@@ -555,7 +543,7 @@ struct AgentSetupStep: View {
         OnboardingStepShell(
             icon: "brain.head.profile",
             title: "Connect the AI Assistant",
-            subtitle: "Aria uses Claude by Anthropic to understand your voice commands and help manage email.",
+            subtitle: "Oralis uses Claude by Anthropic to understand your voice commands and help manage email.",
             primaryLabel: saved ? "Continue" : (apiKey.isEmpty ? "Skip for now" : "Save & Continue"),
             primaryAction: { saveAndAdvance() },
             skipLabel: nil,
@@ -614,7 +602,7 @@ struct FeatureTourStep: View {
     @State private var currentTip = 0
 
     let tips: [(icon: String, title: String, description: String)] = [
-        ("mic.fill",          "Talk to Aria",          "Press ⌘⌥L or click the mic. Say \"Read my latest email\", \"Delete all spam\", or \"Unsubscribe from this list.\""),
+        ("mic.fill",          "Talk to Oralis",          "Press ⌘⌥L or click the mic. Say \"Read my latest email\", \"Delete all spam\", or \"Unsubscribe from this list.\""),
         ("trash.fill",        "Bulk actions",          "Select emails with the spacebar, then say \"Delete selected\" or \"Archive selected\". Works on hundreds at once."),
         ("link",              "Voice link reader",     "When reading an email, say \"Read links\" to hear every link. Say a link's name to open it."),
         ("bell.slash.fill",   "Unsubscribe by voice",  "Say \"Unsubscribe\" on any promotional email. Aria finds the unsubscribe method and handles it for you."),
@@ -676,7 +664,6 @@ struct FeatureTourStep: View {
         withAnimation(.easeInOut(duration: 0.25)) {
             currentTip = min(currentTip + 1, tips.count - 1)
         }
-        appState.speech.speak(tips[currentTip].title + ". " + tips[currentTip].description)
     }
 }
 
@@ -690,7 +677,7 @@ struct ReadyStep: View {
         OnboardingStepShell(
             icon: "checkmark.circle.fill",
             title: "You're All Set!",
-            subtitle: "Aria is ready. Open your inbox and start managing email by voice.",
+            subtitle: "Oralis is ready. Open your inbox and start managing email by voice.",
             primaryLabel: "Open My Inbox",
             primaryAction: finish
         ) {
@@ -705,9 +692,6 @@ struct ReadyStep: View {
             .padding(.horizontal, 20)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Quick keyboard shortcuts list")
-        }
-        .onAppear {
-            appState.speech.speak("You are all set. Press Open My Inbox to get started.")
         }
     }
 }

@@ -106,40 +106,93 @@ struct AccountSetupView: View {
     // MARK: - Step: OAuth
 
     @ViewBuilder private var oauthView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: provider.iconName)
-                .font(.system(size: 48))
-                .foregroundStyle(Color.accentColor)
+        ScrollView {
+            VStack(spacing: 20) {
+                Image(systemName: provider.iconName)
+                    .font(.system(size: 48))
+                    .foregroundStyle(Color.accentColor)
 
-            Text("Sign in to \(provider.rawValue)")
-                .font(.title3.weight(.semibold))
+                Text("Sign in to \(provider.rawValue)")
+                    .font(.title3.weight(.semibold))
+                    .accessibilityAddTraits(.isHeader)
 
-            Text("Aria will open \(provider.rawValue)'s sign-in page in your browser. Your credentials are stored only on this Mac in the Keychain — never on any server.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal)
+                // Step 1: open browser
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Step 1 — Open sign-in page")
+                        .font(.headline)
+                    Text(provider.oauthInstructions)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("Open \(provider.rawValue) in Browser") {
+                        if let url = provider.signInURL {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("Open \(provider.rawValue) sign-in page in your default browser")
+                }
+                .padding()
+                .background(Color.secondary.opacity(0.07))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            Button("Open Sign-In Page") {
-                // In full implementation: open OAuth flow, capture token, save to Keychain
-                let account = EmailAccount(
-                    displayName: provider.rawValue,
-                    emailAddress: "",
-                    provider: provider,
-                    keychainToken: "aria.token.\(UUID().uuidString)"
-                )
-                appState.addAccount(account)
-                appState.announce("\(provider.rawValue) account added.")
-                dismiss()
+                // Step 2: enter details
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Step 2 — Enter your details")
+                        .font(.headline)
+
+                    TextField("Your name", text: $displayName)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Your name")
+
+                    TextField("Email address (e.g. you@gmail.com)", text: $emailAddress)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Email address")
+
+                    SecureField(provider.passwordLabel, text: $password)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel(provider.passwordLabel)
+
+                    Text(provider.passwordHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding()
+                .background(Color.secondary.opacity(0.07))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                Text("Your password is stored only in the macOS Keychain — never on any server.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
-            .buttonStyle(.borderedProminent)
-            .accessibilityLabel("Open \(provider.rawValue) sign-in page in browser")
+            .padding(24)
         }
-        .padding(40)
 
         HStack {
             Button("Back") { step = .choose }
             Spacer()
             Button("Cancel") { dismiss() }
+            Button("Add Account") {
+                let key = "oralis.token.\(UUID().uuidString)"
+                KeychainService.shared.save(key: key, value: password)
+                let acc = EmailAccount(
+                    displayName: displayName.isEmpty ? emailAddress : displayName,
+                    emailAddress: emailAddress,
+                    provider: provider,
+                    imapHost: provider.defaultIMAPHost,
+                    imapPort: 993,
+                    smtpHost: provider.defaultSMTPHost,
+                    smtpPort: 587,
+                    keychainToken: key
+                )
+                appState.addAccount(acc)
+                appState.announce("\(emailAddress) added.")
+                dismiss()
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(emailAddress.isEmpty || password.isEmpty)
+            .accessibilityLabel("Add \(provider.rawValue) account")
         }
         .padding()
     }

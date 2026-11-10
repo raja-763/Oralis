@@ -13,7 +13,7 @@ struct AgentPanelView: View {
 
             // Header
             HStack {
-                Label("Aria Assistant", systemImage: "waveform.circle.fill")
+                Label("Oralis Assistant", systemImage: "waveform.circle.fill")
                     .font(.headline)
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
@@ -65,7 +65,7 @@ struct AgentPanelView: View {
                                 }
                             }
                             .padding(.leading, 12)
-                            .accessibilityLabel("Aria is thinking")
+                            .accessibilityLabel("Oralis is thinking")
                         }
                     }
                     .padding(12)
