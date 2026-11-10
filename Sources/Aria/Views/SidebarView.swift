@@ -42,7 +42,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("Aria")
+        .navigationTitle("Oralis")
         .accessibilityLabel("Accounts and folders")
     }
 }

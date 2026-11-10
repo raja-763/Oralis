@@ -5,9 +5,9 @@ import Foundation
 @MainActor
 final class AIAgentService: ObservableObject {
 
-    // Set your API key in Keychain under key "aria.anthropic.key"
+    // Set your API key in Keychain under key "oralis.anthropic.key"
     private var apiKey: String {
-        KeychainService.shared.load(key: "aria.anthropic.key") ?? ""
+        KeychainService.shared.load(key: "oralis.anthropic.key") ?? ""
     }
 
     private let model = "claude-opus-4-5"
@@ -15,7 +15,7 @@ final class AIAgentService: ObservableObject {
 
     // System prompt that tells the agent about its email capabilities
     private let systemPrompt = """
-    You are Aria, an accessible, voice-first email assistant for macOS.
+    You are Oralis, an accessible, voice-first email assistant for macOS.
     You help blind and visually-impaired users manage email completely by voice.
 
     You can perform these actions — respond with a JSON action block when needed:
@@ -43,7 +43,7 @@ final class AIAgentService: ObservableObject {
         history: [AgentMessage],
         context: EmailAgentContext
     ) async throws -> AgentResponse {
-        guard !apiKey.isEmpty else { throw AriaError.missingAPIKey }
+        guard !apiKey.isEmpty else { throw OralisError.missingAPIKey }
 
         let messages = buildMessages(history: history, userMessage: userMessage, context: context)
         let body = try JSONEncoder().encode(ClaudeRequest(
@@ -62,7 +62,7 @@ final class AIAgentService: ObservableObject {
 
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw AriaError.apiError("Claude API returned an error")
+            throw OralisError.apiError("Claude API returned an error")
         }
 
         let result = try JSONDecoder().decode(ClaudeResponse.self, from: data)

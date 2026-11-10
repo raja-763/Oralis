@@ -39,7 +39,7 @@ struct VoicePreferences: Codable, Equatable {
 
 final class VoicePreferencesStore {
     static let shared = VoicePreferencesStore()
-    private let key = "aria.voicePreferences"
+    private let key = "oralis.voicePreferences"
 
     var current: VoicePreferences {
         get {
@@ -56,9 +56,9 @@ final class VoicePreferencesStore {
     }
 }
 
-// MARK: - AriaVoice  (wrapper for display in UI)
+// MARK: - OralisVoice  (wrapper for display in UI)
 
-struct AriaVoice: Identifiable, Equatable {
+struct OralisVoice: Identifiable, Equatable {
     let id: String               // AVSpeechSynthesisVoice.identifier
     let name: String
     let language: String
@@ -85,11 +85,11 @@ struct AriaVoice: Identifiable, Equatable {
         AVSpeechSynthesisVoice(identifier: id)
     }
 
-    static func allEnglishVoices() -> [AriaVoice] {
+    static func allEnglishVoices() -> [OralisVoice] {
         AVSpeechSynthesisVoice.speechVoices()
             .filter { $0.language.hasPrefix("en") }
             .map { v in
-                AriaVoice(
+                OralisVoice(
                     id: v.identifier,
                     name: v.name,
                     language: Locale(identifier: v.language).localizedString(forLanguageCode: v.language) ?? v.language,

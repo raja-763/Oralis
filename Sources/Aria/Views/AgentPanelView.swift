@@ -247,6 +247,6 @@ struct AgentMessageBubble: View {
 
             if message.role == .assistant { Spacer(minLength: 40) }
         }
-        .accessibilityLabel("\(message.role == .user ? "You" : "Aria"): \(message.content)")
+        .accessibilityLabel("\(message.role == .user ? "You" : "Oralis"): \(message.content)")
     }
 }

@@ -15,7 +15,7 @@ final class GmailService: EmailService {
     private func authToken() throws -> String {
         guard let token = KeychainService.shared.load(key: account.keychainToken),
               !token.isEmpty
-        else { throw AriaError.notAuthenticated }
+        else { throw OralisError.notAuthenticated }
         return token
     }
 

@@ -19,7 +19,7 @@ final class CalendarService {
     /// Add an accepted invite to the user's calendar.
     func addInvite(_ invite: CalendarInvite) async throws {
         guard await requestAccess() else {
-            throw AriaError.notAuthenticated
+            throw OralisError.notAuthenticated
         }
         let event = EKEvent(eventStore: store)
         event.title      = invite.title

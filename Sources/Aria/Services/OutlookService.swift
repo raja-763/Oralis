@@ -9,7 +9,7 @@ final class OutlookService: EmailService {
 
     private func token() throws -> String {
         guard let t = KeychainService.shared.load(key: account.keychainToken) else {
-            throw AriaError.notAuthenticated
+            throw OralisError.notAuthenticated
         }
         return t
     }

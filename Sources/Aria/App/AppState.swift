@@ -27,7 +27,7 @@ final class AppState: ObservableObject {
     @Published var showAccountSetup = false
 
     // MARK: - Onboarding
-    @Published var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: "aria.onboardingComplete")
+    @Published var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: "oralis.onboardingComplete")
 
     // MARK: - Services (lazy singletons)
     let speech = SpeechService()

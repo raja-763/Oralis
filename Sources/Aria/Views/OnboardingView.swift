@@ -69,7 +69,7 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        UserDefaults.standard.set(true, forKey: "aria.onboardingComplete")
+        UserDefaults.standard.set(true, forKey: "oralis.onboardingComplete")
         appState.showOnboarding = false
     }
 }
@@ -249,13 +249,13 @@ struct FeaturePill: View {
 struct VoiceSetupStep: View {
     let advance: () -> Void
     @EnvironmentObject var appState: AppState
-    @State private var voices = AriaVoice.allEnglishVoices()
+    @State private var voices = OralisVoice.allEnglishVoices()
     @State private var selectedID = VoicePreferencesStore.shared.current.voiceIdentifier
     @State private var rate: Float = VoicePreferencesStore.shared.current.rate
     @State private var pitch: Float = VoicePreferencesStore.shared.current.pitch
 
-    var premiumVoices: [AriaVoice] { voices.filter { $0.quality == .premium } }
-    var otherVoices:   [AriaVoice] { voices.filter { $0.quality != .premium } }
+    var premiumVoices: [OralisVoice] { voices.filter { $0.quality == .premium } }
+    var otherVoices:   [OralisVoice] { voices.filter { $0.quality != .premium } }
 
     var body: some View {
         OnboardingStepShell(
@@ -335,12 +335,12 @@ struct VoiceSetupStep: View {
         }
     }
 
-    private func select(_ voice: AriaVoice) {
+    private func select(_ voice: OralisVoice) {
         selectedID = voice.id
         preview(voice)
     }
 
-    private func preview(_ voice: AriaVoice) {
+    private func preview(_ voice: OralisVoice) {
         var p = VoicePreferencesStore.shared.current
         p.voiceIdentifier = voice.id
         p.rate = rate
@@ -366,7 +366,7 @@ struct VoiceSetupStep: View {
 }
 
 struct VoiceChip: View {
-    let voice: AriaVoice
+    let voice: OralisVoice
     let isSelected: Bool
     let onTap: () -> Void
     let onPreview: () -> Void
@@ -601,7 +601,7 @@ struct AgentSetupStep: View {
 
     private func saveAndAdvance() {
         if !apiKey.isEmpty {
-            KeychainService.shared.save(key: "aria.anthropic.key", value: apiKey)
+            KeychainService.shared.save(key: "oralis.anthropic.key", value: apiKey)
             saved = true
             appState.speech.speak("API key saved. The AI assistant is ready.")
         }

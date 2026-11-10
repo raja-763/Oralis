@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct AriaApp: App {
+struct OralisApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {
@@ -19,7 +19,7 @@ struct AriaApp: App {
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
         .commands {
-            AriaCommands(appState: appState)
+            OralisCommands(appState: appState)
         }
     }
 }

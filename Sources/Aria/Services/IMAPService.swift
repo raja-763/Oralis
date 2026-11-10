@@ -17,7 +17,7 @@ final class IMAPService: EmailService {
     }
 
     func fetchMessage(id: String) async throws -> EmailMessage {
-        throw AriaError.notImplemented("IMAP fetchMessage")
+        throw OralisError.notImplemented("IMAP fetchMessage")
     }
 
     func sendMessage(_ draft: DraftMessage) async throws {

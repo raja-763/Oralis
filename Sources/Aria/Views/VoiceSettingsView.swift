@@ -6,9 +6,9 @@ import SwiftUI
 struct VoiceSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var prefs = VoicePreferencesStore.shared.current
-    @State private var voices = AriaVoice.allEnglishVoices()
+    @State private var voices = OralisVoice.allEnglishVoices()
     @State private var selectedVoiceID: String = VoicePreferencesStore.shared.current.voiceIdentifier
-    @State private var previewText = "Hello! I'm Aria, your voice-first email assistant."
+    @State private var previewText = "Hello! I'm Oralis, your voice-first email assistant."
     @State private var isPreviewing = false
     @State private var filterQuality: FilterQuality = .all
 
@@ -17,7 +17,7 @@ struct VoiceSettingsView: View {
         var id: String { rawValue }
     }
 
-    var filteredVoices: [AriaVoice] {
+    var filteredVoices: [OralisVoice] {
         switch filterQuality {
         case .all:      return voices
         case .premium:  return voices.filter { $0.quality == .premium }
@@ -195,7 +195,7 @@ struct VoiceSettingsView: View {
 // MARK: - Voice row
 
 struct VoiceRow: View {
-    let voice: AriaVoice
+    let voice: OralisVoice
     let isSelected: Bool
 
     var body: some View {

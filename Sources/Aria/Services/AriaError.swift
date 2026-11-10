@@ -1,6 +1,6 @@
 import Foundation
 
-enum AriaError: LocalizedError {
+enum OralisError: LocalizedError {
     case notAuthenticated
     case notImplemented(String)
     case apiError(String)

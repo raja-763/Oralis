@@ -86,7 +86,7 @@ struct EmailAccount: Identifiable, Codable, Equatable {
 
 final class AccountStore {
     static let shared = AccountStore()
-    private let key = "aria.accounts"
+    private let key = "oralis.accounts"
 
     func loadAll() -> [EmailAccount] {
         guard let data = UserDefaults.standard.data(forKey: key),

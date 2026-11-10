@@ -20,7 +20,7 @@ final class UnsubscribeService {
             return
         }
 
-        throw AriaError.unsubscribeFailed("No unsubscribe method available for this email.")
+        throw OralisError.unsubscribeFailed("No unsubscribe method available for this email.")
     }
 
     // MARK: - One-click POST (RFC 8058)

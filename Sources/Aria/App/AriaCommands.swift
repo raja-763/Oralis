@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Menu-bar commands so every feature is reachable by keyboard.
-struct AriaCommands: Commands {
+struct OralisCommands: Commands {
     @ObservedObject var appState: AppState
 
     var body: some Commands {
