@@ -5,13 +5,16 @@ import Foundation
 
 struct VoicePreferences: Codable, Equatable {
     var voiceIdentifier: String       // AVSpeechSynthesisVoice.identifier
-    var rate: Float                   // 0.0 – 1.0  (AVSpeechUtteranceDefaultSpeechRate ≈ 0.5)
+    var rate: Float                   // 0.0 – 1.0
     var pitch: Float                  // 0.5 – 2.0
     var volume: Float                 // 0.0 – 1.0
-    var autoReadNewEmails: Bool       // speak each email as you open it
-    var readSenderName: Bool          // include "From: …" in read-aloud
-    var readDate: Bool                // include "Received …" in read-aloud
-    var announceBatchResults: Bool    // "Deleted 42 emails" etc.
+    var autoReadNewEmails: Bool
+    var readSenderName: Bool
+    var readDate: Bool
+    var announceBatchResults: Bool
+    // ElevenLabs — only used when proxy URL is configured
+    var useElevenLabs: Bool           = false
+    var elevenLabsVoiceID: String     = ""
 
     static let `default` = VoicePreferences(
         voiceIdentifier: preferredDefaultVoiceID(),
@@ -21,7 +24,9 @@ struct VoicePreferences: Codable, Equatable {
         autoReadNewEmails: false,
         readSenderName: true,
         readDate: true,
-        announceBatchResults: true
+        announceBatchResults: true,
+        useElevenLabs: false,
+        elevenLabsVoiceID: ""
     )
 
     // Pick the highest-quality English voice available.
