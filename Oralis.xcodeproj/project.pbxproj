@@ -114,7 +114,7 @@
 		F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelView.swift; sourceTree = "<group>"; };
 		F4D86ADF7D928FB7F81452DB /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
 		FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
-		"TEMP_FEE2AB38-AD64-49EF-BE3B-D478A951D2B1" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_BC87B455-6869-45CC-AE87-8B602D7150A0" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -261,10 +261,10 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		"TEMP_929BA450-3B44-42E1-A2B6-D1A640218168" /* Aria */ = {
+		"TEMP_D42E7454-D82B-458C-976A-A9AFBE089405" /* Aria */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_FEE2AB38-AD64-49EF-BE3B-D478A951D2B1" /* Secrets.xcconfig */,
+				"TEMP_BC87B455-6869-45CC-AE87-8B602D7150A0" /* Secrets.xcconfig */,
 			);
 			path = Aria;
 			sourceTree = "<group>";
@@ -433,7 +433,7 @@
 		};
 		28DAD49A115A641EDE5DAEE0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_FEE2AB38-AD64-49EF-BE3B-D478A951D2B1" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_BC87B455-6869-45CC-AE87-8B602D7150A0" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -509,7 +509,7 @@
 		};
 		8C6192BBD32F4CA74B9E89EF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_FEE2AB38-AD64-49EF-BE3B-D478A951D2B1" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_BC87B455-6869-45CC-AE87-8B602D7150A0" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

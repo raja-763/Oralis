@@ -28,7 +28,7 @@ final class AIAgentService: ObservableObject {
         !AIAgentService.anthropicAPIKey.isEmpty
     }
 
-    private let model = "claude-haiku-4-5"
+    private let model = "claude-haiku-5-5"
 
     private var deviceID: String {
         if let stored = UserDefaults.standard.string(forKey: "oralis.deviceID") { return stored }
@@ -120,8 +120,9 @@ final class AIAgentService: ObservableObject {
         req.httpBody = body
 
         let (data, response) = try await URLSession.shared.data(for: req)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw OralisError.apiError("Claude API returned an error")
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            let body = String(data: data, encoding: .utf8) ?? "no body"
+            throw OralisError.apiError("HTTP \(http.statusCode): \(body.prefix(200))")
         }
 
         let result = try JSONDecoder().decode(ClaudeResponse.self, from: data)
