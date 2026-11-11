@@ -17,12 +17,19 @@ final class SpeechService: NSObject, ObservableObject {
     @Published var isSpeaking = false
     private var audioPlayer: AVAudioPlayer?
 
-    // ElevenLabs TTS proxy URL — set in VoicePreferencesStore
-    // Format: https://oralis-tts.YOUR_SUBDOMAIN.workers.dev/tts
-    // Leave empty to use Apple voices.
+    // ElevenLabs direct API key (compiled in via Secrets.xcconfig, never in git)
+    static let elevenLabsAPIKey: String = {
+        Bundle.main.infoDictionary?["ELEVENLABS_API_KEY"] as? String ?? ""
+    }()
+
+    // Optional proxy URL — takes precedence over direct key if set
     static let elevenLabsProxyURL: String = {
         Bundle.main.infoDictionary?["ELEVENLABS_PROXY_URL"] as? String ?? ""
     }()
+
+    static var elevenLabsEnabled: Bool {
+        !elevenLabsAPIKey.isEmpty || !elevenLabsProxyURL.isEmpty
+    }
 
     /// Stable device identifier for rate limiting
     private var deviceID: String {
@@ -42,9 +49,9 @@ final class SpeechService: NSObject, ObservableObject {
     func speak(_ text: String, prefs: VoicePreferences) {
         stopSpeaking()
 
-        // Try ElevenLabs if a voice ID is selected and proxy is configured
+        // Try ElevenLabs if a voice ID is selected and API key or proxy is configured
         if prefs.useElevenLabs, !prefs.elevenLabsVoiceID.isEmpty,
-           !SpeechService.elevenLabsProxyURL.isEmpty {
+           SpeechService.elevenLabsEnabled {
             Task { await speakElevenLabs(text, voiceID: prefs.elevenLabsVoiceID) }
         } else {
             speakApple(text, prefs: prefs)
@@ -85,14 +92,30 @@ final class SpeechService: NSObject, ObservableObject {
     // MARK: - ElevenLabs TTS
 
     private func speakElevenLabs(_ text: String, voiceID: String) async {
-        guard let url = URL(string: SpeechService.elevenLabsProxyURL) else { return }
+        // Use proxy if configured, otherwise call ElevenLabs API directly
+        let useProxy = !SpeechService.elevenLabsProxyURL.isEmpty
+        let urlString = useProxy
+            ? SpeechService.elevenLabsProxyURL
+            : "https://api.elevenlabs.io/v1/text-to-speech/\(voiceID)"
+
+        guard let url = URL(string: urlString) else { return }
 
         do {
             var req = URLRequest(url: url)
             req.httpMethod = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
-            req.httpBody = try JSONEncoder().encode(["text": text, "voice_id": voiceID])
+            if useProxy {
+                req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
+                req.httpBody = try JSONEncoder().encode(["text": text, "voice_id": voiceID])
+            } else {
+                req.setValue(SpeechService.elevenLabsAPIKey, forHTTPHeaderField: "xi-api-key")
+                let body: [String: Any] = [
+                    "text": text,
+                    "model_id": "eleven_multilingual_v2",
+                    "voice_settings": ["stability": 0.5, "similarity_boost": 0.75]
+                ]
+                req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            }
 
             let (data, response) = try await URLSession.shared.data(for: req)
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {

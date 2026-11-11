@@ -5,3 +5,4 @@ DerivedData/
 *.xccheckout
 *.xcscmblueprint
 build/
+Secrets.xcconfig

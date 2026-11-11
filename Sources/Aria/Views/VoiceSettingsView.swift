@@ -29,7 +29,13 @@ struct VoiceSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // ── Voice picker ────────────────────────────────────
+                // ── ElevenLabs voices (shown when API key is active) ─
+                if SpeechService.elevenLabsEnabled {
+                    elevenLabsSection
+                    Divider()
+                }
+
+                // ── Apple voice picker ───────────────────────────────
                 voicePickerSection
 
                 Divider()
@@ -45,6 +51,78 @@ struct VoiceSettingsView: View {
             .padding(24)
         }
         .onDisappear { save() }
+    }
+
+    // MARK: - ElevenLabs section
+
+    private let elevenLabsVoices: [(id: String, name: String, description: String)] = [
+        ("21m00Tcm4TlvDq8ikWAM", "Rachel",  "Calm · Natural · Female"),
+        ("EXAVITQu4vr4xnSDxMaL", "Bella",   "Soft · Friendly · Female"),
+        ("AZnzlk1XvdvUeBnXmlld", "Domi",    "Confident · Strong · Female"),
+        ("MF3mGyEYCl7XYWbV9V6O", "Elli",    "Warm · Expressive · Female"),
+        ("ErXwobaYiN019PkySvjV", "Antoni",  "Natural · Well-rounded · Male"),
+        ("TxGEqnHWrfWFTfGW9XjX", "Josh",    "Deep · Young · Male"),
+        ("VR6AewLTigWG4xSOukaG", "Arnold",  "Crisp · Authoritative · Male"),
+        ("pNInz6obpgDQGcFmaJgB", "Adam",    "Deep · US · Male"),
+        ("yoZ06aMxZJJ28mfd3POQ", "Sam",     "Raspy · Casual · Male"),
+    ]
+
+    private var elevenLabsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Text("ElevenLabs AI Voices")
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                Text("ACTIVE")
+                    .font(.caption2.weight(.bold))
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Color.green.opacity(0.15))
+                    .foregroundStyle(.green)
+                    .clipShape(Capsule())
+            }
+
+            Toggle("Use ElevenLabs voice", isOn: $prefs.useElevenLabs)
+                .onChange(of: prefs.useElevenLabs) { _, _ in save() }
+                .accessibilityLabel("Toggle ElevenLabs AI voice on or off")
+
+            if prefs.useElevenLabs {
+                Menu {
+                    ForEach(elevenLabsVoices, id: \.id) { voice in
+                        Button {
+                            prefs.elevenLabsVoiceID = voice.id
+                            previewElevenLabs(voice.id)
+                        } label: {
+                            HStack {
+                                Text("\(voice.name) — \(voice.description)")
+                                if prefs.elevenLabsVoiceID == voice.id {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            let selected = elevenLabsVoices.first(where: { $0.id == prefs.elevenLabsVoiceID })
+                            Text(selected?.name ?? "Choose a voice")
+                                .fontWeight(.medium)
+                            Text(selected?.description ?? "Tap to pick an ElevenLabs voice")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(Color.secondary.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .accessibilityLabel("ElevenLabs voice: \(elevenLabsVoices.first(where: { $0.id == prefs.elevenLabsVoiceID })?.name ?? "none"). Tap to change.")
+            }
+        }
     }
 
     // MARK: - Voice picker (flat list — no nested HSplitView)
@@ -219,6 +297,14 @@ struct VoiceSettingsView: View {
     private func previewCurrentSettings() {
         guard !previewText.isEmpty else { return }
         appState.speech.speak(previewText, prefs: prefs)
+        isPreviewing = true
+    }
+
+    private func previewElevenLabs(_ voiceID: String) {
+        var p = prefs
+        p.useElevenLabs = true
+        p.elevenLabsVoiceID = voiceID
+        appState.speech.speak("Hi, I'm \(elevenLabsVoices.first(where: { $0.id == voiceID })?.name ?? "your Oralis voice").", prefs: p)
         isPreviewing = true
     }
 

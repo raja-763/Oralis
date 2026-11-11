@@ -6,6 +6,10 @@ options:
   xcodeVersion: "15"
   createIntermediateGroups: true
 
+configFiles:
+  Release: Secrets.xcconfig
+  Debug: Secrets.xcconfig
+
 settings:
   base:
     SWIFT_VERSION: "5.9"

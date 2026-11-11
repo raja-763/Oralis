@@ -108,6 +108,7 @@
 		F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelView.swift; sourceTree = "<group>"; };
 		F4D86ADF7D928FB7F81452DB /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
 		FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
+		"TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -249,6 +250,14 @@
 				5F63247427F1C4045E214CE9 /* Oralis.entitlements */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		"TEMP_3C3D88C3-3B39-44CE-9FF5-2EEEEB09A0E7" /* Aria */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */,
+			);
+			path = Aria;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -412,6 +421,7 @@
 		};
 		28DAD49A115A641EDE5DAEE0 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -487,6 +497,7 @@
 		};
 		8C6192BBD32F4CA74B9E89EF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
