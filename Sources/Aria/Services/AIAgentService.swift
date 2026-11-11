@@ -1,19 +1,30 @@
 import Foundation
 
-/// Wraps the Anthropic Claude API to provide a conversational email assistant.
-/// The agent can read threads, perform actions, and answer questions about email.
+/// Wraps the Anthropic Claude API to provide a conversational assistant for
+/// email, calendar, and voice-controlled web browsing.
+///
+/// Authentication priority:
+///   1. Direct Anthropic API key (ANTHROPIC_API_KEY in Secrets.xcconfig)
+///   2. Cloudflare Worker proxy (ORALIS_PROXY_URL in Secrets.xcconfig or hardcoded fallback)
 @MainActor
 final class AIAgentService: ObservableObject {
 
-    // All requests go through the Oralis proxy — no API key needed in the app.
-    // After deploying the Cloudflare Worker, replace this URL with your worker URL.
-    private let proxyURL = URL(string: "https://oralis-proxy.REPLACE_WITH_YOUR_SUBDOMAIN.workers.dev/v1/messages")!
+    private static let anthropicAPIKey: String = {
+        Bundle.main.infoDictionary?["ANTHROPIC_API_KEY"] as? String ?? ""
+    }()
+    private static let proxyURLString: String = {
+        Bundle.main.infoDictionary?["ORALIS_PROXY_URL"] as? String ?? ""
+    }()
 
-    // Model is forced to Haiku by the proxy for cost efficiency.
-    // This field is still sent but overridden server-side.
+    private let directURL = URL(string: "https://api.anthropic.com/v1/messages")!
+    private var proxyURL: URL? {
+        let s = AIAgentService.proxyURLString
+        return s.isEmpty ? nil : URL(string: s)
+    }
+    private var usingDirectAPI: Bool { !AIAgentService.anthropicAPIKey.isEmpty }
+
     private let model = "claude-haiku-4-5"
 
-    // Stable device identifier used for per-device rate limiting.
     private var deviceID: String {
         if let stored = UserDefaults.standard.string(forKey: "oralis.deviceID") { return stored }
         let id = UUID().uuidString
@@ -21,34 +32,58 @@ final class AIAgentService: ObservableObject {
         return id
     }
 
-    // System prompt that tells the agent about its email capabilities
+    // MARK: - System prompt
+
     private let systemPrompt = """
-    You are Oralis, an accessible, voice-first email assistant for macOS.
-    You help blind and visually-impaired users manage email completely by voice.
+    You are Oralis, a voice-first accessible AI assistant for macOS.
+    You help blind and visually-impaired users control email, browse the web, and manage their calendar — all by voice.
 
-    You can perform these actions — respond with a JSON action block when needed:
-    - Read an email:        { "action": "readEmail",    "threadID": "..." }
-    - Delete emails:        { "action": "delete",       "threadIDs": ["..."] }
-    - Archive emails:       { "action": "archive",      "threadIDs": ["..."] }
-    - Reply to an email:    { "action": "reply",        "threadID": "...", "body": "..." }
-    - Forward an email:     { "action": "forward",      "threadID": "...", "to": "...", "body": "..." }
-    - Search emails:        { "action": "search",       "query": "..." }
-    - Unsubscribe:          { "action": "unsubscribe",  "threadID": "..." }
-    - Delete spam:          { "action": "deleteSpam"  }
-    - Accept calendar invite: { "action": "acceptInvite",  "threadID": "..." }
-    - Decline calendar invite: { "action": "declineInvite", "threadID": "..." }
-    - Open a link:          { "action": "openLink",     "url": "..." }
-    - Fill a form:          { "action": "fillForm",     "url": "..." }
+    IMPORTANT: Always respond in the same language the user used to ask the question.
 
-    Always be concise. The user will hear your response read aloud.
-    Confirm actions before performing destructive ones (delete of more than 10 emails).
+    You can perform actions by responding with a JSON block in your reply.
+    Use ONLY one action per response. Put it after your spoken reply.
+
+    EMAIL ACTIONS:
+    Read email:          { "action": "readEmail",    "threadID": "..." }
+    Summarize email:     { "action": "summarize",    "threadID": "..." }
+    Triage inbox:        { "action": "triage" }
+    Delete emails:       { "action": "delete",       "threadIDs": ["..."] }
+    Archive emails:      { "action": "archive",      "threadIDs": ["..."] }
+    Reply to email:      { "action": "reply",        "threadID": "...", "body": "..." }
+    Forward email:       { "action": "forward",      "threadID": "...", "to": "...", "body": "..." }
+    Draft new email:     { "action": "draft",        "to": "...", "subject": "...", "body": "..." }
+    Search emails:       { "action": "search",       "query": "..." }
+    Unsubscribe:         { "action": "unsubscribe",  "threadID": "..." }
+    Delete spam:         { "action": "deleteSpam" }
+
+    CALENDAR ACTIONS:
+    List events:         { "action": "listCalendar",  "days": 7 }
+    Create event:        { "action": "createEvent",   "title": "...", "date": "2026-11-15T14:00:00", "duration": 60 }
+    Accept invite:       { "action": "acceptInvite",  "threadID": "..." }
+    Decline invite:      { "action": "declineInvite", "threadID": "..." }
+
+    WEB BROWSER ACTIONS:
+    Navigate to URL:     { "action": "navigateTo",    "url": "https://..." }
+    Read web page:       { "action": "readWebPage" }
+    Fill form field:     { "action": "fillForm",      "field": "email", "value": "user@example.com" }
+    Click element:       { "action": "clickElement",  "text": "Submit" }
+    Scroll down:         { "action": "scrollDown" }
+    Go back:             { "action": "goBack" }
+    Open link:           { "action": "openLink",      "url": "https://..." }
+
+    Rules:
+    - Be concise — the user hears everything you say read aloud.
+    - Confirm before deleting more than 10 emails.
+    - For drafts, write in the user's language and tone.
+    - For web browsing, describe what action you are taking before the JSON.
+    - For form fields, use the visible label or placeholder name as the "field" value.
     """
 
     // MARK: - Send a message
 
     func send(
         userMessage: String,
-        history: [AgentMessage],
+        history: ArraySlice<AgentMessage>,
         context: EmailAgentContext
     ) async throws -> AgentResponse {
         let messages = buildMessages(history: history, userMessage: userMessage, context: context)
@@ -59,10 +94,24 @@ final class AIAgentService: ObservableObject {
             messages: messages
         ))
 
-        var req = URLRequest(url: proxyURL)
+        let endpoint: URL
+        if usingDirectAPI {
+            endpoint = directURL
+        } else if let proxy = proxyURL {
+            endpoint = proxy
+        } else {
+            throw OralisError.apiError("No API key or proxy configured. Add ANTHROPIC_API_KEY to Secrets.xcconfig.")
+        }
+
+        var req = URLRequest(url: endpoint)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
+        if usingDirectAPI {
+            req.setValue(AIAgentService.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        } else {
+            req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
+        }
         req.httpBody = body
 
         let (data, response) = try await URLSession.shared.data(for: req)
@@ -78,22 +127,40 @@ final class AIAgentService: ObservableObject {
     // MARK: - Build message array
 
     private func buildMessages(
-        history: [AgentMessage],
+        history: ArraySlice<AgentMessage>,
         userMessage: String,
         context: EmailAgentContext
     ) -> [ClaudeMessage] {
         var messages: [ClaudeMessage] = []
 
-        // Inject current inbox summary as the first user turn
+        // Inject combined context as the first synthetic exchange
+        var contextParts: [String] = []
         if !context.inboxSummary.isEmpty {
-            messages.append(ClaudeMessage(role: "user", content: context.inboxSummary))
-            messages.append(ClaudeMessage(role: "assistant", content: "I have your inbox context. How can I help?"))
+            contextParts.append("INBOX:\n\(context.inboxSummary)")
+        }
+        if let cal = context.calendarSummary, !cal.isEmpty {
+            contextParts.append("CALENDAR:\n\(cal)")
+        }
+        if let pageText = context.webPageContent, !pageText.isEmpty {
+            let preview = String(pageText.prefix(1500))
+            let urlStr = context.webPageURL?.absoluteString ?? ""
+            contextParts.append("CURRENT WEB PAGE: \(urlStr)\n\(preview)")
+        }
+        if let thread = context.selectedThread {
+            let body = thread.messages.first.map { String($0.bodyPlain.prefix(500)) } ?? ""
+            contextParts.append("SELECTED EMAIL:\nSubject: \(thread.subject)\nFrom: \(thread.participants.first?.display ?? "unknown")\n\(body)")
         }
 
-        // Add conversation history
+        if !contextParts.isEmpty {
+            messages.append(ClaudeMessage(role: "user", content: contextParts.joined(separator: "\n\n")))
+            messages.append(ClaudeMessage(role: "assistant", content: "I have your context. How can I help?"))
+        }
+
         for msg in history.suffix(20) {
-            messages.append(ClaudeMessage(role: msg.role == .user ? "user" : "assistant",
-                                          content: msg.content))
+            messages.append(ClaudeMessage(
+                role: msg.role == .user ? "user" : "assistant",
+                content: msg.content
+            ))
         }
 
         messages.append(ClaudeMessage(role: "user", content: userMessage))
@@ -104,42 +171,69 @@ final class AIAgentService: ObservableObject {
 
     private func parseAction(_ text: String) -> AgentAction? {
         guard let start = text.range(of: "{"),
-              let end = text.range(of: "}", options: .backwards),
+              let end   = text.range(of: "}", options: .backwards),
               start.lowerBound < end.upperBound
         else { return nil }
 
         let jsonStr = String(text[start.lowerBound...end.upperBound])
         guard let data = jsonStr.data(using: .utf8),
               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let actionName = dict["action"] as? String
+              let name = dict["action"] as? String
         else { return nil }
 
-        switch actionName {
+        switch name {
+        case "readEmail":
+            return .readEmail(threadID: dict["threadID"] as? String ?? "")
+        case "summarize":
+            return .summarize(threadID: dict["threadID"] as? String ?? "")
+        case "triage":
+            return .triage
         case "delete":
             return .delete(ids: (dict["threadIDs"] as? [String]) ?? [])
         case "archive":
             return .archive(ids: (dict["threadIDs"] as? [String]) ?? [])
+        case "reply":
+            return .reply(threadID: dict["threadID"] as? String ?? "",
+                          body: dict["body"] as? String ?? "")
+        case "forward":
+            return .forward(threadID: dict["threadID"] as? String ?? "",
+                            to: dict["to"] as? String ?? "",
+                            body: dict["body"] as? String ?? "")
+        case "draft":
+            return .draft(to: dict["to"] as? String ?? "",
+                          subject: dict["subject"] as? String ?? "",
+                          body: dict["body"] as? String ?? "")
+        case "search":
+            return .search(query: dict["query"] as? String ?? "")
         case "unsubscribe":
             return .unsubscribe(threadID: dict["threadID"] as? String ?? "")
         case "deleteSpam":
             return .deleteSpam
-        case "search":
-            return .search(query: dict["query"] as? String ?? "")
+        case "listCalendar":
+            return .listCalendar(days: dict["days"] as? Int ?? 7)
+        case "createEvent":
+            return .createEvent(title: dict["title"] as? String ?? "",
+                                date: dict["date"] as? String ?? "",
+                                duration: dict["duration"] as? Int ?? 60)
         case "acceptInvite":
             return .acceptInvite(threadID: dict["threadID"] as? String ?? "")
         case "declineInvite":
             return .declineInvite(threadID: dict["threadID"] as? String ?? "")
-        case "openLink":
-            if let u = dict["url"] as? String, let url = URL(string: u) {
-                return .openLink(url: url)
-            }
+        case "navigateTo":
+            if let u = dict["url"] as? String, let url = URL(string: u) { return .navigateTo(url: url) }
+        case "readWebPage":
+            return .readWebPage
         case "fillForm":
-            if let u = dict["url"] as? String, let url = URL(string: u) {
-                return .fillForm(url: url)
-            }
-        case "reply":
-            return .reply(threadID: dict["threadID"] as? String ?? "",
-                          body: dict["body"] as? String ?? "")
+            return .fillWebForm(field: dict["field"] as? String ?? "",
+                                value: dict["value"] as? String ?? "")
+        case "clickElement":
+            return .clickElement(text: dict["text"] as? String ?? "")
+        case "scrollDown":
+            return .scrollDown
+        case "goBack":
+            return .goBack
+        case "openLink":
+            if let u = dict["url"] as? String, let url = URL(string: u) { return .openLink(url: url) }
         default: break
         }
         return nil
@@ -154,22 +248,39 @@ struct AgentResponse {
 }
 
 struct EmailAgentContext {
-    var inboxSummary: String    // e.g. "You have 12 unread emails, 3 from..."
+    var inboxSummary: String
     var selectedThread: EmailThread?
+    var webPageURL: URL?
+    var webPageContent: String?
+    var calendarSummary: String?
 }
 
 enum AgentAction {
+    // Email
+    case readEmail(threadID: String)
+    case summarize(threadID: String)
+    case triage
     case delete(ids: [String])
     case archive(ids: [String])
     case reply(threadID: String, body: String)
     case forward(threadID: String, to: String, body: String)
+    case draft(to: String, subject: String, body: String)
     case search(query: String)
     case unsubscribe(threadID: String)
     case deleteSpam
+    // Calendar
+    case listCalendar(days: Int)
+    case createEvent(title: String, date: String, duration: Int)
     case acceptInvite(threadID: String)
     case declineInvite(threadID: String)
+    // Browser
+    case navigateTo(url: URL)
+    case readWebPage
+    case fillWebForm(field: String, value: String)
+    case clickElement(text: String)
+    case scrollDown
+    case goBack
     case openLink(url: URL)
-    case fillForm(url: URL)
 }
 
 // MARK: - API shapes

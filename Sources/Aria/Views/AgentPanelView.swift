@@ -146,7 +146,7 @@ struct AgentPanelView: View {
                     appState.announce("Microphone permission denied. Please allow it in System Settings.")
                     return
                 }
-                try? appState.speech.startListening()
+                try? appState.speech.startListening(locale: appState.speech.preferences.language)
                 appState.isAgentListening = true
             }
         }
@@ -165,7 +165,10 @@ struct AgentPanelView: View {
 
         let context = EmailAgentContext(
             inboxSummary: buildInboxSummary(),
-            selectedThread: appState.selectedThread
+            selectedThread: appState.selectedThread,
+            webPageURL: appState.browser.currentURL,
+            webPageContent: appState.browser.pageText.isEmpty ? nil : String(appState.browser.pageText.prefix(2000)),
+            calendarSummary: appState.calendarSummary.isEmpty ? nil : appState.calendarSummary
         )
 
         do {
@@ -224,8 +227,9 @@ struct AgentPanelView: View {
             }
         case .openLink(let url):
             appState.navigationPath.append(url)
-        case .acceptInvite, .declineInvite, .reply, .forward, .unsubscribe, .fillForm:
-            break // handled in detail view
+        default:
+            // All other actions are handled via AppState.sendAgentMessage / execute
+            break
         }
     }
 }

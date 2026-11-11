@@ -6,7 +6,7 @@ import SwiftUI
 struct VoiceSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var prefs = VoicePreferencesStore.shared.current
-    @State private var voices = OralisVoice.allEnglishVoices()
+    @State private var voices = OralisVoice.allVoices(for: VoicePreferencesStore.shared.current.language)
     @State private var selectedVoiceID: String = VoicePreferencesStore.shared.current.voiceIdentifier
     @State private var previewText = "Hello! I'm Oralis, your voice-first email assistant."
     @State private var isPreviewing = false
@@ -29,6 +29,11 @@ struct VoiceSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                // ── Language picker ─────────────────────────────────
+                languageSection
+
+                Divider()
+
                 // ── ElevenLabs voices (shown when API key is active) ─
                 if SpeechService.elevenLabsEnabled {
                     elevenLabsSection
@@ -51,6 +56,55 @@ struct VoiceSettingsView: View {
             .padding(24)
         }
         .onDisappear { save() }
+    }
+
+    // MARK: - Language section
+
+    private var languageSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Conversation Language")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            Text("Oralis listens and responds in this language. Works with both Apple and ElevenLabs voices.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Menu {
+                ForEach(SupportedLanguage.all) { lang in
+                    Button {
+                        prefs.language = lang.id
+                        voices = OralisVoice.allVoices(for: lang.id)
+                        if !voices.isEmpty && !voices.contains(where: { $0.id == selectedVoiceID }) {
+                            selectedVoiceID = voices.first?.id ?? ""
+                            prefs.voiceIdentifier = selectedVoiceID
+                        }
+                        save()
+                    } label: {
+                        HStack {
+                            Text("\(lang.flag) \(lang.name)")
+                            if prefs.language == lang.id {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                let selected = SupportedLanguage.find(prefs.language)
+                HStack {
+                    Text("\(selected.flag) \(selected.name)")
+                        .fontWeight(.medium)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, 14).padding(.vertical, 10)
+                .background(Color.secondary.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .accessibilityLabel("Language: \(SupportedLanguage.find(prefs.language).name). Tap to change.")
+        }
     }
 
     // MARK: - ElevenLabs section

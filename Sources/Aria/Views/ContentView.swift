@@ -1,19 +1,25 @@
 import SwiftUI
 
-/// Root container: two tabs — Talk and Settings.
+/// Root container: three tabs — Talk, Browse, and Settings.
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: AppTab = .talk
 
-    enum AppTab { case talk, settings }
+    enum AppTab { case talk, browse, settings }
 
     var body: some View {
         TabView(selection: $selectedTab) {
             TalkView()
                 .tabItem {
-                    Label("Talk to Oralis", systemImage: "waveform.circle.fill")
+                    Label("Talk", systemImage: "waveform.circle.fill")
                 }
                 .tag(AppTab.talk)
+
+            BrowserView()
+                .tabItem {
+                    Label("Browse", systemImage: "globe")
+                }
+                .tag(AppTab.browse)
 
             SettingsView()
                 .tabItem {
@@ -21,7 +27,7 @@ struct ContentView: View {
                 }
                 .tag(AppTab.settings)
         }
-        .frame(minWidth: 600, minHeight: 500)
+        .frame(minWidth: 700, minHeight: 520)
         .sheet(isPresented: $appState.showAccountSetup) {
             AccountSetupView()
                 .environmentObject(appState)

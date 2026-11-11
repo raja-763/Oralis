@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.oralis.app</string>
     <key>CFBundleVersion</key>
-    <string>3</string>
+    <string>4</string>
     <key>CFBundleShortVersionString</key>
-    <string>3.1</string>
+    <string>4.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -42,7 +42,11 @@
     <key>MICROSOFT_OAUTH_CLIENT_ID</key>
     <string>$(MICROSOFT_OAUTH_CLIENT_ID)</string>
 
-    <!-- ElevenLabs TTS -->
+    <!-- AI + ElevenLabs -->
+    <key>ANTHROPIC_API_KEY</key>
+    <string>$(ANTHROPIC_API_KEY)</string>
+    <key>ORALIS_PROXY_URL</key>
+    <string>$(ORALIS_PROXY_URL)</string>
     <key>ELEVENLABS_API_KEY</key>
     <string>$(ELEVENLABS_API_KEY)</string>
     <key>ELEVENLABS_PROXY_URL</key>

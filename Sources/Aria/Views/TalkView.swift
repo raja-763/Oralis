@@ -98,11 +98,32 @@ struct TalkView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                SuggestionChip("Read my latest emails")
-                SuggestionChip("How many unread do I have?")
-                SuggestionChip("Delete all spam")
-                SuggestionChip("Unsubscribe from promotions")
-                SuggestionChip("Any emails from my boss?")
+                Group {
+                    Text("Email")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    SuggestionChip("Read my latest emails")
+                    SuggestionChip("Summarize my inbox")
+                    SuggestionChip("Any emails from my boss?")
+                    SuggestionChip("Delete all spam")
+                    SuggestionChip("Unsubscribe from promotions")
+                }
+                Group {
+                    Text("Calendar")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 6)
+                    SuggestionChip("What's on my calendar this week?")
+                    SuggestionChip("Schedule a meeting tomorrow at 3pm")
+                }
+                Group {
+                    Text("Web")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 6)
+                    SuggestionChip("Go to google.com")
+                    SuggestionChip("Read this page")
+                }
             }
         }
         .padding(.horizontal, 32)

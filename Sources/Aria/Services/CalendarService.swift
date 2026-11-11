@@ -43,4 +43,35 @@ final class CalendarService {
                    combined.contains("teams.microsoft") || combined.contains("webex")
         }
     }
+
+    /// All upcoming events within `days` days, sorted by start date.
+    func upcomingEvents(days: Int = 7) async throws -> [EKEvent] {
+        guard await requestAccess() else { return [] }
+        let now  = Date()
+        let end  = Calendar.current.date(byAdding: .day, value: days, to: now)!
+        let pred = store.predicateForEvents(withStart: now, end: end, calendars: nil)
+        return store.events(matching: pred).sorted { $0.startDate < $1.startDate }
+    }
+
+    /// Create a new calendar event.
+    func createEvent(title: String, startDate: Date, durationMinutes: Int, notes: String? = nil) async throws {
+        guard await requestAccess() else { throw OralisError.notAuthenticated }
+        let event = EKEvent(eventStore: store)
+        event.title     = title
+        event.startDate = startDate
+        event.endDate   = startDate.addingTimeInterval(TimeInterval(durationMinutes * 60))
+        event.notes     = notes
+        event.calendar  = store.defaultCalendarForNewEvents
+        try store.save(event, span: .thisEvent)
+    }
+
+    /// Format events as a voice-readable summary.
+    func formatEventSummary(_ events: [EKEvent]) -> String {
+        guard !events.isEmpty else { return "No upcoming events in the next 7 days." }
+        let fmt = DateFormatter()
+        fmt.dateStyle = .full
+        fmt.timeStyle = .short
+        let lines = events.prefix(10).map { "– \($0.title ?? "Untitled") on \(fmt.string(from: $0.startDate))" }
+        return lines.joined(separator: "\n")
+    }
 }

@@ -1,155 +1,124 @@
-# Oralis
+# Oralis 4.0
 
-**Voice-first, accessibility-first email for macOS.**
+**A voice-first macOS assistant for blind and visually-impaired users.**
 
-> Inspired by [Lumin](https://www.luminemail.com/) — the accessible iOS email app. Oralis brings that same voice-first philosophy to the Mac.
+Oralis lets you control email, browse the web, and manage your calendar entirely by voice — no mouse, no reading required. Press a keyboard shortcut, speak naturally, and Oralis handles the rest.
 
-Oralis is a native macOS email client built from the ground up for screen reader users. Talk to an AI assistant to manage your inbox hands-free — read emails aloud, delete spam in bulk, unsubscribe from mailing lists, accept meeting invites, and open links — all by voice or keyboard, with full VoiceOver support throughout.
+---
+
+## ⚠️ Personal Use Only
+
+Oralis is built for **personal accessibility use**. It is not a commercial product, is not intended for redistribution, and comes with no warranty. Use it for your own needs.
+
+---
+
+## Privacy First
+
+Oralis is **privacy-first** by design:
+
+- **No analytics, no telemetry, no tracking** — Oralis never phones home
+- **Email credentials stay on your Mac** — stored encrypted in macOS Keychain, never transmitted
+- **AI is opt-in** — the AI assistant only activates when you speak to it; your emails are never sent anywhere automatically
+- **AI queries go to Anthropic's Claude API directly** — Anthropic's privacy policy applies; no data is stored by Oralis
+- **ElevenLabs voice synthesis** is processed on their servers per their privacy policy; no audio is stored
+- **Web browsing stays local** — Oralis does not log sites you visit or forms you fill
+- **Calendar access is on-device only** — via macOS EventKit; calendar data never leaves your Mac
+- **No account required** — Oralis works for TTS and STT without signing in to anything
 
 ---
 
 ## Features
 
-### Voice control
-Say commands like:
-- *"Read my latest email"*
-- *"Delete all spam"*
-- *"Unsubscribe from this list"*
-- *"Archive everything older than a week"*
-- *"How many unread emails do I have?"*
-- *"Reply to the last email from Sarah"*
+### Email (Lumin-inspired)
 
-Oralis understands natural language and translates it into real actions on your inbox.
+- **Read** your emails aloud, with sender name and date
+- **Summarize** long email threads in a few sentences
+- **Triage** your inbox — hear what needs attention
+- **Draft** new emails by voice
+- **Reply** and **forward** without touching the keyboard
+- **Search** by voice query ("emails from John about the invoice")
+- **Unsubscribe** from mailing lists in one command
+- **Delete spam** in bulk with a single phrase
+- **Manage attachments** via voice commands
 
-### Batch actions
-Select any number of emails with the spacebar and act on all of them at once — delete, archive, mark as read, or move to spam. Works on hundreds of emails in a single command.
+### Calendar
 
-### Voice link reader
-When reading an email, say *"Read links"* to hear every link. Say a link's name to open it in your browser.
+- **Hear upcoming events** ("What's on my calendar this week?")
+- **Create events** by voice ("Add a meeting tomorrow at 3pm")
+- **Accept or decline** meeting invites from email
 
-### Unsubscribe by voice
-Say *"Unsubscribe"* on any promotional email. Oralis automatically finds the unsubscribe method (one-click List-Unsubscribe, webpage, or reply email) and handles it for you.
+### Voice-Controlled Web Browser
 
-### Calendar invites
-Accept or decline meeting invites by voice. Oralis adds accepted events to your macOS Calendar and can read the meeting link (Zoom, Teams, Meet, Webex) aloud.
+- **Navigate** to any website by voice ("Go to nytimes.com")
+- **Read and summarize** web pages aloud
+- **Fill out forms** by describing the fields ("Fill in my email address")
+- **Click buttons and links** by name ("Click the submit button")
+- **Scroll** and navigate back/forward by voice
 
-### Multiple accounts
-Add as many accounts as you need — Gmail, Outlook / Exchange, iCloud, Yahoo, or any IMAP / SMTP provider. Oralis can also import accounts already set up in macOS Mail (opt-in).
+### 70+ Languages
 
-### Voice customisation
-Choose your preferred reading voice from Apple's full catalogue, including high-quality Premium voices. Adjust reading speed, pitch, and volume. Toggle options like reading the sender name and date before each email.
+Oralis speaks and listens in over 70 languages including English, Spanish, French, German, Arabic, Hindi, Japanese, Chinese, Swahili, and more. Change the language in Settings → Voice → Conversation Language. The AI assistant always responds in the language you used.
 
-### Accessible onboarding
-A 7-step, VoiceOver-guided setup walks you through choosing a voice, connecting your first account, and configuring the AI assistant — entirely by keyboard and voice, with no sighted assistance required.
+### Voices
+
+- **Apple system voices** — Premium and Enhanced quality, available offline
+- **ElevenLabs AI voices** — Rachel, Josh, Adam, and more (requires API key)
+- Adjustable **speed**, **pitch**, and **volume**
+
+---
+
+## Setup
+
+1. Download **Oralis 4.dmg**
+2. Open the DMG and drag **Oralis.app** to Applications
+3. First launch: **right-click → Open** (once, to bypass Gatekeeper on a personal build)
+4. Connect your email account in **Settings → Accounts**
+5. Grant **microphone** and **speech recognition** permission when prompted
+
+> **Note:** Oralis is not signed with an Apple Developer ID (this is a personal build). macOS Gatekeeper will warn you on first launch. Right-click → Open to proceed.
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| **⌘⌥Space** | Open / close Oralis from anywhere |
+| **⌘⌥L** | Start / stop listening |
+
+---
+
+## AI Assistant (Optional)
+
+For the AI features (summarize, draft, triage, web reading), add your Anthropic API key to `Secrets.xcconfig`:
+
+```
+ANTHROPIC_API_KEY = sk-ant-...your key here...
+```
+
+Get a key at [console.anthropic.com](https://console.anthropic.com). The app works without it — voice commands for navigation, reading, and playback are always available.
 
 ---
 
 ## Requirements
 
-- macOS 14 (Sonoma) or later
+- **macOS 14.0** or later
 - Apple Silicon or Intel Mac
-- Microphone access (for voice commands)
-- An Anthropic API key (for the AI assistant — optional but recommended)
+- Microphone access (for voice input)
 
 ---
 
-## Installation
-
-1. Go to the [latest release](https://github.com/raja-763/Oralis/releases/latest) and download **Oralis-1.0.0.dmg**.
-2. Open the DMG file. macOS will mount it as a disk image.
-3. Inside the disk image, drag **Oralis.app** into the **Applications** shortcut.
-4. Eject the disk image.
-5. Open **Oralis** from your Applications folder.
-6. Follow the voice-guided onboarding. Oralis will ask for microphone and speech recognition permissions on first launch — both are required for voice commands.
-
-> **VoiceOver tip:** When the DMG opens, press VO+Shift+M to open the Finder menu and navigate to the mounted volume, then drag Oralis.app to Applications with VO+Command+Drag or use the keyboard shortcut shown in the onboarding.
-
----
-
-## Keyboard shortcuts
-
-- **⌘⌥L** — Start / stop listening
-- **⌘⌥A** — Toggle AI assistant panel
-- **⌘A** — Select all emails
-- **⌘⌫** — Delete selected emails
-- **Space** — Toggle selection on focused email
-- **⌘R** — Reply
-- **⌘⌥R** — Read email aloud / stop
-- **⌘⌥U** — Unsubscribe from focused email
-- **⌘F** — Search inbox
-- **⌘,** — Open Settings
-
----
-
-## Getting an API key
-
-The AI assistant requires an Anthropic API key.
-
-1. Go to [console.anthropic.com](https://console.anthropic.com) and sign up or log in.
-2. Under **API Keys**, create a new key.
-3. In Oralis, open **Settings › AI Assistant** and paste the key. It is saved to your Mac's Keychain — Oralis never transmits it anywhere else.
-
-Anthropic offers pay-as-you-go pricing. Typical email management costs a fraction of a cent per session. See [anthropic.com/pricing](https://www.anthropic.com/pricing) for current rates.
-
----
-
-## Privacy & Security
-
-Your data stays on your Mac.
-
-**Credentials and tokens**
-All account credentials, OAuth tokens, and your Anthropic API key are stored exclusively in the **macOS Keychain**. They are never written to disk in plain text, never included in crash reports, and never transmitted to any server operated by Oralis.
-
-**Email content**
-Oralis fetches email directly from your provider (Gmail, Outlook, etc.) over encrypted HTTPS or SSL/TLS connections. Email content is processed locally on your device. When you send a voice command, only the relevant context (email subjects, senders, counts) is sent to the Anthropic API to generate a response — full email bodies are never sent unless you explicitly ask Oralis to summarise or reply to a specific message.
-
-**macOS Mail import**
-The option to import accounts from macOS Mail reads a local configuration file (`~/Library/Mail/…/Accounts.plist`) once, with your explicit opt-in, and only to pre-fill account settings. No passwords are read from that file.
-
-**Microphone**
-The microphone is used solely for voice commands via Apple's on-device SFSpeechRecognizer framework. Audio is not recorded, stored, or transmitted.
-
-**No analytics, no telemetry**
-Oralis collects no usage data, crash metrics, or analytics of any kind.
-
-**Open source**
-Oralis is fully open source. You can review every line of code at [github.com/raja-763/Oralis](https://github.com/raja-763/Oralis).
-
----
-
-## Building from source
+## Building from Source
 
 ```bash
-# Prerequisites: Xcode 15+, Homebrew
+# Install xcodegen if needed
 brew install xcodegen
 
-# Clone and build
-git clone https://github.com/raja-763/Oralis.git
-cd Oralis
+# Generate Xcode project
 xcodegen generate
-open Oralis.xcodeproj
+
+# Build and package (strips quarantine automatically)
+./build_dmg.sh
 ```
 
-Build and run the **Oralis** scheme in Xcode. The first launch will trigger permission prompts for microphone and speech recognition.
-
----
-
-## Supported email providers
-
-- **Gmail** — OAuth 2.0 via Gmail API v1
-- **Outlook / Exchange** — OAuth 2.0 via Microsoft Graph API
-- **iCloud** — OAuth 2.0
-- **Yahoo** — Password + App Password (IMAP)
-- **Any IMAP / SMTP** — Password, generic provider
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE).
-
----
-
-## Acknowledgements
-
-Built with [Claude](https://claude.ai) by Anthropic (AI assistant), Apple AVSpeechSynthesizer and SFSpeechRecognizer (voice), EventKit (calendar), and WebKit (link reader).
+The build script removes the quarantine flag from the DMG, so users never see the Gatekeeper warning.

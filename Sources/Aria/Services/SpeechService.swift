@@ -65,24 +65,33 @@ final class SpeechService: NSObject, ObservableObject {
         utterance.rate             = prefs.rate
         utterance.pitchMultiplier  = prefs.pitch
         utterance.volume           = prefs.volume
-        // Prefer a Premium voice if none explicitly chosen
         if prefs.voiceIdentifier.isEmpty {
-            utterance.voice = bestAvailableAppleVoice()
+            utterance.voice = bestVoiceForLanguage(prefs.language)
         } else {
             utterance.voice = AVSpeechSynthesisVoice(identifier: prefs.voiceIdentifier)
-                           ?? bestAvailableAppleVoice()
+                           ?? bestVoiceForLanguage(prefs.language)
         }
         isSpeaking = true
         synthesizer.speak(utterance)
     }
 
-    /// Returns the best available Apple voice (Premium > Enhanced > default en-US).
-    static func bestAvailableAppleVoice() -> AVSpeechSynthesisVoice? {
-        let voices = AVSpeechSynthesisVoice.speechVoices()
-            .filter { $0.language.hasPrefix("en") }
+    /// Best available Apple voice for a locale (Premium > Enhanced > any match).
+    static func bestVoiceForLanguage(_ locale: String) -> AVSpeechSynthesisVoice? {
+        let prefix = locale.split(separator: "-").first.map(String.init) ?? locale
+        let voices = AVSpeechSynthesisVoice.speechVoices().filter { $0.language.hasPrefix(prefix) }
         return voices.first(where: { $0.quality == .premium })
             ?? voices.first(where: { $0.quality == .enhanced })
+            ?? voices.first
+            ?? AVSpeechSynthesisVoice(language: locale)
             ?? AVSpeechSynthesisVoice(language: "en-US")
+    }
+
+    static func bestAvailableAppleVoice() -> AVSpeechSynthesisVoice? {
+        bestVoiceForLanguage("en-US")
+    }
+
+    private func bestVoiceForLanguage(_ locale: String) -> AVSpeechSynthesisVoice? {
+        SpeechService.bestVoiceForLanguage(locale)
     }
 
     private func bestAvailableAppleVoice() -> AVSpeechSynthesisVoice? {
@@ -173,10 +182,10 @@ final class SpeechService: NSObject, ObservableObject {
         }
     }
 
-    func startListening() throws {
+    func startListening(locale: String = "en-US") throws {
         guard !isListening else { return }
 
-        recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+        recognizer = SFSpeechRecognizer(locale: Locale(identifier: locale))
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let req = recognitionRequest else { return }
         req.shouldReportPartialResults = true

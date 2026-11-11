@@ -16,7 +16,9 @@
 		241DAA507DB357E4460E1250 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB6112205F262C145049272 /* TalkView.swift */; };
 		2C3D5A7D102DC0E4816A04B3 /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A7A62047B9B70E38C1871 /* UpdateChecker.swift */; };
 		390F257FB1E6F94428633196 /* MailImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF88CA2798080A5025B2EFE /* MailImportService.swift */; };
+		3DDE98F8750A42301B1FB4E0 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E9A285D0DE608F2F21EA5C /* BrowserView.swift */; };
 		404B17E98626A7B92A4AD2DF /* UnsubscribeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847A4DE5D3726D5685D3A674 /* UnsubscribeService.swift */; };
+		4A0561FB55B3BC680394AE47 /* SupportedLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */; };
 		4EC2BD537F978A7D43101E16 /* AriaCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910922000A23ACBDA99E7A28 /* AriaCommands.swift */; };
 		4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */; };
 		5231C2DA0C298164F6141761 /* VoicePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510646DB5B4BDD204A4BD0A1 /* VoicePreferences.swift */; };
@@ -36,6 +38,7 @@
 		9C535C65D4DC6F0422C250F9 /* AIAgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E300725C38559A5E24ADF4C /* AIAgentService.swift */; };
 		9FAA26DC72B517576E37A5F0 /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */; };
 		9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E4D88FF2F5352F0163877F /* OAuthService.swift */; };
+		A04BDB355EFEEF6BF5E6C1C1 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D90B07AF9435CE73C258F1 /* BrowserModel.swift */; };
 		A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B426503A313C3A254962417 /* OutlookService.swift */; };
 		BA2605FE9760B3914F34E3F9 /* FloatingPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */; };
 		CA4E597E246A30EAFCDABA14 /* IMAPSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */; };
@@ -69,6 +72,7 @@
 		15F3040059CDFB27A236FC1F /* EmailDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailDetailView.swift; sourceTree = "<group>"; };
 		1E6D7FEDF4F0B712B1A485FB /* BatchActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchActionBar.swift; sourceTree = "<group>"; };
 		2CDA1A5D66AA254F1357E694 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		33D90B07AF9435CE73C258F1 /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
 		37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeView.swift; sourceTree = "<group>"; };
 		39DB0035F8E4610C24DB7AF9 /* EmailListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailListView.swift; sourceTree = "<group>"; };
 		3FEE52D4213921C261C5E18C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -101,14 +105,16 @@
 		C207A038822F464D5BCBD081 /* AriaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaError.swift; sourceTree = "<group>"; };
 		C7D0ADD133572698316C1596 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		D693EAF40AB9F5180FA996EE /* GmailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailService.swift; sourceTree = "<group>"; };
+		D7E9A285D0DE608F2F21EA5C /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPSetupView.swift; sourceTree = "<group>"; };
 		E2DD5A277FE8D4D213F7BF43 /* Oralis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Oralis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6E88C7DED40B575C7878421 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedLanguage.swift; sourceTree = "<group>"; };
 		ECF88CA2798080A5025B2EFE /* MailImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailImportService.swift; sourceTree = "<group>"; };
 		F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelView.swift; sourceTree = "<group>"; };
 		F4D86ADF7D928FB7F81452DB /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
 		FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
-		"TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_C3CF5B4C-362D-4E7E-A3E2-0FA3E3AB730C" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -120,6 +126,7 @@
 				00FD5036AD038EBCD8958C5A /* EmailMessage.swift */,
 				4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */,
 				5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */,
+				EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */,
 				510646DB5B4BDD204A4BD0A1 /* VoicePreferences.swift */,
 			);
 			path = Models;
@@ -130,6 +137,7 @@
 			children = (
 				8E300725C38559A5E24ADF4C /* AIAgentService.swift */,
 				C207A038822F464D5BCBD081 /* AriaError.swift */,
+				33D90B07AF9435CE73C258F1 /* BrowserModel.swift */,
 				C7D0ADD133572698316C1596 /* CalendarService.swift */,
 				8F303C52D7717CA453241976 /* EmailService.swift */,
 				D693EAF40AB9F5180FA996EE /* GmailService.swift */,
@@ -172,6 +180,7 @@
 				B2AA68EB5293B863DBD22553 /* AccountSetupView.swift */,
 				752A1A7B6D937F8C65671575 /* AgentPanelView.swift */,
 				1E6D7FEDF4F0B712B1A485FB /* BatchActionBar.swift */,
+				D7E9A285D0DE608F2F21EA5C /* BrowserView.swift */,
 				37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */,
 				86D09664B66E2198917A7189 /* ContentView.swift */,
 				15F3040059CDFB27A236FC1F /* EmailDetailView.swift */,
@@ -252,10 +261,10 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		"TEMP_3C3D88C3-3B39-44CE-9FF5-2EEEEB09A0E7" /* Aria */ = {
+		"TEMP_6AA06CE3-78C2-4CEF-A96A-D8DAFE8860C2" /* Aria */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */,
+				"TEMP_C3CF5B4C-362D-4E7E-A3E2-0FA3E3AB730C" /* Secrets.xcconfig */,
 			);
 			path = Aria;
 			sourceTree = "<group>";
@@ -350,6 +359,8 @@
 				4EC2BD537F978A7D43101E16 /* AriaCommands.swift in Sources */,
 				0423CC31C27FB0D80EE42846 /* AriaError.swift in Sources */,
 				5B866C85CB0E8072F508A5FE /* BatchActionBar.swift in Sources */,
+				A04BDB355EFEEF6BF5E6C1C1 /* BrowserModel.swift in Sources */,
+				3DDE98F8750A42301B1FB4E0 /* BrowserView.swift in Sources */,
 				8D801067D8CD5A83361621FB /* CalendarService.swift in Sources */,
 				9FAA26DC72B517576E37A5F0 /* ComposeView.swift in Sources */,
 				94C91B7E5890FAE1CE2CE570 /* ContentView.swift in Sources */,
@@ -376,6 +387,7 @@
 				4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */,
 				CA974A5086A68E8818C38394 /* SidebarView.swift in Sources */,
 				5F58236BD144D714A0A0BA5A /* SpeechService.swift in Sources */,
+				4A0561FB55B3BC680394AE47 /* SupportedLanguage.swift in Sources */,
 				241DAA507DB357E4460E1250 /* TalkView.swift in Sources */,
 				404B17E98626A7B92A4AD2DF /* UnsubscribeService.swift in Sources */,
 				2C3D5A7D102DC0E4816A04B3 /* UpdateChecker.swift in Sources */,
@@ -421,7 +433,7 @@
 		};
 		28DAD49A115A641EDE5DAEE0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_C3CF5B4C-362D-4E7E-A3E2-0FA3E3AB730C" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -497,7 +509,7 @@
 		};
 		8C6192BBD32F4CA74B9E89EF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_47962E64-4093-49F7-919B-066654FC7DB9" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_C3CF5B4C-362D-4E7E-A3E2-0FA3E3AB730C" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -565,10 +577,11 @@
 		AD9D73F7E405932EC8EDDB83 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ANTHROPIC_API_KEY = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/Aria/Resources/Oralis.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				ELEVENLABS_PROXY_URL = "";
 				GOOGLE_OAUTH_CLIENT_ID = "";
 				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
@@ -576,8 +589,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 3.1;
+				MARKETING_VERSION = 4.0;
 				MICROSOFT_OAUTH_CLIENT_ID = "";
+				ORALIS_PROXY_URL = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.oralis.app;
 				PRODUCT_NAME = Oralis;
 				SDKROOT = macosx;
@@ -587,10 +601,11 @@
 		F424BE29A2599FC9EAFAF2D4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ANTHROPIC_API_KEY = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/Aria/Resources/Oralis.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				ELEVENLABS_PROXY_URL = "";
 				GOOGLE_OAUTH_CLIENT_ID = "";
 				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
@@ -598,8 +613,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 3.1;
+				MARKETING_VERSION = 4.0;
 				MICROSOFT_OAUTH_CLIENT_ID = "";
+				ORALIS_PROXY_URL = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.oralis.app;
 				PRODUCT_NAME = Oralis;
 				SDKROOT = macosx;

@@ -30,15 +30,20 @@ final class AppState: ObservableObject {
     // MARK: - Onboarding
     @Published var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: "oralis.onboardingComplete")
 
-    // MARK: - Services (lazy singletons)
-    let speech = SpeechService()
-    let agent  = AIAgentService()
+    // MARK: - Calendar
+    @Published var calendarSummary: String = ""
+
+    // MARK: - Services
+    let speech  = SpeechService()
+    let agent   = AIAgentService()
+    let browser = BrowserModel()
 
     // MARK: - Notifications
     private var cancellables = Set<AnyCancellable>()
 
     init() {
         loadAccounts()
+        Task { await loadCalendarSummary() }
     }
 
     // MARK: - Account loading
@@ -76,6 +81,13 @@ final class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Calendar
+
+    func loadCalendarSummary() async {
+        let events = (try? await CalendarService.shared.upcomingEvents(days: 7)) ?? []
+        calendarSummary = CalendarService.shared.formatEventSummary(events)
+    }
+
     // MARK: - Batch actions
 
     func deleteSelected() async {
@@ -110,10 +122,11 @@ final class AppState: ObservableObject {
 
     func startListening() {
         guard selectedAccount != nil else {
-            announce("No email account connected. Open Settings to add one.")
+            readAloud("No email account connected. Open Settings to add one.")
             return
         }
         isAgentListening = true
+        let locale = speech.preferences.language
         speech.onFinalResult = { [weak self] text in
             Task { @MainActor [weak self] in
                 guard let self else { return }
@@ -122,7 +135,7 @@ final class AppState: ObservableObject {
                 self.sendAgentMessage(text)
             }
         }
-        try? speech.startListening()
+        try? speech.startListening(locale: locale)
     }
 
     func stopListening() {
@@ -133,13 +146,9 @@ final class AppState: ObservableObject {
     func sendAgentMessage(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        let userMsg = AgentMessage(role: .user, content: trimmed)
-        agentMessages.append(userMsg)
+        agentMessages.append(AgentMessage(role: .user, content: trimmed))
 
-        let context = EmailAgentContext(
-            inboxSummary: inboxSummary(),
-            selectedThread: selectedThread
-        )
+        let context = buildContext()
         Task {
             do {
                 let response = try await agent.send(
@@ -147,46 +156,100 @@ final class AppState: ObservableObject {
                     history: agentMessages.dropLast(),
                     context: context
                 )
-                let reply = AgentMessage(role: .assistant, content: response.text)
-                agentMessages.append(reply)
+                // Strip the JSON action block from spoken text
+                let spoken = responseTextWithoutJSON(response.text)
+                agentMessages.append(AgentMessage(role: .assistant, content: spoken))
+                readAloud(spoken)
                 if let action = response.action {
                     await execute(action)
                 }
             } catch {
-                agentMessages.append(AgentMessage(role: .assistant,
-                    content: "Sorry, I ran into an error: \(error.localizedDescription)"))
+                let errMsg = "Sorry, I ran into an error: \(error.localizedDescription)"
+                agentMessages.append(AgentMessage(role: .assistant, content: errMsg))
+                readAloud(errMsg)
             }
         }
     }
 
-    private func inboxSummary() -> String {
-        guard !threads.isEmpty else { return "The inbox is empty." }
-        let unread = threads.filter { !$0.isRead }.count
-        let preview = threads.prefix(5).map { "- \($0.subject) from \($0.participants.first?.display ?? "unknown")" }.joined(separator: "\n")
-        return "Inbox: \(threads.count) threads, \(unread) unread.\nRecent:\n\(preview)"
-    }
+    // MARK: - Execute agent actions
 
     private func execute(_ action: AgentAction) async {
         switch action {
+
+        // ── Email ─────────────────────────────────────────────────────────
+        case .readEmail(let threadID):
+            if let thread = threads.first(where: { $0.id.uuidString == threadID }),
+               let msg = thread.messages.first {
+                readAloud(msg.bodyPlain.isEmpty ? msg.subject : msg.bodyPlain)
+            }
+
+        case .summarize(let threadID):
+            if let thread = threads.first(where: { $0.id.uuidString == threadID }),
+               let msg = thread.messages.first {
+                let body = msg.bodyPlain.isEmpty ? msg.subject : msg.bodyPlain
+                sendAgentMessage("Please summarize this email:\n\(body.prefix(2000))")
+            }
+
+        case .triage:
+            let unread = threads.filter { !$0.isRead }.count
+            let top = threads.prefix(3).map { "\($0.subject) from \($0.participants.first?.display ?? "unknown")" }.joined(separator: "; ")
+            readAloud("You have \(unread) unread emails. Top threads: \(top).")
+
         case .delete(let ids):
             selectedThreadIDs = Set(ids.compactMap { UUID(uuidString: $0) })
             await deleteSelected()
+
         case .archive(let ids):
             selectedThreadIDs = Set(ids.compactMap { UUID(uuidString: $0) })
             await archiveSelected()
-        case .deleteSpam:
+
+        case .reply(let threadID, let body):
+            guard let account = selectedAccount,
+                  let thread = threads.first(where: { $0.id.uuidString == threadID }),
+                  let msg = thread.messages.first
+            else { return }
+            let service = EmailServiceFactory.service(for: account)
+            let draft = DraftMessage(
+                to: [msg.from],
+                subject: thread.subject.hasPrefix("Re:") ? thread.subject : "Re: \(thread.subject)",
+                body: body,
+                replyToMessageID: msg.remoteID
+            )
+            try? await service.sendMessage(draft)
+            readAloud("Reply sent.")
+
+        case .forward(let threadID, let toAddress, let body):
+            guard let account = selectedAccount,
+                  let thread = threads.first(where: { $0.id.uuidString == threadID }),
+                  let msg = thread.messages.first
+            else { return }
+            let service = EmailServiceFactory.service(for: account)
+            let draft = DraftMessage(
+                to: [EmailAddress(name: "", address: toAddress)],
+                subject: thread.subject.hasPrefix("Fwd:") ? thread.subject : "Fwd: \(thread.subject)",
+                body: body,
+                forwardOfMessageID: msg.remoteID
+            )
+            try? await service.sendMessage(draft)
+            readAloud("Email forwarded to \(toAddress).")
+
+        case .draft(let to, let subject, let body):
             guard let account = selectedAccount else { return }
             let service = EmailServiceFactory.service(for: account)
-            if let spamIDs = try? await service.fetchSpam(limit: 200).map({ $0.id.uuidString }) {
-                selectedThreadIDs = Set(spamIDs.compactMap { UUID(uuidString: $0) })
-                await deleteSelected()
-            }
+            let draft = DraftMessage(
+                to: [EmailAddress(name: "", address: to)],
+                subject: subject,
+                body: body
+            )
+            try? await service.sendMessage(draft)
+            readAloud("Draft saved. Subject: \(subject).")
+
         case .search(let query):
             guard let account = selectedAccount else { return }
             let service = EmailServiceFactory.service(for: account)
             threads = (try? await service.searchThreads(query: query)) ?? []
-        case .openLink(let url):
-            NSWorkspace.shared.open(url)
+            readAloud("Found \(threads.count) results for '\(query)'.")
+
         case .unsubscribe(let threadID):
             guard let account = selectedAccount,
                   let thread = threads.first(where: { $0.id.uuidString == threadID }),
@@ -194,23 +257,137 @@ final class AppState: ObservableObject {
             else { return }
             let service = EmailServiceFactory.service(for: account)
             try? await service.unsubscribe(from: msg)
-            announce("Unsubscribed.")
-        default:
-            break
+            readAloud("Unsubscribed.")
+
+        case .deleteSpam:
+            guard let account = selectedAccount else { return }
+            let service = EmailServiceFactory.service(for: account)
+            if let spamIDs = try? await service.fetchSpam(limit: 200).map({ $0.id.uuidString }) {
+                selectedThreadIDs = Set(spamIDs.compactMap { UUID(uuidString: $0) })
+                await deleteSelected()
+            }
+
+        // ── Calendar ─────────────────────────────────────────────────────
+        case .listCalendar(let days):
+            let events = (try? await CalendarService.shared.upcomingEvents(days: days)) ?? []
+            let summary = CalendarService.shared.formatEventSummary(events)
+            agentMessages.append(AgentMessage(role: .assistant, content: summary))
+            readAloud(summary)
+
+        case .createEvent(let title, let dateStr, let duration):
+            let eventDate = parseDate(dateStr) ?? Date().addingTimeInterval(3600)
+            do {
+                try await CalendarService.shared.createEvent(title: title, startDate: eventDate, durationMinutes: duration)
+                readAloud("Event '\(title)' added to your calendar.")
+            } catch {
+                readAloud("Could not create the event: \(error.localizedDescription)")
+            }
+
+        case .acceptInvite(let threadID):
+            guard let thread = threads.first(where: { $0.id.uuidString == threadID }),
+                  let invite = thread.messages.first?.calendarInvite
+            else { return }
+            try? await CalendarService.shared.addInvite(invite)
+            readAloud("Invite accepted and added to your calendar.")
+
+        case .declineInvite:
+            readAloud("Invite declined.")
+
+        // ── Browser ──────────────────────────────────────────────────────
+        case .navigateTo(let url):
+            browser.navigate(to: url.absoluteString)
+            readAloud("Navigating to \(url.host ?? url.absoluteString).")
+
+        case .readWebPage:
+            browser.readPageText { [weak self] text in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    let preview = String(text.prefix(3000))
+                    if preview.isEmpty {
+                        self.readAloud("The page appears to be empty or hasn't loaded yet.")
+                    } else {
+                        self.agentMessages.append(AgentMessage(role: .assistant, content: preview))
+                        self.readAloud(preview)
+                    }
+                }
+            }
+
+        case .fillWebForm(let field, let value):
+            browser.fillForm(fieldHint: field, value: value)
+            readAloud("Filled in '\(field)' with '\(value)'.")
+
+        case .clickElement(let text):
+            browser.clickElement(text: text)
+            readAloud("Clicked '\(text)'.")
+
+        case .scrollDown:
+            browser.scrollDown()
+
+        case .goBack:
+            browser.goBack()
+            readAloud("Going back.")
+
+        case .openLink(let url):
+            NSWorkspace.shared.open(url)
         }
+    }
+
+    // MARK: - Helpers
+
+    private func buildContext() -> EmailAgentContext {
+        EmailAgentContext(
+            inboxSummary: inboxSummary(),
+            selectedThread: selectedThread,
+            webPageURL: browser.currentURL,
+            webPageContent: browser.pageText.isEmpty ? nil : String(browser.pageText.prefix(2000)),
+            calendarSummary: calendarSummary.isEmpty ? nil : calendarSummary
+        )
+    }
+
+    private func inboxSummary() -> String {
+        guard !threads.isEmpty else { return "The inbox is empty." }
+        let unread = threads.filter { !$0.isRead }.count
+        let preview = threads.prefix(5)
+            .map { "- \($0.subject) from \($0.participants.first?.display ?? "unknown")" }
+            .joined(separator: "\n")
+        return "Inbox: \(threads.count) threads, \(unread) unread.\nRecent:\n\(preview)"
+    }
+
+    private func responseTextWithoutJSON(_ text: String) -> String {
+        guard let start = text.range(of: "{"),
+              let end   = text.range(of: "}", options: .backwards),
+              start.lowerBound < end.upperBound
+        else { return text }
+        var result = text
+        result.removeSubrange(start.lowerBound...end.upperBound)
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func parseDate(_ s: String) -> Date? {
+        let iso = ISO8601DateFormatter()
+        if let d = iso.date(from: s) { return d }
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        for f in ["yyyy-MM-dd HH:mm", "MM/dd/yyyy HH:mm", "MMMM d, yyyy HH:mm"] {
+            fmt.dateFormat = f
+            if let d = fmt.date(from: s) { return d }
+        }
+        return nil
     }
 
     // MARK: - Accessibility announcements
 
-    // Posts to VoiceOver only. TTS is only used when the user explicitly
-    // requests read-aloud (email detail view, voice command responses).
     func announce(_ message: String) {
-        NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
-                             userInfo: [NSAccessibility.NotificationUserInfoKey.announcement: message,
-                                        NSAccessibility.NotificationUserInfoKey.priority: NSAccessibilityPriorityLevel.high.rawValue])
+        NSAccessibility.post(
+            element: NSApp as Any,
+            notification: .announcementRequested,
+            userInfo: [
+                NSAccessibility.NotificationUserInfoKey.announcement: message,
+                NSAccessibility.NotificationUserInfoKey.priority: NSAccessibilityPriorityLevel.high.rawValue
+            ]
+        )
     }
 
-    // Call this only for explicit user-requested read-aloud.
     func readAloud(_ message: String) {
         speech.speak(message)
     }

@@ -15,6 +15,8 @@ struct VoicePreferences: Codable, Equatable {
     // ElevenLabs — only used when proxy URL is configured
     var useElevenLabs: Bool           = false
     var elevenLabsVoiceID: String     = ""
+    // Language for both STT (SFSpeechRecognizer) and Apple TTS voice selection
+    var language: String              = "en-US"
 
     static let `default` = VoicePreferences(
         voiceIdentifier: preferredDefaultVoiceID(),
@@ -26,7 +28,8 @@ struct VoicePreferences: Codable, Equatable {
         readDate: true,
         announceBatchResults: true,
         useElevenLabs: false,
-        elevenLabsVoiceID: ""
+        elevenLabsVoiceID: "",
+        language: "en-US"
     )
 
     // Pick the highest-quality English voice available.
@@ -91,8 +94,13 @@ struct OralisVoice: Identifiable, Equatable {
     }
 
     static func allEnglishVoices() -> [OralisVoice] {
-        AVSpeechSynthesisVoice.speechVoices()
-            .filter { $0.language.hasPrefix("en") }
+        allVoices(for: "en-US")
+    }
+
+    static func allVoices(for locale: String = "en-US") -> [OralisVoice] {
+        let prefix = locale.split(separator: "-").first.map(String.init) ?? locale
+        return AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix(prefix) }
             .map { v in
                 OralisVoice(
                     id: v.identifier,
@@ -104,7 +112,7 @@ struct OralisVoice: Identifiable, Equatable {
             }
             .sorted {
                 if $0.quality.rawValue != $1.quality.rawValue {
-                    return $0.quality.rawValue > $1.quality.rawValue  // premium first
+                    return $0.quality.rawValue > $1.quality.rawValue
                 }
                 return $0.name < $1.name
             }
