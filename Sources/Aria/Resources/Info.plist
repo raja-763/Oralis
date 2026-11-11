@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Aria</string>
+    <string>Oralis</string>
     <key>CFBundleDisplayName</key>
-    <string>Aria</string>
+    <string>Oralis</string>
     <key>CFBundleIdentifier</key>
-    <string>com.aria.app</string>
+    <string>com.oralis.app</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>3</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
+    <string>3.1</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -22,15 +22,40 @@
     <string>NSApplication</string>
     <key>NSMainStoryboardFile</key>
     <string></string>
+
+    <!-- OAuth callback URL scheme — required for ASWebAuthenticationSession redirect -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.oralis.app</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.oralis.app</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- OAuth client IDs — fill in after registering apps in Google/Microsoft portals -->
+    <key>GOOGLE_OAUTH_CLIENT_ID</key>
+    <string>$(GOOGLE_OAUTH_CLIENT_ID)</string>
+    <key>MICROSOFT_OAUTH_CLIENT_ID</key>
+    <string>$(MICROSOFT_OAUTH_CLIENT_ID)</string>
+
+    <!-- ElevenLabs TTS proxy -->
+    <key>ELEVENLABS_PROXY_URL</key>
+    <string>$(ELEVENLABS_PROXY_URL)</string>
+
+    <!-- Privacy usage descriptions -->
     <key>NSMicrophoneUsageDescription</key>
-    <string>Aria uses the microphone so you can control your email by voice.</string>
+    <string>Oralis uses the microphone so you can control your email by voice.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Aria uses speech recognition so you can read, reply to, and manage emails hands-free.</string>
+    <string>Oralis uses speech recognition so you can read, reply to, and manage emails hands-free.</string>
     <key>NSContactsUsageDescription</key>
-    <string>Aria reads your contacts to autocomplete email addresses.</string>
+    <string>Oralis reads your contacts to autocomplete email addresses.</string>
     <key>NSCalendarsUsageDescription</key>
-    <string>Aria reads your calendar so you can manage meeting invites by voice.</string>
+    <string>Oralis reads your calendar so you can manage meeting invites by voice.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Aria imports accounts from macOS Mail with your permission.</string>
+    <string>Oralis imports accounts from macOS Mail with your permission.</string>
 </dict>
 </plist>
