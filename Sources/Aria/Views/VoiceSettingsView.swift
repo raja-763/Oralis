@@ -11,6 +11,8 @@ struct VoiceSettingsView: View {
     @State private var previewText = "Hello! I'm Oralis, your voice-first email assistant."
     @State private var isPreviewing = false
     @State private var filterQuality: FilterQuality = .all
+    @State private var anthropicKey: String = UserDefaults.standard.string(forKey: "oralis.anthropicAPIKey") ?? ""
+    @State private var keySaved = false
 
     enum FilterQuality: String, CaseIterable, Identifiable {
         case all = "All", premium = "Premium", enhanced = "Enhanced", standard = "Standard"
@@ -29,6 +31,11 @@ struct VoiceSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                // ── Anthropic API key ───────────────────────────────
+                aiKeySection
+
+                Divider()
+
                 // ── Language picker ─────────────────────────────────
                 languageSection
 
@@ -56,6 +63,39 @@ struct VoiceSettingsView: View {
             .padding(24)
         }
         .onDisappear { save() }
+    }
+
+    // MARK: - AI key section
+
+    private var aiKeySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("AI (Anthropic)")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            Text("Required for voice commands. Get a free key at console.anthropic.com.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                SecureField("sk-ant-…", text: $anthropicKey)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel("Anthropic API key")
+
+                Button(keySaved ? "Saved ✓" : "Save") {
+                    let trimmed = anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                    UserDefaults.standard.set(trimmed, forKey: "oralis.anthropicAPIKey")
+                    keySaved = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { keySaved = false }
+                }
+                .disabled(anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            if anthropicKey.isEmpty {
+                Text("⚠ No key — voice commands won't work until you add one.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
     }
 
     // MARK: - Language section

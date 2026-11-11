@@ -9,9 +9,12 @@ import Foundation
 @MainActor
 final class AIAgentService: ObservableObject {
 
-    private static let anthropicAPIKey: String = {
-        Bundle.main.infoDictionary?["ANTHROPIC_API_KEY"] as? String ?? ""
-    }()
+    private static var anthropicAPIKey: String {
+        // UserDefaults key (entered via Settings) takes priority over build-time xcconfig value.
+        let ud = UserDefaults.standard.string(forKey: "oralis.anthropicAPIKey") ?? ""
+        if !ud.isEmpty { return ud }
+        return Bundle.main.infoDictionary?["ANTHROPIC_API_KEY"] as? String ?? ""
+    }
     private static let proxyURLString: String = {
         Bundle.main.infoDictionary?["ORALIS_PROXY_URL"] as? String ?? ""
     }()
@@ -21,7 +24,9 @@ final class AIAgentService: ObservableObject {
         let s = AIAgentService.proxyURLString
         return s.isEmpty ? nil : URL(string: s)
     }
-    private var usingDirectAPI: Bool { !AIAgentService.anthropicAPIKey.isEmpty }
+    private var usingDirectAPI: Bool {
+        !AIAgentService.anthropicAPIKey.isEmpty
+    }
 
     private let model = "claude-haiku-4-5"
 
@@ -107,7 +112,7 @@ final class AIAgentService: ObservableObject {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if usingDirectAPI {
-            req.setValue(AIAgentService.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
+            req.setValue(AIAgentService.anthropicAPIKey, forHTTPHeaderField: "x-api-key")  // read fresh each call
             req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         } else {
             req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")

@@ -44,6 +44,7 @@ final class AppState: ObservableObject {
     init() {
         loadAccounts()
         Task { await loadCalendarSummary() }
+        Task { await speech.requestPermissions() }  // trigger mic + speech dialogs on launch
     }
 
     // MARK: - Account loading
@@ -172,6 +173,10 @@ final class AppState: ObservableObject {
                 if let action = response.action {
                     await execute(action)
                 }
+            } catch OralisError.apiError(let msg) where msg.contains("No API key") {
+                let prompt = "To use voice commands, please open Settings and add your Anthropic API key."
+                agentMessages.append(AgentMessage(role: .assistant, content: prompt))
+                readAloud(prompt)
             } catch {
                 let errMsg = "Sorry, I ran into an error: \(error.localizedDescription)"
                 agentMessages.append(AgentMessage(role: .assistant, content: errMsg))

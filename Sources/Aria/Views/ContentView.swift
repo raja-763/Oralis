@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// Root container: three tabs — Talk, Browse, and Settings.
+/// Root container: Talk and Settings tabs.
+/// The browser runs in the background (driven by the AI); there is no Browse tab.
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: AppTab = .talk
 
-    enum AppTab { case talk, browse, settings }
+    enum AppTab { case talk, settings }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -15,19 +16,13 @@ struct ContentView: View {
                 }
                 .tag(AppTab.talk)
 
-            BrowserView()
-                .tabItem {
-                    Label("Browse", systemImage: "globe")
-                }
-                .tag(AppTab.browse)
-
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
                 .tag(AppTab.settings)
         }
-        .frame(minWidth: 700, minHeight: 520)
+        .frame(minWidth: 480, minHeight: 520)
         .sheet(isPresented: $appState.showAccountSetup) {
             AccountSetupView()
                 .environmentObject(appState)
