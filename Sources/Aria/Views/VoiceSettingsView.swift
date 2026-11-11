@@ -72,25 +72,29 @@ struct VoiceSettingsView: View {
             Text("AI (Anthropic)")
                 .font(.headline)
                 .accessibilityAddTraits(.isHeader)
-            Text("Required for voice commands. Get a free key at console.anthropic.com.")
+            Text("Paste your key below — it saves automatically as you type.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 8) {
-                SecureField("sk-ant-…", text: $anthropicKey)
+                TextField("sk-ant-…", text: $anthropicKey)
                     .textFieldStyle(.roundedBorder)
                     .accessibilityLabel("Anthropic API key")
+                    .onChange(of: anthropicKey) { _, new in
+                        let trimmed = new.trimmingCharacters(in: .whitespacesAndNewlines)
+                        UserDefaults.standard.set(trimmed, forKey: "oralis.anthropicAPIKey")
+                        keySaved = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { keySaved = false }
+                    }
 
-                Button(keySaved ? "Saved ✓" : "Save") {
-                    let trimmed = anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                    UserDefaults.standard.set(trimmed, forKey: "oralis.anthropicAPIKey")
-                    keySaved = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { keySaved = false }
+                if keySaved {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .transition(.scale)
                 }
-                .disabled(anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
 
-            if anthropicKey.isEmpty {
+            if anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Text("⚠ No key — voice commands won't work until you add one.")
                     .font(.caption)
                     .foregroundStyle(.orange)

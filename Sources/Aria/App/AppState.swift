@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import Combine
 
@@ -133,17 +134,18 @@ final class AppState: ObservableObject {
             }
         }
         Task {
-            let ok = await speech.requestPermissions()
+            // If already granted skip the dialog round-trip for speed.
+            let ok = speech.permissionsGranted ? true : await speech.requestPermissions()
             guard ok else {
                 isAgentListening = false
-                readAloud("Microphone or speech recognition access denied. Please allow it in System Settings under Privacy and Security.")
+                readAloud("Microphone access is blocked. Go to System Settings, Privacy and Security, Microphone, and enable Oralis.")
                 return
             }
             do {
                 try speech.startListening(locale: locale)
             } catch {
                 isAgentListening = false
-                readAloud("Could not start listening: \(error.localizedDescription)")
+                readAloud("Could not start the microphone: \(error.localizedDescription)")
             }
         }
     }
@@ -156,7 +158,14 @@ final class AppState: ObservableObject {
     func sendAgentMessage(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+
+        // "Heard you" tone — confirms STT captured the request
+        NSSound(named: .init("Tink"))?.play()
+
         agentMessages.append(AgentMessage(role: .user, content: trimmed))
+
+        // Loading tone — signals the AI is thinking
+        NSSound(named: .init("Bottle"))?.play()
 
         let context = buildContext()
         Task {
@@ -166,7 +175,9 @@ final class AppState: ObservableObject {
                     history: agentMessages.dropLast(),
                     context: context
                 )
-                // Strip the JSON action block from spoken text
+                // Response-ready tone — plays just before Oralis speaks the answer
+                NSSound(named: .init("Glass"))?.play()
+
                 let spoken = responseTextWithoutJSON(response.text)
                 agentMessages.append(AgentMessage(role: .assistant, content: spoken))
                 readAloud(spoken)

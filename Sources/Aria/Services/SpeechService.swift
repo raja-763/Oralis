@@ -184,12 +184,17 @@ final class SpeechService: NSObject, ObservableObject {
         }
         guard speechOK else { return false }
 
-        // Request microphone permission (required separately on macOS).
+        // Request microphone permission.
         return await withCheckedContinuation { cont in
             AVCaptureDevice.requestAccess(for: .audio) { granted in
                 cont.resume(returning: granted)
             }
         }
+    }
+
+    var permissionsGranted: Bool {
+        SFSpeechRecognizer.authorizationStatus() == .authorized &&
+        AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     }
 
     func startListening(locale: String = "en-US") throws {
