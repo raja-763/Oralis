@@ -121,10 +121,6 @@ final class AppState: ObservableObject {
     // MARK: - Voice + Agent (Talk screen)
 
     func startListening() {
-        guard selectedAccount != nil else {
-            readAloud("No email account connected. Open Settings to add one.")
-            return
-        }
         isAgentListening = true
         let locale = speech.preferences.language
         speech.onFinalResult = { [weak self] text in
@@ -135,7 +131,20 @@ final class AppState: ObservableObject {
                 self.sendAgentMessage(text)
             }
         }
-        try? speech.startListening(locale: locale)
+        Task {
+            let ok = await speech.requestPermissions()
+            guard ok else {
+                isAgentListening = false
+                readAloud("Microphone or speech recognition access denied. Please allow it in System Settings under Privacy and Security.")
+                return
+            }
+            do {
+                try speech.startListening(locale: locale)
+            } catch {
+                isAgentListening = false
+                readAloud("Could not start listening: \(error.localizedDescription)")
+            }
+        }
     }
 
     func stopListening() {
@@ -378,14 +387,10 @@ final class AppState: ObservableObject {
     // MARK: - Accessibility announcements
 
     func announce(_ message: String) {
-        NSAccessibility.post(
-            element: NSApp as Any,
-            notification: .announcementRequested,
-            userInfo: [
-                NSAccessibility.NotificationUserInfoKey.announcement: message,
-                NSAccessibility.NotificationUserInfoKey.priority: NSAccessibilityPriorityLevel.high.rawValue
-            ]
-        )
+        // Route through Oralis's own TTS instead of NSAccessibility/VoiceOver.
+        // Using .announcementRequested on macOS 27 triggers VoiceOver which speaks
+        // over Oralis's own TTS and can cause the accessibility label recursion crash.
+        readAloud(message)
     }
 
     func readAloud(_ message: String) {

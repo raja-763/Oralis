@@ -70,6 +70,9 @@ struct TalkView: View {
                         }
                     }
                     .padding(16)
+                    // Oralis reads every message aloud — hide the text from VoiceOver
+                    // to prevent double-reading and the macOS 27 accessibility recursion crash.
+                    .accessibilityHidden(true)
                 }
             }
             .onChange(of: appState.agentMessages.count) { _, _ in
@@ -127,16 +130,15 @@ struct TalkView: View {
             }
         }
         .padding(.horizontal, 32)
-        .accessibilityElement(children: .contain)
     }
 
     // MARK: - Mic bar (voice only — no text input)
 
     private var micBar: some View {
         VStack(spacing: 10) {
-            // Status label
-            Group {
-                if appState.isAgentListening {
+            // Status label + live transcription
+            if appState.isAgentListening {
+                VStack(spacing: 4) {
                     HStack(spacing: 6) {
                         Image(systemName: "waveform")
                             .symbolEffect(.variableColor.iterative)
@@ -145,13 +147,23 @@ struct TalkView: View {
                             .fontWeight(.medium)
                             .foregroundStyle(.red)
                     }
-                } else {
-                    Text(appState.agentMessages.isEmpty ? "Tap the mic to speak" : "Tap the mic to respond")
-                        .foregroundStyle(.secondary)
+                    .font(.subheadline)
+                    if !appState.speech.transcribedText.isEmpty {
+                        Text(appState.speech.transcribedText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                            .accessibilityHidden(true)
+                    }
                 }
+                .frame(minHeight: 22)
+            } else {
+                Text(appState.agentMessages.isEmpty ? "Tap the mic to speak" : "Tap the mic to respond")
+                    .foregroundStyle(.secondary)
+                    .font(.subheadline)
+                    .frame(height: 22)
             }
-            .font(.subheadline)
-            .frame(height: 22)
 
             // Big mic button
             Button {
@@ -249,6 +261,5 @@ struct SuggestionChip: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Suggested command: \(text)")
     }
 }

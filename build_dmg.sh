@@ -5,10 +5,10 @@ set -euo pipefail
 
 APP_NAME="Oralis"
 DMG_NAME="Oralis 4"
-BUILD_DIR="$(pwd)/build/Release"
 DERIVED_DATA="$(pwd)/build"
+BUILD_DIR="$DERIVED_DATA/Build/Products/Release"
 APP_PATH="$BUILD_DIR/$APP_NAME.app"
-DMG_PATH="$BUILD_DIR/$DMG_NAME.dmg"
+DMG_PATH="$(pwd)/build/$DMG_NAME.dmg"
 
 echo "▶ Regenerating Xcode project..."
 xcodegen generate

@@ -1,3 +1,4 @@
+import AppKit
 import AVFoundation
 import Speech
 import SwiftUI
@@ -175,9 +176,18 @@ final class SpeechService: NSObject, ObservableObject {
     var onFinalResult: ((String) -> Void)?
 
     func requestPermissions() async -> Bool {
-        await withCheckedContinuation { cont in
+        // Request speech recognition permission.
+        let speechOK = await withCheckedContinuation { cont in
             SFSpeechRecognizer.requestAuthorization { status in
                 cont.resume(returning: status == .authorized)
+            }
+        }
+        guard speechOK else { return false }
+
+        // Request microphone permission (required separately on macOS).
+        return await withCheckedContinuation { cont in
+            AVCaptureDevice.requestAccess(for: .audio) { granted in
+                cont.resume(returning: granted)
             }
         }
     }
@@ -185,13 +195,24 @@ final class SpeechService: NSObject, ObservableObject {
     func startListening(locale: String = "en-US") throws {
         guard !isListening else { return }
 
+        // Re-create engine every session — reusing a stopped engine can deadlock on some Macs.
+        audioEngine = AVAudioEngine()
+
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: locale))
+        guard let recognizer, recognizer.isAvailable else {
+            throw OralisError.apiError("Speech recognition is unavailable for \(locale).")
+        }
+
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let req = recognitionRequest else { return }
         req.shouldReportPartialResults = true
 
         let inputNode = audioEngine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
+        // Use inputFormat (not outputFormat) for the microphone tap.
+        let format = inputNode.inputFormat(forBus: 0)
+        guard format.sampleRate > 0 else {
+            throw OralisError.apiError("No audio input device found. Check System Settings → Sound → Input.")
+        }
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             req.append(buffer)
         }
@@ -200,7 +221,10 @@ final class SpeechService: NSObject, ObservableObject {
         try audioEngine.start()
         isListening = true
 
-        recognitionTask = recognizer?.recognitionTask(with: req) { [weak self] result, error in
+        // Mic-on sound
+        NSSound(named: .init("Ping"))?.play()
+
+        recognitionTask = recognizer.recognitionTask(with: req) { [weak self] result, error in
             guard let self else { return }
             if let result {
                 Task { @MainActor in
@@ -217,6 +241,9 @@ final class SpeechService: NSObject, ObservableObject {
     }
 
     func stopListening() {
+        guard isListening else { return }
+        // Mic-off sound
+        NSSound(named: .init("Pop"))?.play()
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
@@ -224,6 +251,7 @@ final class SpeechService: NSObject, ObservableObject {
         recognitionRequest = nil
         recognitionTask = nil
         isListening = false
+        transcribedText = ""
     }
 }
 
