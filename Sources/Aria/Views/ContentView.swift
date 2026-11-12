@@ -27,5 +27,19 @@ struct ContentView: View {
             AccountSetupView()
                 .environmentObject(appState)
         }
+        // Call overlay — shown for sighted users only.
+        // VoiceOver users stay in the main window; audio feedback comes via VO announcements.
+        .sheet(isPresented: .init(
+            get: { appState.isConversationMode && !SpeechService.isVoiceOverActive },
+            set: { if !$0 { appState.stopConversationMode() } }
+        )) {
+            CallView()
+                .environmentObject(appState)
+                .frame(minWidth: 480, minHeight: 540)
+        }
+        // Switch to Settings tab when triggered from menu bar or app menu
+        .onReceive(NotificationCenter.default.publisher(for: .oralisOpenSettings)) { _ in
+            selectedTab = .settings
+        }
     }
 }

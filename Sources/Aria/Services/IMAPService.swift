@@ -1,9 +1,6 @@
 import Foundation
 
-/// Generic IMAP/SMTP service using URLSession for IMAP-over-HTTP proxy
-/// (or direct IMAP via Network.framework in a future iteration).
-/// This skeleton handles the full protocol surface; the network layer
-/// is stubbed and ready to be backed by a real IMAP library.
+/// IMAP/SMTP email service backed by IMAPClient (NWConnection + TLS).
 final class IMAPService: EmailService {
     let account: EmailAccount
 
@@ -11,36 +8,57 @@ final class IMAPService: EmailService {
         self.account = account
     }
 
+    // MARK: - Fetch
+
     func fetchThreads(limit: Int) async throws -> [EmailThread] {
-        // TODO: open IMAP connection, SELECT INBOX, FETCH threads
-        return []
+        let (host, port) = imapCoords
+        guard !host.isEmpty else { throw IMAPError.notConnected }
+
+        let password = KeychainService.loadPassword(for: account.id) ?? ""
+        guard !password.isEmpty else {
+            throw OralisError.apiError("No password saved for \(account.emailAddress). Open Settings → Accounts to re-enter it.")
+        }
+
+        let client = IMAPClient()
+        try await client.connect(host: host, port: port)
+        try await client.login(username: account.emailAddress, password: password)
+        let threads = try await client.fetchInbox(limit: limit)
+        await client.logout()
+        return threads
     }
 
     func fetchMessage(id: String) async throws -> EmailMessage {
-        throw OralisError.notImplemented("IMAP fetchMessage")
+        // Full-body fetch not yet implemented — callers receive body in fetchThreads preview
+        throw OralisError.notImplemented("IMAP full fetchMessage")
     }
+
+    // MARK: - Send (SMTP — not yet implemented; store draft locally)
 
     func sendMessage(_ draft: DraftMessage) async throws {
-        // TODO: SMTP connection, EHLO, AUTH, DATA
+        // TODO: SMTP with STARTTLS
+        throw OralisError.notImplemented("SMTP send — coming soon")
     }
 
+    // MARK: - Mutations (mark read/delete/archive via IMAP commands)
+
     func deleteThreads(ids: [UUID]) async throws {
-        // STORE +FLAGS.SILENT \Deleted, then EXPUNGE
+        // TODO: STORE +FLAGS.SILENT \Deleted, then EXPUNGE
     }
 
     func archiveThreads(ids: [UUID]) async throws {
-        // COPY to Archive folder, then delete from INBOX
+        // TODO: COPY to Archive, delete from INBOX
     }
 
     func markRead(ids: [UUID], read: Bool) async throws {
-        // STORE ±FLAGS.SILENT \Seen
+        // TODO: STORE ±FLAGS.SILENT \Seen
     }
 
     func starThreads(ids: [UUID], starred: Bool) async throws {
-        // STORE ±FLAGS.SILENT \Flagged
+        // TODO: STORE ±FLAGS.SILENT \Flagged
     }
 
     func searchThreads(query: String) async throws -> [EmailThread] {
+        // TODO: IMAP SEARCH command
         return []
     }
 
@@ -53,4 +71,18 @@ final class IMAPService: EmailService {
     }
 
     func moveToSpam(ids: [UUID]) async throws {}
+
+    // MARK: - Helpers
+
+    private var imapCoords: (String, Int) {
+        if !account.imapHost.isEmpty { return (account.imapHost, account.imapPort) }
+        // Fall back to per-provider defaults
+        switch account.provider {
+        case .icloud:  return ("imap.mail.me.com",          993)
+        case .gmail:   return ("imap.gmail.com",             993)
+        case .outlook: return ("outlook.office365.com",      993)
+        case .yahoo:   return ("imap.mail.yahoo.com",        993)
+        default:       return ("",                             993)
+        }
+    }
 }

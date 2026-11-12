@@ -10,11 +10,11 @@ final class MenuBarController: NSObject, ObservableObject {
     private var panel: FloatingPanel?
     private var eventMonitor: Any?
 
-    // Current shortcut (default ⌘⌥Space)
+    // Current hotkey (default ⌥Space)
     @Published var shortcutKeyCode: UInt32   = UInt32(kVK_Space)
-    @Published var shortcutModifiers: UInt32 = UInt32(cmdKey | optionKey)
+    @Published var shortcutModifiers: UInt32 = UInt32(optionKey)
 
-    private var appState: AppState?
+    private weak var appState: AppState?
     private var panelSetUp = false
 
     // Called from AriaApp.onChange when appState changes
@@ -36,10 +36,129 @@ final class MenuBarController: NSObject, ObservableObject {
         button.image = NSImage(systemSymbolName: "waveform.circle.fill",
                                accessibilityDescription: "Oralis")
         button.image?.isTemplate = true
-        button.action = #selector(togglePanel)
-        button.target = self
-        button.toolTip = "Oralis — click or press ⌘⌥Space"
-        button.setAccessibilityLabel("Oralis menu bar button — toggle voice panel")
+        button.toolTip = "Oralis — click to open, Option+Space from anywhere"
+        button.setAccessibilityLabel("Oralis voice assistant")
+
+        // Attach the dropdown menu so a click shows it
+        statusItem?.menu = buildStatusMenu()
+
+        // Listen for the keyboard shortcut notification from app menus
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(togglePanel),
+            name: .oralisTogglePanel,
+            object: nil
+        )
+    }
+
+    private func buildStatusMenu() -> NSMenu {
+        let menu = NSMenu()
+
+        // ── Conversation ───────────────────────────────────────────────
+        let startItem = NSMenuItem(title: "Start Conversation",
+                                   action: #selector(menuStartConversation),
+                                   keyEquivalent: "")
+        startItem.target = self
+        startItem.image  = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+        menu.addItem(startItem)
+
+        let stopItem = NSMenuItem(title: "Stop Conversation",
+                                  action: #selector(menuStopConversation),
+                                  keyEquivalent: "")
+        stopItem.target = self
+        stopItem.image  = NSImage(systemSymbolName: "stop.circle", accessibilityDescription: nil)
+        menu.addItem(stopItem)
+
+        menu.addItem(.separator())
+
+        // ── Window ─────────────────────────────────────────────────────
+        let panelItem = NSMenuItem(title: "Show Panel",
+                                   action: #selector(togglePanel),
+                                   keyEquivalent: " ")
+        panelItem.keyEquivalentModifierMask = [.option]
+        panelItem.target = self
+        panelItem.image  = NSImage(systemSymbolName: "rectangle.inset.filled", accessibilityDescription: nil)
+        menu.addItem(panelItem)
+
+        let windowItem = NSMenuItem(title: "Open Oralis Window",
+                                    action: #selector(openMainWindow),
+                                    keyEquivalent: "")
+        windowItem.target = self
+        windowItem.image  = NSImage(systemSymbolName: "macwindow", accessibilityDescription: nil)
+        menu.addItem(windowItem)
+
+        menu.addItem(.separator())
+
+        // ── Inbox quick actions ────────────────────────────────────────
+        let checkItem = NSMenuItem(title: "Check Inbox",
+                                   action: #selector(menuCheckInbox),
+                                   keyEquivalent: "")
+        checkItem.target = self
+        checkItem.image  = NSImage(systemSymbolName: "tray.fill", accessibilityDescription: nil)
+        menu.addItem(checkItem)
+
+        let calItem = NSMenuItem(title: "Today's Calendar",
+                                 action: #selector(menuCheckCalendar),
+                                 keyEquivalent: "")
+        calItem.target = self
+        calItem.image  = NSImage(systemSymbolName: "calendar", accessibilityDescription: nil)
+        menu.addItem(calItem)
+
+        menu.addItem(.separator())
+
+        // ── Settings & Quit ────────────────────────────────────────────
+        let settingsItem = NSMenuItem(title: "Settings…",
+                                      action: #selector(openSettings),
+                                      keyEquivalent: ",")
+        settingsItem.keyEquivalentModifierMask = .command
+        settingsItem.target = self
+        settingsItem.image  = NSImage(systemSymbolName: "gearshape.fill", accessibilityDescription: nil)
+        menu.addItem(settingsItem)
+
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(title: "Quit Oralis",
+                                  action: #selector(NSApplication.terminate(_:)),
+                                  keyEquivalent: "q")
+        quitItem.keyEquivalentModifierMask = .command
+        menu.addItem(quitItem)
+
+        return menu
+    }
+
+    // MARK: - Menu actions
+
+    @objc private func menuStartConversation() {
+        NSApp.activate(ignoringOtherApps: true)
+        appState?.startConversationMode()
+    }
+
+    @objc private func menuStopConversation() {
+        appState?.stopConversationMode()
+    }
+
+    @objc private func openMainWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        for w in NSApp.windows where !(w is FloatingPanel) {
+            w.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    @objc private func menuCheckInbox() {
+        NSApp.activate(ignoringOtherApps: true)
+        appState?.sendAgentMessage("Read my latest emails and give me a summary.")
+    }
+
+    @objc private func menuCheckCalendar() {
+        NSApp.activate(ignoringOtherApps: true)
+        appState?.sendAgentMessage("What's on my calendar today?")
+    }
+
+    @objc private func openSettings() {
+        NSApp.activate(ignoringOtherApps: true)
+        openMainWindow()
+        // Post notification that ContentView listens to for showing settings
+        NotificationCenter.default.post(name: .oralisOpenSettings, object: nil)
     }
 
     // MARK: - Floating panel
@@ -84,14 +203,12 @@ final class MenuBarController: NSObject, ObservableObject {
         panel.setFrameOrigin(origin)
     }
 
-    // MARK: - Global keyboard shortcut (NSEvent monitor)
+    // MARK: - Global keyboard shortcut
 
     func installEventMonitor() {
         if let old = eventMonitor { NSEvent.removeMonitor(old) }
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            Task { @MainActor [weak self] in
-                self?.handleGlobalKey(event)
-            }
+            Task { @MainActor [weak self] in self?.handleGlobalKey(event) }
         }
     }
 
@@ -121,7 +238,7 @@ final class MenuBarController: NSObject, ObservableObject {
     }
 }
 
-// MARK: - NSWindowDelegate (dismiss on click-away)
+// MARK: - NSWindowDelegate
 
 extension MenuBarController: NSWindowDelegate {
     func windowDidResignKey(_ notification: Notification) {
@@ -139,15 +256,15 @@ final class FloatingPanel: NSPanel {
             backing:     .buffered,
             defer:       false
         )
-        isMovableByWindowBackground = true
-        isFloatingPanel  = true
-        level            = .floating
-        titlebarAppearsTransparent = true
-        titleVisibility  = .hidden
-        backgroundColor  = .clear
-        hasShadow        = true
-        isReleasedWhenClosed = false
-        collectionBehavior   = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        isMovableByWindowBackground  = true
+        isFloatingPanel              = true
+        level                        = .floating
+        titlebarAppearsTransparent   = true
+        titleVisibility              = .hidden
+        backgroundColor              = .clear
+        hasShadow                    = true
+        isReleasedWhenClosed         = false
+        collectionBehavior           = [.canJoinAllSpaces, .fullScreenAuxiliary]
     }
     override var canBecomeKey: Bool { true }
 }
@@ -163,4 +280,11 @@ private extension NSEvent.ModifierFlags {
         if contains(.control) { c |= UInt32(controlKey) }
         return c
     }
+}
+
+// MARK: - Notification names
+
+extension Notification.Name {
+    static let oralisOpenSettings = Notification.Name("oralis.openSettings")
+    static let oralisTogglePanel  = Notification.Name("oralis.togglePanel")
 }

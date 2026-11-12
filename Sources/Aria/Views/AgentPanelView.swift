@@ -146,7 +146,7 @@ struct AgentPanelView: View {
                     appState.announce("Microphone permission denied. Please allow it in System Settings.")
                     return
                 }
-                try? appState.speech.startListening(locale: appState.speech.preferences.language)
+                try? await appState.speech.startListening(locale: appState.speech.preferences.language)
                 appState.isAgentListening = true
             }
         }

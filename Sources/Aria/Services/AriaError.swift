@@ -25,3 +25,18 @@ enum OralisError: LocalizedError {
         }
     }
 }
+
+
+/// Appends a diagnostic line to ~/Library/Logs/Oralis.log. Never log tokens or message content.
+func oralisLog(_ message: String) {
+    let url = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Logs/Oralis.log")
+    let line = "\(Date()) \(message)\n"
+    if let handle = try? FileHandle(forWritingTo: url) {
+        handle.seekToEndOfFile()
+        handle.write(Data(line.utf8))
+        try? handle.close()
+    } else {
+        try? Data(line.utf8).write(to: url)
+    }
+}

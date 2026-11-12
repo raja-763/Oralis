@@ -39,12 +39,16 @@
     <!-- OAuth client IDs — fill in after registering apps in Google/Microsoft portals -->
     <key>GOOGLE_OAUTH_CLIENT_ID</key>
     <string>$(GOOGLE_OAUTH_CLIENT_ID)</string>
+    <key>GOOGLE_OAUTH_CLIENT_SECRET</key>
+    <string>$(GOOGLE_OAUTH_CLIENT_SECRET)</string>
     <key>MICROSOFT_OAUTH_CLIENT_ID</key>
     <string>$(MICROSOFT_OAUTH_CLIENT_ID)</string>
 
     <!-- AI + ElevenLabs -->
     <key>ANTHROPIC_API_KEY</key>
     <string>$(ANTHROPIC_API_KEY)</string>
+    <key>ANTHROPIC_WORKSPACE_ID</key>
+    <string>$(ANTHROPIC_WORKSPACE_ID)</string>
     <key>ORALIS_PROXY_URL</key>
     <string>$(ORALIS_PROXY_URL)</string>
     <key>ELEVENLABS_API_KEY</key>
@@ -58,10 +62,12 @@
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Oralis uses speech recognition so you can read, reply to, and manage emails hands-free.</string>
     <key>NSContactsUsageDescription</key>
-    <string>Oralis reads your contacts to autocomplete email addresses.</string>
+    <string>Oralis reads your contacts to find email addresses and phone numbers for the people you name.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Oralis reads and adds calendar events when you ask about your calendar by voice.</string>
     <key>NSCalendarsUsageDescription</key>
     <string>Oralis reads your calendar so you can manage meeting invites by voice.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Oralis imports accounts from macOS Mail with your permission.</string>
+    <string>Oralis uses the Messages app to send text messages you dictate, and can import accounts from macOS Mail.</string>
 </dict>
 </plist>

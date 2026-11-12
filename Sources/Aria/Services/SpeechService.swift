@@ -17,6 +17,22 @@ final class SpeechService: NSObject, ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
     @Published var isSpeaking = false
     private var audioPlayer: AVAudioPlayer?
+    private var speakingTimeoutTask: Task<Void, Never>?
+
+    override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
+
+    // MARK: - VoiceOver detection
+
+    /// True when VoiceOver is running. When true, we route all speech through
+    /// VoiceOver announcements instead of AVSpeechSynthesizer so the two TTS
+    /// engines don't fight each other.
+    static var isVoiceOverActive: Bool {
+        UserDefaults(suiteName: "com.apple.universalaccess")?
+            .bool(forKey: "voiceOverOnOffKey") ?? false
+    }
 
     // ElevenLabs direct API key (compiled in via Secrets.xcconfig, never in git)
     static let elevenLabsAPIKey: String = {
@@ -49,6 +65,18 @@ final class SpeechService: NSObject, ObservableObject {
 
     func speak(_ text: String, prefs: VoicePreferences) {
         stopSpeaking()
+        isSpeaking = true
+
+        // Always speak with Oralis's own voice, VoiceOver or not. VoiceOver announcements
+        // proved unreliable (silent, or cut off by VoiceOver's own focus speech).
+        // The timeout frees the conversation loop if didFinish never fires.
+        let timeoutSecs = max(Double(text.count) / 12.0 + 6.0, 10.0)
+        speakingTimeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(timeoutSecs * 1_000_000_000))
+            guard let self, !Task.isCancelled else { return }
+            oralisLog("speech: finish signal never arrived, released by timeout after \(Int(timeoutSecs))s")
+            self.isSpeaking = false
+        }
 
         // Try ElevenLabs if a voice ID is selected and API key or proxy is configured
         if prefs.useElevenLabs, !prefs.elevenLabsVoiceID.isEmpty,
@@ -72,7 +100,7 @@ final class SpeechService: NSObject, ObservableObject {
             utterance.voice = AVSpeechSynthesisVoice(identifier: prefs.voiceIdentifier)
                            ?? bestVoiceForLanguage(prefs.language)
         }
-        isSpeaking = true
+        // isSpeaking already set to true in speak() before calling here
         synthesizer.speak(utterance)
     }
 
@@ -137,17 +165,23 @@ final class SpeechService: NSObject, ObservableObject {
             audioPlayer = try AVAudioPlayer(data: data)
             audioPlayer?.delegate = audioDelegate
             audioPlayer?.play()
-            isSpeaking = true
+            // isSpeaking already set to true in speak() before this Task ran
         } catch {
             speakApple(text, prefs: preferences)
         }
     }
 
     private lazy var audioDelegate = AudioPlayerDelegate { [weak self] in
-        Task { @MainActor [weak self] in self?.isSpeaking = false }
+        Task { @MainActor [weak self] in
+            self?.speakingTimeoutTask?.cancel()
+            self?.speakingTimeoutTask = nil
+            self?.isSpeaking = false
+        }
     }
 
     func stopSpeaking() {
+        speakingTimeoutTask?.cancel()
+        speakingTimeoutTask = nil
         synthesizer.stopSpeaking(at: .immediate)
         audioPlayer?.stop()
         audioPlayer = nil
@@ -174,6 +208,93 @@ final class SpeechService: NSObject, ObservableObject {
     @Published var isListening = false
     @Published var transcribedText = ""
     var onFinalResult: ((String) -> Void)?
+    var onListeningStopped: (() -> Void)?
+    private var silenceTask: Task<Void, Never>?
+
+    // MARK: - Wake word detection ("Hey Oralis" / "Oralis")
+
+    private var wakeEngine = AVAudioEngine()
+    private var wakeRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var wakeTask: SFSpeechRecognitionTask?
+    private var wakeRestartTimer: Timer?
+    private(set) var isWakeWordActive = false
+    private var wakeTapInstalled = false
+    var onWakeWordDetected: (() -> Void)?
+
+    func startWakeWordDetection() {
+        guard !isWakeWordActive, permissionsGranted else { return }
+        isWakeWordActive = true
+        startOneWakeWordSession()
+        // SFSpeechRecognizer tasks time out after ~60 s — restart every 55 s
+        wakeRestartTimer = Timer.scheduledTimer(withTimeInterval: 55, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.isWakeWordActive, !self.isListening else { return }
+                self.stopOneWakeWordSession()
+                self.startOneWakeWordSession()
+            }
+        }
+    }
+
+    func stopWakeWordDetection() {
+        isWakeWordActive = false
+        wakeRestartTimer?.invalidate()
+        wakeRestartTimer = nil
+        stopOneWakeWordSession()
+    }
+
+    private func startOneWakeWordSession() {
+        guard !isListening else { return }
+        wakeEngine = AVAudioEngine()
+        let wakeRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+        guard let wakeRecognizer, wakeRecognizer.isAvailable else { return }
+        let req = SFSpeechAudioBufferRecognitionRequest()
+        req.shouldReportPartialResults = true
+        wakeRequest = req
+        let inputNode = wakeEngine.inputNode
+        let format = inputNode.inputFormat(forBus: 0)
+        guard format.sampleRate > 0 else { return }
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak req] buffer, _ in
+            req?.append(buffer)
+        }
+        wakeTapInstalled = true
+        // Start wake engine off main thread for the same reason as startListening
+        let capturedWakeEngine = wakeEngine
+        Task.detached(priority: .background) { try? capturedWakeEngine.start() }
+        wakeTask = wakeRecognizer.recognitionTask(with: req) { [weak self] result, error in
+            guard let self else { return }
+            if let text = result?.bestTranscription.formattedString.lowercased() {
+                let triggers = ["oralis", "hey oralis", "orales", "aurelius", "hey aurelius"]
+                if triggers.contains(where: { text.contains($0) }) {
+                    Task { @MainActor [weak self] in
+                        guard let self, !self.isListening else { return }
+                        self.stopOneWakeWordSession()
+                        self.onWakeWordDetected?()
+                    }
+                }
+            }
+            if error != nil || result?.isFinal == true {
+                Task { @MainActor [weak self] in
+                    guard let self, self.isWakeWordActive, !self.isListening else { return }
+                    self.stopOneWakeWordSession()
+                    self.startOneWakeWordSession()
+                }
+            }
+        }
+    }
+
+    private func stopOneWakeWordSession() {
+        // Only touch the engine if a session really started. Asking a never-started
+        // engine for its inputNode blocks the main thread indefinitely, which froze the
+        // app whenever wake word was disabled (it is disabled under VoiceOver).
+        guard wakeTapInstalled else { return }
+        wakeTapInstalled = false
+        wakeEngine.stop()
+        wakeEngine.inputNode.removeTap(onBus: 0)
+        wakeRequest?.endAudio()
+        wakeTask?.cancel()
+        wakeRequest = nil
+        wakeTask = nil
+    }
 
     func requestPermissions() async -> Bool {
         // Request speech recognition permission.
@@ -197,7 +318,7 @@ final class SpeechService: NSObject, ObservableObject {
         AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     }
 
-    func startListening(locale: String = "en-US") throws {
+    func startListening(locale: String = "en-US") async throws {
         guard !isListening else { return }
 
         // Re-create engine every session — reusing a stopped engine can deadlock on some Macs.
@@ -211,6 +332,8 @@ final class SpeechService: NSObject, ObservableObject {
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let req = recognitionRequest else { return }
         req.shouldReportPartialResults = true
+        // On-device recognition answers faster and works offline.
+        if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
 
         let inputNode = audioEngine.inputNode
         // Use inputFormat (not outputFormat) for the microphone tap.
@@ -223,7 +346,12 @@ final class SpeechService: NSObject, ObservableObject {
         }
 
         audioEngine.prepare()
-        try audioEngine.start()
+        // Start the audio engine off the main thread so VoiceOver accessibility events
+        // are not blocked (VoiceOver marks the app "not responding" if the main thread
+        // is busy with audio I/O for more than ~2 seconds).
+        let engine = audioEngine
+        try await Task.detached(priority: .userInitiated) { try engine.start() }.value
+
         isListening = true
 
         // Mic-on sound
@@ -234,7 +362,18 @@ final class SpeechService: NSObject, ObservableObject {
             if let result {
                 Task { @MainActor in
                     self.transcribedText = result.bestTranscription.formattedString
+                    // The recognizer never finalizes on its own while the mic stays open,
+                    // so treat one second without new words as the end of the command.
+                    if !result.isFinal, !self.transcribedText.isEmpty {
+                        self.silenceTask?.cancel()
+                        self.silenceTask = Task { @MainActor [weak self] in
+                            try? await Task.sleep(nanoseconds: 1_000_000_000)
+                            guard let self, !Task.isCancelled, self.isListening else { return }
+                            self.recognitionRequest?.endAudio()
+                        }
+                    }
                     if result.isFinal {
+                        self.silenceTask?.cancel()
                         self.onFinalResult?(result.bestTranscription.formattedString)
                     }
                 }
@@ -247,6 +386,8 @@ final class SpeechService: NSObject, ObservableObject {
 
     func stopListening() {
         guard isListening else { return }
+        silenceTask?.cancel()
+        silenceTask = nil
         // Mic-off sound
         NSSound(named: .init("Pop"))?.play()
         audioEngine.stop()
@@ -257,13 +398,18 @@ final class SpeechService: NSObject, ObservableObject {
         recognitionTask = nil
         isListening = false
         transcribedText = ""
+        onListeningStopped?()
     }
 }
 
 extension SpeechService: AVSpeechSynthesizerDelegate {
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer,
                              didFinish utterance: AVSpeechUtterance) {
-        Task { @MainActor in isSpeaking = false }
+        Task { @MainActor in
+            speakingTimeoutTask?.cancel()
+            speakingTimeoutTask = nil
+            isSpeaking = false
+        }
     }
 }
 

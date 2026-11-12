@@ -1,16 +1,14 @@
 import SwiftUI
 import AuthenticationServices
 
-/// Account setup — SSO sign-in for Google and Microsoft, plus Apple Mail import fallback.
+/// Account setup — SSO sign-in for Google and Microsoft.
 struct AccountSetupView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var oauth    = OAuthService()
-    @StateObject private var importer = MailImportService()
+    @StateObject private var oauth = OAuthService()
 
-    @State private var signingIn  = false
+    @State private var signingIn = false
     @State private var errorMsg: String?
-    @State private var showManual = false
 
     private static let googleConfigured    = !(Bundle.main.infoDictionary?["GOOGLE_OAUTH_CLIENT_ID"]    as? String ?? "").isEmpty
     private static let microsoftConfigured = !(Bundle.main.infoDictionary?["MICROSOFT_OAUTH_CLIENT_ID"] as? String ?? "").isEmpty
@@ -71,11 +69,6 @@ struct AccountSetupView: View {
                                     icon: "envelope.fill",
                                     tint: Color(red: 0.0, green: 0.47, blue: 0.84)
                                 ) { Task { await signIn(provider: .outlook) } }
-                            } else {
-                                OAuthNotConfiguredRow(
-                                    provider: "Microsoft",
-                                    tint: Color(red: 0.0, green: 0.47, blue: 0.84)
-                                )
                             }
                         }
 
@@ -85,49 +78,6 @@ struct AccountSetupView: View {
                                 .foregroundStyle(.red)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 8)
-                        }
-
-                        Divider()
-
-                        // ── Apple Mail import ──────────────────────────
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Or import from Apple Mail")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 4)
-
-                            if importer.isLoading {
-                                HStack(spacing: 8) {
-                                    ProgressView().controlSize(.small)
-                                    Text("Checking Apple Mail…")
-                                        .font(.callout)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.vertical, 8)
-                            } else if !importer.importedAccounts.isEmpty {
-                                ForEach(importer.importedAccounts) { acc in
-                                    ImportedAccountRow(account: acc) { addImported(acc) }
-                                }
-                            } else {
-                                Text(importer.errorMessage ?? "No accounts found in Apple Mail.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.vertical, 4)
-                            }
-                        }
-
-                        Divider()
-
-                        // ── Manual fallback ────────────────────────────
-                        Button {
-                            showManual = true
-                        } label: {
-                            Label("Add Account Manually", systemImage: "plus.circle")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .sheet(isPresented: $showManual) {
-                            IMAPSetupView(provider: .custom).environmentObject(appState)
                         }
                     }
                 }
@@ -152,7 +102,6 @@ struct AccountSetupView: View {
         }
         .frame(width: 460)
         .background(Color(nsColor: .windowBackgroundColor))
-        .task { await importer.fetchMailAccounts() }
     }
 
     // MARK: - OAuth sign-in
@@ -191,6 +140,7 @@ struct AccountSetupView: View {
                 // user cancelled — no message
             } else {
                 errorMsg = error.localizedDescription
+                appState.readAloud("Sign in failed. \(error.localizedDescription)")
             }
         }
         signingIn = false
@@ -198,18 +148,6 @@ struct AccountSetupView: View {
 
     // MARK: - Apple Mail import
 
-    private func addImported(_ imported: MailImportService.ImportedAccount) {
-        let account = EmailAccount(id: UUID(), displayName: imported.displayName,
-                                   emailAddress: imported.emailAddress, provider: imported.provider,
-                                   imapHost: imported.imapHost, imapPort: imported.imapPort,
-                                   smtpHost: imported.smtpHost, smtpPort: imported.smtpPort,
-                                   useOAuth: false)
-        if let pwd = AppleMailKeychain.password(for: imported.emailAddress, host: imported.imapHost) {
-            KeychainService.savePassword(pwd, for: account.id)
-        }
-        appState.addAccount(account)
-        dismiss()
-    }
 }
 
 // MARK: - "Not configured" placeholder row

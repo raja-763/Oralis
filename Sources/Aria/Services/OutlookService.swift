@@ -8,14 +8,17 @@ final class OutlookService: EmailService {
     init(account: EmailAccount) { self.account = account }
 
     private func token() throws -> String {
-        guard let t = KeychainService.shared.load(key: account.keychainToken) else {
+        guard let t = KeychainService.loadAccessToken(for: account.id), !t.isEmpty else {
             throw OralisError.notAuthenticated
         }
         return t
     }
 
     private func request(_ path: String, method: String = "GET", body: Data? = nil) throws -> URLRequest {
-        var req = URLRequest(url: baseURL.appendingPathComponent(path))
+        guard let url = URL(string: baseURL.absoluteString + "/" + path) else {
+            throw OralisError.apiError("Oralis built an invalid mail request.")
+        }
+        var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("Bearer \(try token())", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")

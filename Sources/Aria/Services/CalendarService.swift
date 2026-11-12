@@ -9,7 +9,13 @@ final class CalendarService {
     private let store = EKEventStore()
 
     func requestAccess() async -> Bool {
-        await withCheckedContinuation { cont in
+        // Never re-prompt: only ask when the user has not decided yet.
+        switch EKEventStore.authorizationStatus(for: .event) {
+        case .fullAccess: return true
+        case .notDetermined: break
+        default: return false
+        }
+        return await withCheckedContinuation { cont in
             store.requestFullAccessToEvents { granted, _ in
                 cont.resume(returning: granted)
             }

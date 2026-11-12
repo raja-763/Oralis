@@ -26,25 +26,22 @@ struct OralisApp: App {
                         if appState.accounts.isEmpty {
                             appState.showAccountSetup = true
                         }
+                        // Boot menu bar on first appearance
+                        appDelegate.menuBar.refreshPanel(appState: appState)
                     }
             }
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .windowResizability(.contentMinSize)
         .commands {
-            CommandGroup(after: .newItem) {
-                Button("Toggle Oralis Panel") {
-                    appDelegate.menuBar.togglePanel()
-                }
-                .keyboardShortcut("o", modifiers: [.command, .option])
-            }
+            OralisCommands(appState: appState)
         }
-        // Pass appState to the delegate once it's available
+        // Keep menu bar booted after account changes
         .onChange(of: appState.accounts.count) { _, _ in
             appDelegate.menuBar.refreshPanel(appState: appState)
         }
     }
-
 }
 
 // MARK: - App Delegate
@@ -52,10 +49,11 @@ struct OralisApp: App {
 @MainActor
 final class OralisAppDelegate: NSObject, NSApplicationDelegate {
     let menuBar = MenuBarController()
-    private var appState: AppState?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // appState is wired via refreshPanel from the Scene
+        // Customize the app-level About panel title
+        NSApplication.shared.applicationIconImage = NSImage(systemSymbolName: "waveform.circle.fill",
+                                                             accessibilityDescription: "Oralis")
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -63,5 +61,10 @@ final class OralisAppDelegate: NSObject, NSApplicationDelegate {
             NSApp.windows.first(where: { !($0 is FloatingPanel) })?.makeKeyAndOrderFront(nil)
         }
         return true
+    }
+
+    // Keep the app running even with no windows (menu bar app pattern)
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 }

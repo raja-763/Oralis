@@ -99,10 +99,7 @@ struct IMAPSetupView: View {
                         }
                     }
 
-                    if let appLink = appPasswordLink {
-                        Link("How to create an App Password →", destination: URL(string: appLink)!)
-                            .font(.caption)
-                    }
+                    appPasswordGuide
 
                     if let error {
                         Text(error)
@@ -171,29 +168,72 @@ struct IMAPSetupView: View {
 
     private var appPasswordNote: String? {
         switch presetProvider {
+        case .icloud:
+            return "iCloud requires an App-Specific Password — your regular Apple ID password won't work here."
         case .gmail:
-            return "Gmail requires an App Password — your regular password won't work."
+            return "Gmail requires an App Password — your regular Google password won't work here."
         case .yahoo:
-            return "Yahoo requires an App Password — your regular password won't work."
+            return "Yahoo requires an App Password — your regular password won't work here."
         default:
             return nil
         }
     }
 
-    private var appPasswordLink: String? {
+    @ViewBuilder
+    private var appPasswordGuide: some View {
         switch presetProvider {
-        case .gmail:  return "https://support.google.com/accounts/answer/185833"
-        case .yahoo:  return "https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html"
-        default:      return nil
+        case .icloud:
+            VStack(alignment: .leading, spacing: 6) {
+                Text("How to create an iCloud App-Specific Password:")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("1. Go to appleid.apple.com and sign in.")
+                    Text("2. Under Sign-In & Security, tap App-Specific Passwords.")
+                    Text("3. Tap + and name it \"Oralis\".")
+                    Text("4. Copy the generated password and paste it above.")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                Link("Open Apple ID → App-Specific Passwords →",
+                     destination: URL(string: "https://appleid.apple.com/account/manage")!)
+                    .font(.caption)
+            }
+            .padding(12)
+            .background(Color.blue.opacity(0.07))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        case .gmail:
+            VStack(alignment: .leading, spacing: 6) {
+                Text("How to create a Gmail App Password:")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("1. Go to myaccount.google.com → Security.")
+                    Text("2. Under \"How you sign in to Google\", tap 2-Step Verification (enable it if off).")
+                    Text("3. Scroll down and tap App passwords.")
+                    Text("4. Create one for Oralis and paste it above.")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                Link("Open Google App Passwords →",
+                     destination: URL(string: "https://myaccount.google.com/apppasswords")!)
+                    .font(.caption)
+            }
+            .padding(12)
+            .background(Color.blue.opacity(0.07))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        default:
+            EmptyView()
         }
     }
 
     private static func defaultServers(for provider: EmailProvider) -> (String, String, String, String) {
         switch provider {
-        case .gmail:   return ("imap.gmail.com",          "993", "smtp.gmail.com",          "587")
-        case .outlook: return ("outlook.office365.com",   "993", "smtp.office365.com",      "587")
-        case .yahoo:   return ("imap.mail.yahoo.com",     "993", "smtp.mail.yahoo.com",     "465")
-        default:       return ("",                         "993", "",                         "587")
+        case .icloud:  return ("imap.mail.me.com",         "993", "smtp.mail.me.com",         "587")
+        case .gmail:   return ("imap.gmail.com",           "993", "smtp.gmail.com",            "587")
+        case .outlook: return ("outlook.office365.com",    "993", "smtp.office365.com",        "587")
+        case .yahoo:   return ("imap.mail.yahoo.com",      "993", "smtp.mail.yahoo.com",       "465")
+        default:       return ("",                          "993", "",                           "587")
         }
     }
 }

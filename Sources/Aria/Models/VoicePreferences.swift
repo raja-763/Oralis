@@ -3,6 +3,23 @@ import Foundation
 
 // MARK: - VoicePreferences
 
+/// Order in which email fields are read aloud.
+enum EmailReadOrder: String, Codable, CaseIterable, Identifiable {
+    case senderSubjectDateBody = "Sender, Subject, Date, Body"
+    case subjectSenderDateBody = "Subject, Sender, Date, Body"
+    case subjectDateSenderBody = "Subject, Date, Sender, Body"
+    case bodyOnly              = "Body only"
+    case summaryOnly           = "Summary only (AI)"
+    var id: String { rawValue }
+}
+
+/// How much of a response Oralis speaks.
+enum ResponseLength: String, Codable, CaseIterable, Identifiable {
+    case short  = "Short (key points)"
+    case full   = "Full response"
+    var id: String { rawValue }
+}
+
 struct VoicePreferences: Codable, Equatable {
     var voiceIdentifier: String       // AVSpeechSynthesisVoice.identifier
     var rate: Float                   // 0.0 – 1.0
@@ -17,6 +34,10 @@ struct VoicePreferences: Codable, Equatable {
     var elevenLabsVoiceID: String     = ""
     // Language for both STT (SFSpeechRecognizer) and Apple TTS voice selection
     var language: String              = "en-US"
+    // Reading customisation
+    var emailReadOrder: EmailReadOrder = .senderSubjectDateBody
+    var responseLength: ResponseLength = .full
+    var readEmailSummaryOnly: Bool     = false
 
     static let `default` = VoicePreferences(
         voiceIdentifier: preferredDefaultVoiceID(),
@@ -29,7 +50,10 @@ struct VoicePreferences: Codable, Equatable {
         announceBatchResults: true,
         useElevenLabs: false,
         elevenLabsVoiceID: "",
-        language: "en-US"
+        language: "en-US",
+        emailReadOrder: .senderSubjectDateBody,
+        responseLength: .full,
+        readEmailSummaryOnly: false
     )
 
     // Pick the highest-quality English voice available.

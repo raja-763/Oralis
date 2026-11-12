@@ -119,39 +119,56 @@ struct FloatingPanelView: View {
 
     private var micSection: some View {
         VStack(spacing: 6) {
-            // Listening status
-            if appState.isAgentListening {
-                HStack(spacing: 5) {
-                    Image(systemName: "waveform")
-                        .symbolEffect(.variableColor.iterative)
-                        .accessibilityHidden(true)
-                    Text("Listening…")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.red)
+            // Status label
+            Group {
+                if appState.isAgentListening {
+                    HStack(spacing: 5) {
+                        Image(systemName: "waveform")
+                            .symbolEffect(.variableColor.iterative)
+                            .accessibilityHidden(true)
+                        Text("Listening…")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.red)
+                    }
+                } else if appState.speech.isSpeaking {
+                    HStack(spacing: 5) {
+                        Image(systemName: "speaker.wave.2")
+                            .symbolEffect(.variableColor.iterative)
+                            .accessibilityHidden(true)
+                        Text("Speaking…")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                } else if appState.isConversationMode {
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.green).frame(width: 6, height: 6)
+                        Text("Active — speak anytime")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("⌥Space from anywhere")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
-                .frame(height: 18)
-            } else {
-                Text("Tap mic or ⌘⌥Space")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .frame(height: 18)
             }
+            .frame(height: 18)
 
             Button {
-                if appState.isAgentListening {
-                    appState.stopListening()
+                if appState.isConversationMode {
+                    appState.stopConversationMode()
                 } else {
-                    appState.startListening()
+                    appState.startConversationMode()
                 }
             } label: {
                 ZStack {
                     Circle()
-                        .fill(appState.isAgentListening ? Color.red : Color.accentColor)
+                        .fill(appState.isConversationMode ? Color.red : Color.accentColor)
                         .frame(width: 56, height: 56)
-                        .shadow(color: appState.isAgentListening
+                        .shadow(color: appState.isConversationMode
                                 ? .red.opacity(0.4) : .accentColor.opacity(0.3),
-                                radius: appState.isAgentListening ? 12 : 5)
-                    Image(systemName: appState.isAgentListening ? "stop.fill" : "mic.fill")
+                                radius: appState.isConversationMode ? 12 : 5)
+                    Image(systemName: appState.isConversationMode ? "stop.fill" : "mic.fill")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(.white)
                 }
@@ -159,7 +176,11 @@ struct FloatingPanelView: View {
             .buttonStyle(.plain)
             .scaleEffect(appState.isAgentListening ? 1.08 : 1.0)
             .animation(.spring(response: 0.3), value: appState.isAgentListening)
-            .accessibilityLabel(appState.isAgentListening ? "Stop listening" : "Start listening")
+            .accessibilityLabel(appState.isConversationMode ? "End conversation" : "Start conversation with Oralis")
+
+            Text(appState.isConversationMode ? "Say \"stop\" to end" : "Tap to start")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
