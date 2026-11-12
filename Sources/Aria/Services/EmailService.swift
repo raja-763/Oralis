@@ -16,6 +16,13 @@ protocol EmailService {
     func fetchSpam(limit: Int) async throws -> [EmailThread]
     func unsubscribe(from message: EmailMessage) async throws
     func moveToSpam(ids: [UUID]) async throws
+    func moveToInbox(ids: [UUID]) async throws
+}
+
+extension EmailService {
+    func moveToInbox(ids: [UUID]) async throws {
+        throw OralisError.apiError("Moving mail back to the inbox is only supported for Gmail accounts.")
+    }
 }
 
 // MARK: - Draft

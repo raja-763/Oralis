@@ -15,7 +15,13 @@ final class AppState: ObservableObject {
     // MARK: - Inbox
     @Published var threads: [EmailThread] = []
     private var spamThreads: [EmailThread] = []
+    private var searchResults: [EmailThread] = []
     private var isLoadingInbox = false
+
+    /// Finds an email the AI refers to, whether it came from the inbox, spam or a search.
+    private func knownThread(_ id: String) -> EmailThread? {
+        (threads + spamThreads + searchResults).first { $0.id.uuidString == id }
+    }
 
     private static func senderName(_ t: EmailThread) -> String {
         guard let sender = t.participants.first else { return "unknown" }
@@ -284,6 +290,7 @@ final class AppState: ObservableObject {
             try await service.deleteThreads(ids: ids)
             threads.removeAll { selectedThreadIDs.contains($0.id) }
             spamThreads.removeAll { selectedThreadIDs.contains($0.id) }
+            searchResults.removeAll { selectedThreadIDs.contains($0.id) }
             selectedThreadIDs.removeAll()
             announce(ids.count == 1 ? "Moved it to the trash." : "Moved \(ids.count) emails to the trash.")
         } catch {
@@ -426,7 +433,7 @@ final class AppState: ObservableObject {
 
         // ── Email ─────────────────────────────────────────────────────────
         case .readEmail(let threadID):
-            if let thread = threads.first(where: { $0.id.uuidString == threadID }),
+            if let thread = knownThread(threadID),
                let msg = thread.messages.first {
                 let prefs = speech.preferences
                 if prefs.readEmailSummaryOnly {
@@ -443,7 +450,7 @@ final class AppState: ObservableObject {
             }
 
         case .summarize(let threadID):
-            if let thread = threads.first(where: { $0.id.uuidString == threadID }),
+            if let thread = knownThread(threadID),
                let msg = thread.messages.first {
                 let body = msg.bodyPlain.isEmpty ? msg.subject : msg.bodyPlain
                 sendAgentMessage("Please summarize this email in 2-3 sentences:\n\(body.prefix(2000))")
@@ -464,7 +471,7 @@ final class AppState: ObservableObject {
 
         case .reply(let threadID, let body):
             guard let account = selectedAccount,
-                  let thread = threads.first(where: { $0.id.uuidString == threadID }),
+                  let thread = knownThread(threadID),
                   let msg = thread.messages.first
             else { return }
             let service = EmailServiceFactory.service(for: account)
@@ -479,7 +486,7 @@ final class AppState: ObservableObject {
 
         case .forward(let threadID, let toAddress, let body):
             guard let account = selectedAccount,
-                  let thread = threads.first(where: { $0.id.uuidString == threadID }),
+                  let thread = knownThread(threadID),
                   let msg = thread.messages.first
             else { return }
             let service = EmailServiceFactory.service(for: account)
@@ -521,12 +528,28 @@ final class AppState: ObservableObject {
         case .search(let query):
             guard let account = selectedAccount else { return }
             let service = EmailServiceFactory.service(for: account)
-            threads = (try? await service.searchThreads(query: query)) ?? []
-            readAloud("Found \(threads.count) results for '\(query)'.")
+            // Results are kept apart from the inbox so a search never empties it.
+            do {
+                searchResults = try await service.searchThreads(query: query)
+                let spoken: String
+                if searchResults.isEmpty {
+                    spoken = "I found nothing for that search."
+                } else {
+                    let lines = searchResults.prefix(5).enumerated().map { index, t in
+                        "\(index + 1), from \(Self.senderName(t)): \(t.subject)."
+                    }.joined(separator: " ")
+                    spoken = "I found \(searchResults.count). \(lines)"
+                }
+                agentMessages.append(AgentMessage(role: .assistant, content: spoken))
+                readAloud(spoken)
+            } catch {
+                oralisLog("search failed: \(String(describing: error).prefix(200))")
+                readAloud("The search didn't work. Please try again.")
+            }
 
         case .unsubscribe(let threadID):
             guard let account = selectedAccount,
-                  let thread = threads.first(where: { $0.id.uuidString == threadID }),
+                  let thread = knownThread(threadID),
                   let msg = thread.messages.first
             else { return }
             let service = EmailServiceFactory.service(for: account)
@@ -568,6 +591,22 @@ final class AppState: ObservableObject {
                 readAloud("I couldn't move that to spam. \(error.localizedDescription)")
             }
 
+        case .moveToInbox(let ids):
+            guard let account = selectedAccount else { return }
+            let uuids = ids.compactMap { UUID(uuidString: $0) }
+            guard !uuids.isEmpty else { readAloud("I couldn't tell which email you meant."); return }
+            do {
+                try await EmailServiceFactory.service(for: account).moveToInbox(ids: uuids)
+                spamThreads.removeAll { uuids.contains($0.id) }
+                searchResults.removeAll { uuids.contains($0.id) }
+                oralisLog("moveToInbox: moved \(uuids.count)")
+                readAloud(uuids.count == 1 ? "Moved it back to your inbox." : "Moved \(uuids.count) emails back to your inbox.")
+                await refreshInbox(for: account)
+            } catch {
+                oralisLog("moveToInbox failed: \(String(describing: error).prefix(200))")
+                readAloud("I couldn't move that to your inbox. \(error.localizedDescription)")
+            }
+
         case .deleteSpam:
             guard let account = selectedAccount else { return }
             let service = EmailServiceFactory.service(for: account)
@@ -601,7 +640,7 @@ final class AppState: ObservableObject {
             }
 
         case .acceptInvite(let threadID):
-            guard let thread = threads.first(where: { $0.id.uuidString == threadID }),
+            guard let thread = knownThread(threadID),
                   let invite = thread.messages.first?.calendarInvite
             else { return }
             try? await CalendarService.shared.addInvite(invite)
@@ -679,6 +718,12 @@ final class AppState: ObservableObject {
                 "\(index + 1). threadID \(t.id.uuidString) | from \(Self.senderName(t)) | subject: \(t.subject)"
             }.joined(separator: "\n")
             summary += "\n\nSPAM FOLDER (already read aloud to the user, same numbering):\n\(spam)"
+        }
+        if !searchResults.isEmpty {
+            let found = searchResults.enumerated().map { index, t in
+                "\(index + 1). threadID \(t.id.uuidString) | from \(Self.senderName(t)) | subject: \(t.subject)"
+            }.joined(separator: "\n")
+            summary += "\n\nSEARCH RESULTS (already read aloud to the user, same numbering):\n\(found)"
         }
         return summary
     }

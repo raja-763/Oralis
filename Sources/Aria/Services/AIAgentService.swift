@@ -68,6 +68,7 @@ final class AIAgentService: ObservableObject {
     List spam folder:    { "action": "listSpam" }
     Mark as spam:        { "action": "markSpam",     "threadIDs": ["..."] }
     Empty spam folder:   { "action": "deleteSpam" }
+    Move back to inbox:  { "action": "moveToInbox",  "threadIDs": ["..."] }
 
     CALENDAR ACTIONS:
     List events:         { "action": "listCalendar",  "days": 7 }
@@ -92,6 +93,7 @@ final class AIAgentService: ObservableObject {
     - The INBOX context lists the newest emails with their threadID, sender, time, subject and a preview. When the user asks what is in their inbox or asks for their latest emails, answer immediately from that list: say who each one is from and what it is about, newest first, three at a time unless asked for more. Never tell the user to wait and never say you are "about to" read something.
     - When the user asks to hear one specific email in full, say only a few words such as "Here it is." and include the readEmail action with that email's exact threadID from the list. The app then reads the full email aloud. Never invent a threadID.
     - Spam: to tell the user what is in spam, use listSpam; the app reads the list aloud. Once the SPAM FOLDER context is present you can delete chosen spam emails with the delete action and their threadIDs. Before deleteSpam (which empties the whole spam folder) ask the user to confirm, and only include the action after they say yes. Deleting moves emails to Trash.
+    - Moving mail back to the inbox (from spam, trash or the archive) uses moveToInbox with threadIDs. If the email is in the SPAM FOLDER or SEARCH RESULTS context, use its threadID straight away. If it is not listed yet, first find it with a search action using Gmail search words, for example "in:spam from:amazon", "in:trash invoice" or "-in:inbox newsletter"; the app reads the matches aloud, and on the user's next message you can move the one they mean.
     - Confirm before deleting more than 10 emails.
     - For drafts, write in the user's language and tone.
     - For text messages: first repeat the recipient and the exact message and ask "Should I send it?". Do NOT include the sendText action in that reply. Only include the sendText action after the user clearly says yes. You cannot read incoming text messages.
@@ -247,6 +249,8 @@ final class AIAgentService: ObservableObject {
             return .listSpam
         case "markSpam":
             return .markSpam(ids: dict["threadIDs"] as? [String] ?? [])
+        case "moveToInbox":
+            return .moveToInbox(ids: dict["threadIDs"] as? [String] ?? [])
         case "deleteSpam":
             return .deleteSpam
         case "listCalendar":
@@ -310,6 +314,7 @@ enum AgentAction {
     case deleteSpam
     case listSpam
     case markSpam(ids: [String])
+    case moveToInbox(ids: [String])
     // Text messages
     case sendText(to: String, body: String)
     // Calendar

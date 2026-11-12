@@ -5,6 +5,7 @@ import SwiftUI
 struct TalkView: View {
     @EnvironmentObject var appState: AppState
     @State private var typedCommand = ""
+    @FocusState private var typeFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -143,6 +144,7 @@ struct TalkView: View {
         HStack(spacing: 8) {
             TextField("Type a message to Oralis", text: $typedCommand)
                 .textFieldStyle(.roundedBorder)
+                .focused($typeFieldFocused)
                 .onSubmit(sendTypedCommand)
             Button("Send", action: sendTypedCommand)
                 .disabled(typedCommand.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -157,6 +159,8 @@ struct TalkView: View {
         guard !text.isEmpty else { return }
         typedCommand = ""
         appState.sendAgentMessage(text)
+        // Keep the cursor in the field so the next message can be typed straight away.
+        typeFieldFocused = true
     }
 
     // MARK: - Mic bar

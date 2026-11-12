@@ -195,7 +195,10 @@ final class GmailService: EmailService {
 
     func searchThreads(query: String) async throws -> [EmailThread] {
         let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-        let data = try await execute("threads?q=\(encoded)&maxResults=50")
+        // Gmail leaves Spam and Trash out of searches unless asked to include them.
+        let lower = query.lowercased()
+        let everywhere = lower.contains("in:spam") || lower.contains("in:trash") || lower.contains("in:anywhere")
+        let data = try await execute("threads?q=\(encoded)&maxResults=15\(everywhere ? "&includeSpamTrash=true" : "")")
         let list = try JSONDecoder().decode(GmailThreadList.self, from: data)
         // Fetch in parallel, four at a time, keeping Gmail's newest-first order.
         let ids = (list.threads ?? []).map(\.id)
@@ -242,6 +245,16 @@ final class GmailService: EmailService {
 
     func unsubscribe(from message: EmailMessage) async throws {
         try await UnsubscribeService.shared.unsubscribe(from: message, via: account)
+    }
+
+    /// Restores threads from Spam, Trash or the archive to the inbox.
+    func moveToInbox(ids: [UUID]) async throws {
+        // Untrash first; it is harmless for threads that are not in Trash.
+        for id in ids {
+            _ = try? await execute("threads/\(try gmailID(for: id))/untrash", method: "POST")
+        }
+        let mod = GmailModify(addLabelIds: ["INBOX"], removeLabelIds: ["SPAM"])
+        try await modifyEach(ids, path: "modify", body: try JSONEncoder().encode(mod))
     }
 
     func moveToSpam(ids: [UUID]) async throws {
