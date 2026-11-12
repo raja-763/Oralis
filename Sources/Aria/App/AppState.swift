@@ -18,6 +18,31 @@ final class AppState: ObservableObject {
     private var searchResults: [EmailThread] = []
     private var isLoadingInbox = false
 
+    /// Sends an email and says honestly whether it went.
+    private func sendEmail(_ draft: DraftMessage, via account: EmailAccount, success: String) async {
+        do {
+            try await EmailServiceFactory.service(for: account).sendMessage(draft)
+            oralisLog("email: sent")
+            readAloud(success)
+        } catch {
+            oralisLog("email: send failed: \(String(describing: error).prefix(200))")
+            readAloud("The email was not sent. \(error.localizedDescription)")
+        }
+    }
+
+    /// Accepts an email address or a contact's name.
+    private func emailAddress(for to: String) async -> EmailAddress? {
+        let trimmed = to.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.contains("@") { return EmailAddress(name: "", address: trimmed) }
+        do {
+            let found = try await ContactLookup.email(for: trimmed)
+            return EmailAddress(name: found.name, address: found.address)
+        } catch {
+            readAloud(error.localizedDescription)
+            return nil
+        }
+    }
+
     /// Finds an email the AI refers to, whether it came from the inbox, spam or a search.
     private func knownThread(_ id: String) -> EmailThread? {
         (threads + spamThreads + searchResults).first { $0.id.uuidString == id }
@@ -366,9 +391,17 @@ final class AppState: ObservableObject {
 
         // Stop word detection — end conversation mode on explicit dismissal
         let lower = trimmed.lowercased()
-        let stopWords = ["stop listening", "stop", "goodbye", "bye", "that's all", "exit", "quit", "oralis stop", "done"]
-        if stopWords.contains(where: { lower == $0 || lower.hasPrefix($0 + " ") }) {
-            stopConversationMode()
+        // Only a whole utterance that is nothing but a goodbye ends the conversation.
+        // Anything longer ("stop reading and delete it") goes to the AI as a request.
+        let bare = lower.trimmingCharacters(in: CharacterSet.punctuationCharacters.union(.whitespaces))
+        let stopWords = ["stop listening", "stop", "goodbye", "bye", "that's all", "thats all",
+                         "exit", "quit", "oralis stop", "done", "i'm done", "im done"]
+        if stopWords.contains(bare) {
+            if isConversationMode {
+                stopConversationMode()
+            } else {
+                speech.stopSpeaking()
+            }
             return
         }
 
@@ -410,7 +443,10 @@ final class AppState: ObservableObject {
                 let spoken = responseTextWithoutJSON(response.text)
                 agentMessages.append(AgentMessage(role: .assistant, content: spoken))
                 readAloud(spoken)
-                if let action = response.action {
+                // Carry out each requested action in order, letting Oralis finish
+                // speaking between them so one result does not cut off the last.
+                for action in response.actions {
+                    await waitForSpeechToFinish()
                     await execute(action)
                 }
             } catch OralisError.apiError(let msg) where msg.contains("No API key") {
@@ -470,59 +506,61 @@ final class AppState: ObservableObject {
             await archiveSelected()
 
         case .reply(let threadID, let body):
-            guard let account = selectedAccount,
-                  let thread = knownThread(threadID),
-                  let msg = thread.messages.first
-            else { return }
-            let service = EmailServiceFactory.service(for: account)
+            guard let account = selectedAccount else { return }
+            guard let thread = knownThread(threadID), let msg = thread.messages.last ?? thread.messages.first else {
+                readAloud("I couldn't find the email you want to reply to.")
+                return
+            }
             let draft = DraftMessage(
                 to: [msg.from],
                 subject: thread.subject.hasPrefix("Re:") ? thread.subject : "Re: \(thread.subject)",
                 body: body,
                 replyToMessageID: msg.remoteID
             )
-            try? await service.sendMessage(draft)
-            readAloud("Reply sent.")
+            await sendEmail(draft, via: account, success: "Reply sent to \(Self.senderName(thread)).")
 
         case .forward(let threadID, let toAddress, let body):
-            guard let account = selectedAccount,
-                  let thread = knownThread(threadID),
-                  let msg = thread.messages.first
-            else { return }
-            let service = EmailServiceFactory.service(for: account)
+            guard let account = selectedAccount else { return }
+            guard let thread = knownThread(threadID), let msg = thread.messages.last ?? thread.messages.first else {
+                readAloud("I couldn't find the email you want to forward.")
+                return
+            }
+            guard let address = await emailAddress(for: toAddress) else { return }
             let draft = DraftMessage(
-                to: [EmailAddress(name: "", address: toAddress)],
+                to: [address],
                 subject: thread.subject.hasPrefix("Fwd:") ? thread.subject : "Fwd: \(thread.subject)",
                 body: body,
                 forwardOfMessageID: msg.remoteID
             )
-            try? await service.sendMessage(draft)
-            readAloud("Email forwarded to \(toAddress).")
+            await sendEmail(draft, via: account, success: "Forwarded to \(address.name.isEmpty ? address.address : address.name).")
 
         case .draft(let to, let subject, let body):
             guard let account = selectedAccount else { return }
-            let service = EmailServiceFactory.service(for: account)
-            let draft = DraftMessage(
-                to: [EmailAddress(name: "", address: to)],
-                subject: subject,
-                body: body
-            )
-            try? await service.sendMessage(draft)
-            readAloud("Draft saved. Subject: \(subject).")
+            guard let address = await emailAddress(for: to) else { return }
+            let draft = DraftMessage(to: [address], subject: subject, body: body)
+            await sendEmail(draft, via: account, success: "Email sent to \(address.name.isEmpty ? address.address : address.name).")
 
-        case .sendText(let to, let body):
-            guard !to.isEmpty, !body.isEmpty else {
-                readAloud("I need both a recipient and a message to send a text.")
-                return
-            }
+        case .markRead(let ids, let read):
+            guard let account = selectedAccount else { return }
+            let uuids = ids.compactMap { UUID(uuidString: $0) }
+            guard !uuids.isEmpty else { readAloud("I couldn't tell which email you meant."); return }
             do {
-                let recipient = try await TextMessageService.resolve(to)
-                try TextMessageService.send(body, to: recipient)
-                oralisLog("text: sent")
-                readAloud("Text sent to \(recipient.name).")
+                try await EmailServiceFactory.service(for: account).markRead(ids: uuids, read: read)
+                for index in threads.indices where uuids.contains(threads[index].id) { threads[index].isRead = read }
+                readAloud(read ? "Marked as read." : "Marked as unread.")
             } catch {
-                oralisLog("text: failed: \(error.localizedDescription)")
-                readAloud(error.localizedDescription)
+                readAloud("I couldn't change that. \(error.localizedDescription)")
+            }
+
+        case .star(let ids, let starred):
+            guard let account = selectedAccount else { return }
+            let uuids = ids.compactMap { UUID(uuidString: $0) }
+            guard !uuids.isEmpty else { readAloud("I couldn't tell which email you meant."); return }
+            do {
+                try await EmailServiceFactory.service(for: account).starThreads(ids: uuids, starred: starred)
+                readAloud(starred ? "Starred." : "Star removed.")
+            } catch {
+                readAloud("I couldn't change that. \(error.localizedDescription)")
             }
 
         case .search(let query):
@@ -770,16 +808,23 @@ final class AppState: ObservableObject {
     }
 
     private func responseTextWithoutJSON(_ text: String) -> String {
-        guard let start = text.range(of: "{"),
-              let end   = text.range(of: "}", options: .backwards),
-              start.lowerBound < end.upperBound
-        else { return text }
         var result = text
-        result.removeSubrange(start.lowerBound..<end.upperBound)
-        // Drop any code-fence markers left around the removed action block.
+        for block in AIAgentService.jsonBlocks(in: text).reversed() {
+            result.removeSubrange(block)
+        }
+        // Drop any code-fence markers left around the removed action blocks.
         result = result.replacingOccurrences(of: "```json", with: "")
                        .replacingOccurrences(of: "```", with: "")
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Waits until Oralis has stopped speaking (at most 90 seconds).
+    private func waitForSpeechToFinish() async {
+        var waited = 0
+        while speech.isSpeaking && waited < 900 {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            waited += 1
+        }
     }
 
     private func parseDate(_ s: String) -> Date? {

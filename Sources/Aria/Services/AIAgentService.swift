@@ -52,7 +52,7 @@ final class AIAgentService: ObservableObject {
     IMPORTANT: Always respond in the same language the user used to ask the question.
 
     You can perform actions by responding with a JSON block in your reply.
-    Use ONLY one action per response. Put it after your spoken reply.
+    Put actions after your spoken reply, each as its own JSON block. When the user asks for several things at once ("delete the first two and star the one from my bank"), include one block per step, in the order they should happen, up to five. The app carries them out one after another.
 
     EMAIL ACTIONS:
     Read email:          { "action": "readEmail",    "threadID": "..." }
@@ -62,7 +62,9 @@ final class AIAgentService: ObservableObject {
     Archive emails:      { "action": "archive",      "threadIDs": ["..."] }
     Reply to email:      { "action": "reply",        "threadID": "...", "body": "..." }
     Forward email:       { "action": "forward",      "threadID": "...", "to": "...", "body": "..." }
-    Draft new email:     { "action": "draft",        "to": "...", "subject": "...", "body": "..." }
+    Send a new email:    { "action": "draft",        "to": "email address or contact name", "subject": "...", "body": "..." }
+    Mark read or unread: { "action": "markRead",     "threadIDs": ["..."], "read": true }
+    Star or unstar:      { "action": "star",         "threadIDs": ["..."], "starred": true }
     Search emails:       { "action": "search",       "query": "..." }
     Unsubscribe:         { "action": "unsubscribe",  "threadID": "..." }
     List spam folder:    { "action": "listSpam" }
@@ -76,9 +78,6 @@ final class AIAgentService: ObservableObject {
     Accept invite:       { "action": "acceptInvite",  "threadID": "..." }
     Decline invite:      { "action": "declineInvite", "threadID": "..." }
 
-    TEXT MESSAGE ACTIONS (sent through the Messages app as iMessage or SMS):
-    Send text message:   { "action": "sendText",     "to": "contact name or phone number", "body": "..." }
-
     WEB BROWSER ACTIONS:
     Navigate to URL:     { "action": "navigateTo",    "url": "https://..." }
     Read web page:       { "action": "readWebPage" }
@@ -88,6 +87,14 @@ final class AIAgentService: ObservableObject {
     Go back:             { "action": "goBack" }
     Open link:           { "action": "openLink",      "url": "https://..." }
 
+    Understanding the user:
+    - The user speaks or types in everyday language, often loosely, and speech recognition may mishear words. Work out what they most likely mean from the conversation so far; never ask them to rephrase or to use particular words.
+    - Resolve references yourself: "the second one", "that one", "the last one you read", "the one from my bank", "all of those", "it" refer to emails you listed or discussed. Match senders and subjects loosely (partial names, nicknames, misheard spellings).
+    - If a request could mean two different emails or actions, ask one short question. Otherwise just do it.
+    - The reply, forward and draft actions SEND the email immediately. Before sending, say who it is going to and read the wording back, and ask "Shall I send it?". Only include the action after the user agrees. If they ask for changes, revise and read it back again.
+    - You handle email, calendar and web pages only. You cannot send text messages or iMessages.
+    - If the user asks for something you have no action for, say so plainly in one sentence and offer the closest thing you can do.
+
     Rules:
     - Be concise — the user hears everything you say read aloud. This is a spoken back-and-forth conversation: answer in one to three short sentences unless asked for more, use plain speech with no lists, symbols or markdown, and remember what was said earlier in the conversation.
     - The INBOX context lists the newest emails with their threadID, sender, time, subject and a preview. When the user asks what is in their inbox or asks for their latest emails, answer immediately from that list: say who each one is from and what it is about, newest first, three at a time unless asked for more. Never tell the user to wait and never say you are "about to" read something.
@@ -96,7 +103,6 @@ final class AIAgentService: ObservableObject {
     - Moving mail back to the inbox (from spam, trash or the archive) uses moveToInbox with threadIDs. If the email is in the SPAM FOLDER or SEARCH RESULTS context, use its threadID straight away. If it is not listed yet, first find it with a search action using Gmail search words, for example "in:spam from:amazon", "in:trash invoice" or "-in:inbox newsletter"; the app reads the matches aloud, and on the user's next message you can move the one they mean.
     - Confirm before deleting more than 10 emails.
     - For drafts, write in the user's language and tone.
-    - For text messages: first repeat the recipient and the exact message and ask "Should I send it?". Do NOT include the sendText action in that reply. Only include the sendText action after the user clearly says yes. You cannot read incoming text messages.
     - For web browsing, describe what action you are taking before the JSON.
     - For form fields, use the visible label or placeholder name as the "field" value.
     """
@@ -140,7 +146,13 @@ final class AIAgentService: ObservableObject {
         }
         req.httpBody = body
 
-        let (data, response) = try await URLSession.shared.data(for: req)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch let error as URLError where error.code == .networkConnectionLost || error.code == .timedOut {
+            // A dropped connection is usually momentary; try once more before reporting it.
+            (data, response) = try await URLSession.shared.data(for: req)
+        }
         let rawBody = String(data: data, encoding: .utf8) ?? ""
 
         if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
@@ -151,7 +163,8 @@ final class AIAgentService: ObservableObject {
         do {
             let result = try JSONDecoder().decode(ClaudeResponse.self, from: data)
             let text = result.content.first(where: { $0.type == "text" })?.text ?? ""
-            return AgentResponse(text: text, action: parseAction(text))
+            let actions = AIAgentService.jsonBlocks(in: text).compactMap { parseAction(String(text[$0])) }
+            return AgentResponse(text: text, actions: Array(actions.prefix(5)))
         } catch {
             throw OralisError.apiError(rawBody.isEmpty ? error.localizedDescription : String(rawBody.prefix(300)))
         }
@@ -202,6 +215,37 @@ final class AIAgentService: ObservableObject {
 
     // MARK: - Parse action JSON from response text
 
+    /// Ranges of each top-level { ... } block in the text, ignoring braces inside strings.
+    static func jsonBlocks(in text: String) -> [Range<String.Index>] {
+        var blocks: [Range<String.Index>] = []
+        var depth = 0
+        var start: String.Index?
+        var inString = false
+        var escaped = false
+        var index = text.startIndex
+        while index < text.endIndex {
+            let ch = text[index]
+            if inString {
+                if escaped { escaped = false }
+                else if ch == "\\" { escaped = true }
+                else if ch == "\"" { inString = false }
+            } else if ch == "\"" && depth > 0 {
+                inString = true
+            } else if ch == "{" {
+                if depth == 0 { start = index }
+                depth += 1
+            } else if ch == "}" && depth > 0 {
+                depth -= 1
+                if depth == 0, let s = start {
+                    blocks.append(s..<text.index(after: index))
+                    start = nil
+                }
+            }
+            index = text.index(after: index)
+        }
+        return blocks
+    }
+
     private func parseAction(_ text: String) -> AgentAction? {
         guard let start = text.range(of: "{"),
               let end   = text.range(of: "}", options: .backwards),
@@ -238,9 +282,10 @@ final class AIAgentService: ObservableObject {
             return .draft(to: dict["to"] as? String ?? "",
                           subject: dict["subject"] as? String ?? "",
                           body: dict["body"] as? String ?? "")
-        case "sendText":
-            return .sendText(to: dict["to"] as? String ?? "",
-                             body: dict["body"] as? String ?? "")
+        case "markRead":
+            return .markRead(ids: dict["threadIDs"] as? [String] ?? [], read: dict["read"] as? Bool ?? true)
+        case "star":
+            return .star(ids: dict["threadIDs"] as? [String] ?? [], starred: dict["starred"] as? Bool ?? true)
         case "search":
             return .search(query: dict["query"] as? String ?? "")
         case "unsubscribe":
@@ -288,7 +333,8 @@ final class AIAgentService: ObservableObject {
 
 struct AgentResponse {
     var text: String
-    var action: AgentAction?
+    var actions: [AgentAction]
+    var action: AgentAction? { actions.first }
 }
 
 struct EmailAgentContext {
@@ -315,8 +361,8 @@ enum AgentAction {
     case listSpam
     case markSpam(ids: [String])
     case moveToInbox(ids: [String])
-    // Text messages
-    case sendText(to: String, body: String)
+    case markRead(ids: [String], read: Bool)
+    case star(ids: [String], starred: Bool)
     // Calendar
     case listCalendar(days: Int)
     case createEvent(title: String, date: String, duration: Int)

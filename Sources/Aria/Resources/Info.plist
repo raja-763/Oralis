@@ -62,12 +62,12 @@
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Oralis uses speech recognition so you can read, reply to, and manage emails hands-free.</string>
     <key>NSContactsUsageDescription</key>
-    <string>Oralis reads your contacts to find email addresses and phone numbers for the people you name.</string>
+    <string>Oralis reads your contacts to find the email address of someone you name.</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
     <string>Oralis reads and adds calendar events when you ask about your calendar by voice.</string>
     <key>NSCalendarsUsageDescription</key>
     <string>Oralis reads your calendar so you can manage meeting invites by voice.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Oralis uses the Messages app to send text messages you dictate, and can import accounts from macOS Mail.</string>
+    <string>Oralis imports accounts from macOS Mail with your permission.</string>
 </dict>
 </plist>
