@@ -228,8 +228,46 @@ final class AppState: ObservableObject {
         accounts = AccountStore.shared.loadAll()
         selectedAccount = accounts.first
         if let first = selectedAccount {
-            Task { await refreshInbox(for: first) }
+            // Show the last-seen inbox instantly; the fresh copy replaces it moments later.
+            if let cached = Self.readInboxCache(for: first), !cached.isEmpty {
+                if first.provider == .gmail { GmailService.register(cached) }
+                threads = cached
+                oralisLog("inbox: \(cached.count) threads restored from cache")
+            }
+            inboxTask = Task { await refreshInbox(for: first) }
         }
+    }
+
+    private var inboxTask: Task<Void, Never>?
+
+    /// Waits (up to `seconds`) for a load that is already running, so a request made
+    /// right after launch is answered with the real inbox instead of "still loading".
+    private func waitForInbox(seconds: Double = 20) async {
+        let deadline = Date().addingTimeInterval(seconds)
+        while isLoadingInbox && threads.isEmpty && Date() < deadline {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+    }
+
+    private static func inboxCacheURL(for account: EmailAccount) -> URL? {
+        guard let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Oralis", isDirectory: true) else { return nil }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("inbox-\(account.id.uuidString).json")
+    }
+
+    private static func readInboxCache(for account: EmailAccount) -> [EmailThread]? {
+        guard let url = inboxCacheURL(for: account), let data = try? Data(contentsOf: url) else { return nil }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode([EmailThread].self, from: data)
+    }
+
+    private func writeInboxCache(_ threads: [EmailThread], for account: EmailAccount) {
+        guard let url = Self.inboxCacheURL(for: account) else { return }
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(threads) { try? data.write(to: url, options: .atomic) }
     }
 
     func addAccount(_ account: EmailAccount) {
@@ -270,6 +308,7 @@ final class AppState: ObservableObject {
             }
             let fetched = try await service.fetchThreads(limit: 25)
             threads = fetched
+            writeInboxCache(fetched, for: account)
             inboxProblem = nil
             oralisLog("inbox: loaded \(fetched.count) threads")
         } catch {
@@ -418,7 +457,6 @@ final class AppState: ObservableObject {
 
 
         let prefs = speech.preferences
-        let context = buildContext()
         isProcessingResponse = true
         oralisLog("command: received (\(trimmed.count) characters), asking AI")
         // Soft tick every two seconds so it is audible that Oralis is still thinking.
@@ -431,6 +469,8 @@ final class AppState: ObservableObject {
         }
         Task {
             defer { isProcessingResponse = false; thinkingTicks.cancel() }
+            await waitForInbox()
+            let context = buildContext()
             do {
                 // Inject response-length hint into the user message when set to short
                 let userMsg = prefs.responseLength == .short
@@ -833,6 +873,9 @@ final class AppState: ObservableObject {
         // Drop any code-fence markers left around the removed action blocks.
         result = result.replacingOccurrences(of: "```json", with: "")
                        .replacingOccurrences(of: "```", with: "")
+        // The model sometimes narrates an action as "[Action: ...]"; that is not for speech.
+        result = result.replacingOccurrences(of: "\\[\\s*Actions?\\s*:[^\\]]*\\]", with: "",
+                                             options: [.regularExpression, .caseInsensitive])
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 

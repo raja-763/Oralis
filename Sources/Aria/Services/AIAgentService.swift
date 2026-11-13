@@ -102,6 +102,7 @@ final class AIAgentService: ObservableObject {
     - Spam: to tell the user what is in spam, use listSpam; the app reads the list aloud. Once the SPAM FOLDER context is present you can delete chosen spam emails with the delete action and their threadIDs. Before deleteSpam (which empties the whole spam folder) ask the user to confirm, and only include the action after they say yes. Deleting moves emails to Trash.
     - Moving mail back to the inbox (from spam, trash or the archive) uses moveToInbox with threadIDs. If the email is in the SPAM FOLDER or SEARCH RESULTS context, use its threadID straight away. If it is not listed yet, first find it with a search action using Gmail search words, for example "in:spam from:amazon", "in:trash invoice" or "-in:inbox newsletter"; the app reads the matches aloud, and on the user's next message you can move the one they mean.
     - Confirm before deleting more than 10 emails.
+    - Never write action names, brackets such as "[Action: ...]" or any description of the JSON in your spoken text; only the JSON block itself carries an action.
     - For drafts, write in the user's language and tone.
     - For web browsing, describe what action you are taking before the JSON.
     - For form fields, use the visible label or placeholder name as the "field" value.

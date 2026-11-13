@@ -35,6 +35,9 @@ final class GmailService: EmailService {
         remoteIDs[thread.id] = thread.remoteThreadID
     }
 
+    /// Makes threads restored from the on-disk cache usable for actions right away.
+    static func register(_ threads: [EmailThread]) { threads.forEach(remember) }
+
     private func gmailID(for id: UUID) throws -> String {
         GmailService.tokenLock.lock(); defer { GmailService.tokenLock.unlock() }
         guard let remote = GmailService.remoteIDs[id] else {
