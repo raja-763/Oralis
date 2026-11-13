@@ -1,0 +1,21 @@
+// Settings for the public, customer-facing build (target "OralisPublic").
+// Nothing in this file is secret, so it is committed to git. The API keys live only
+// in the Cloudflare Worker (see proxy/DEPLOY.md); they must stay empty here.
+//
+// In xcconfig files "//" starts a comment, so URLs are written as https:/$()/host.
+
+ANTHROPIC_API_KEY =
+ANTHROPIC_WORKSPACE_ID =
+ELEVENLABS_API_KEY =
+GOOGLE_OAUTH_CLIENT_SECRET =
+MICROSOFT_OAUTH_CLIENT_ID =
+
+// Public client ID (not a secret). Create a separate Google OAuth client for the
+// public app and paste its ID here. See proxy/DEPLOY.md, step 2.
+GOOGLE_OAUTH_CLIENT_ID =
+
+// Your Worker URL after "wrangler deploy", for example:
+//   ORALIS_PROXY_URL = https:/$()/oralis-proxy.YOURNAME.workers.dev/v1/messages
+//   ELEVENLABS_PROXY_URL = https:/$()/oralis-proxy.YOURNAME.workers.dev/v1/speech
+ORALIS_PROXY_URL =
+ELEVENLABS_PROXY_URL =

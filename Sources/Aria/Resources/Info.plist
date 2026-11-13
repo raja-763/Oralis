@@ -7,7 +7,7 @@
     <key>CFBundleDisplayName</key>
     <string>Oralis</string>
     <key>CFBundleIdentifier</key>
-    <string>com.oralis.app</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleVersion</key>
     <string>4</string>
     <key>CFBundleShortVersionString</key>
@@ -31,12 +31,14 @@
             <string>com.oralis.app</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>com.oralis.app</string>
+                <string>$(OAUTH_REDIRECT_SCHEME)</string>
             </array>
         </dict>
     </array>
 
     <!-- OAuth client IDs — fill in after registering apps in Google/Microsoft portals -->
+    <key>OAUTH_REDIRECT_SCHEME</key>
+    <string>$(OAUTH_REDIRECT_SCHEME)</string>
     <key>GOOGLE_OAUTH_CLIENT_ID</key>
     <string>$(GOOGLE_OAUTH_CLIENT_ID)</string>
     <key>GOOGLE_OAUTH_CLIENT_SECRET</key>

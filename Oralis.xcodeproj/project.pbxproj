@@ -9,31 +9,68 @@
 /* Begin PBXBuildFile section */
 		03A70F072ABF88BE1EA8FF45 /* GmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D693EAF40AB9F5180FA996EE /* GmailService.swift */; };
 		0423CC31C27FB0D80EE42846 /* AriaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207A038822F464D5BCBD081 /* AriaError.swift */; };
+		08093307DD90791BDE77F847 /* MacMailImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E094D3F57113A33060225A /* MacMailImporter.swift */; };
+		08CA43C331458B165A1FFE4F /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752A1A7B6D937F8C65671575 /* AgentPanelView.swift */; };
 		0A8B10D649C648690A0FFF1B /* MacMailImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E094D3F57113A33060225A /* MacMailImporter.swift */; };
 		0BDE5CD1CBB6E97328E80644 /* IMAPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D86ADF7D928FB7F81452DB /* IMAPService.swift */; };
+		0F0E2B7ABE2F36E5E8137F7D /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */; };
+		10A9221E9ED89203020612A0 /* AgentMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457FD6ACD79650371DDC531D /* AgentMessage.swift */; };
+		15734D77F23B596037CDE7FF /* GmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D693EAF40AB9F5180FA996EE /* GmailService.swift */; };
+		165D2B397B554DB67182DB81 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB6112205F262C145049272 /* TalkView.swift */; };
 		1A238CF5D769FA89E9E78AD8 /* EmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F303C52D7717CA453241976 /* EmailService.swift */; };
+		1E79D418C0D7A826E45E01B8 /* AriaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C55CDA7447317DA86881E95 /* AriaApp.swift */; };
 		211ADB3FFEFDAB755DCE6FBE /* EmailThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */; };
+		2260824A1EA2816137A92236 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E9A285D0DE608F2F21EA5C /* BrowserView.swift */; };
 		241DAA507DB357E4460E1250 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB6112205F262C145049272 /* TalkView.swift */; };
+		27E812D580DE38E7FC7E4491 /* VoicePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510646DB5B4BDD204A4BD0A1 /* VoicePreferences.swift */; };
 		2C3D5A7D102DC0E4816A04B3 /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A7A62047B9B70E38C1871 /* UpdateChecker.swift */; };
 		2F2D5C012587369EDABABFB9 /* CallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A246178593940097E1EC67 /* CallView.swift */; };
+		31E83B8E91D8AA6722123D66 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486023F7D5013E7C5AB1C317 /* VoiceSettingsView.swift */; };
+		351350F66FAD8DFE8509CC2C /* EmailAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77F8AA1B10202C2F50BC9E26 /* EmailAccount.swift */; };
+		36E65FEA6A19C6483669530C /* AriaCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910922000A23ACBDA99E7A28 /* AriaCommands.swift */; };
 		390F257FB1E6F94428633196 /* MailImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF88CA2798080A5025B2EFE /* MailImportService.swift */; };
+		3BF7E367E04B5FED51008CBE /* EmailMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00FD5036AD038EBCD8958C5A /* EmailMessage.swift */; };
+		3CEADF3BFB74ED18253B6396 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */; };
 		3DDE98F8750A42301B1FB4E0 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E9A285D0DE608F2F21EA5C /* BrowserView.swift */; };
+		3EF9262D95C0AF40A276A2BB /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A7A62047B9B70E38C1871 /* UpdateChecker.swift */; };
 		404B17E98626A7B92A4AD2DF /* UnsubscribeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847A4DE5D3726D5685D3A674 /* UnsubscribeService.swift */; };
 		4A0561FB55B3BC680394AE47 /* SupportedLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */; };
+		4A6E8398EC70C8BF8CAC3698 /* EmailDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F3040059CDFB27A236FC1F /* EmailDetailView.swift */; };
+		4D5380639738C4FFD9C514A4 /* EmailMessage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */; };
+		4E0523E666A78845FB94385B /* ProxyAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6849998D75389119D786AE69 /* ProxyAuth.swift */; };
 		4EC2BD537F978A7D43101E16 /* AriaCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910922000A23ACBDA99E7A28 /* AriaCommands.swift */; };
+		4ED45AE525D101B3A67C8897 /* AIAgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E300725C38559A5E24ADF4C /* AIAgentService.swift */; };
 		4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */; };
 		5231C2DA0C298164F6141761 /* VoicePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510646DB5B4BDD204A4BD0A1 /* VoicePreferences.swift */; };
+		5723134BFD5052B4E3C65DD3 /* IMAPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D86ADF7D928FB7F81452DB /* IMAPService.swift */; };
+		579F46F5E07177B382AA6473 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A997F53835FF56846A47FF7 /* MenuBarController.swift */; };
+		59529919B2C80421C9EFDF38 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E35DFB71D63E45E01E94B4C /* KeychainService.swift */; };
 		5B866C85CB0E8072F508A5FE /* BatchActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6D7FEDF4F0B712B1A485FB /* BatchActionBar.swift */; };
+		5CCBD7F60996946E936ECECD /* EmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F303C52D7717CA453241976 /* EmailService.swift */; };
 		5DE036005061934DE156AD8D /* AccessibilityLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */; };
 		5E5C7A19D1CBBB20F6C826C7 /* ContactLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8763A402EC59BC8EFF62EFEE /* ContactLookup.swift */; };
+		5EC9402A739745D9AA7F7120 /* IMAPSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */; };
 		5F58236BD144D714A0A0BA5A /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E8FD170FE17CEACAA514CF /* SpeechService.swift */; };
+		65AF8A1292BEA433E32FF2BA /* IMAPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A22DA53D66B3E27CD58A732 /* IMAPClient.swift */; };
+		67A09CC38C87E7B130DFC0A0 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905DA1D552F09FC8C976952C /* AppState.swift */; };
+		691CC5DFCB7EF0C46EFE391F /* AccessibilityLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */; };
+		6A0AE2A34D3019982BD4A950 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D0ADD133572698316C1596 /* CalendarService.swift */; };
+		6B7B4EC98060A7A4347A9CF4 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDA1A5D66AA254F1357E694 /* SidebarView.swift */; };
+		72A7F5477D1557B675B2546F /* ProxyAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6849998D75389119D786AE69 /* ProxyAuth.swift */; };
+		734191876A7E92D1064D965E /* AriaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207A038822F464D5BCBD081 /* AriaError.swift */; };
+		786F143FC93E40BA82367AAD /* VoiceCommandHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0185F652AE245BEA5C5033A8 /* VoiceCommandHandler.swift */; };
 		794BEEA854B7EF9C68950EE5 /* AccountSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AA68EB5293B863DBD22553 /* AccountSetupView.swift */; };
+		82AFDD2F5CA655DEA2B27279 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D90B07AF9435CE73C258F1 /* BrowserModel.swift */; };
 		84DD576350F1DFA129C380AB /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905DA1D552F09FC8C976952C /* AppState.swift */; };
+		85852450B763CBC41809377F /* EmailListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DB0035F8E4610C24DB7AF9 /* EmailListView.swift */; };
+		882EFBFDE7FEEAC61714F72D /* FloatingPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */; };
 		8993D4EA7C3D44C48B25BCC8 /* LinkReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D73BC94AC72EECEE503BB2B /* LinkReaderView.swift */; };
 		8A65AB655CD278E7F179DD8B /* EmailListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DB0035F8E4610C24DB7AF9 /* EmailListView.swift */; };
 		8D1E14D209E24A6D917B786D /* AgentMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457FD6ACD79650371DDC531D /* AgentMessage.swift */; };
 		8D801067D8CD5A83361621FB /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D0ADD133572698316C1596 /* CalendarService.swift */; };
 		91EDB8DD03EDFE39565662A5 /* EmailAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77F8AA1B10202C2F50BC9E26 /* EmailAccount.swift */; };
+		934A87F944A5DC70EEFAA7F9 /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E4D88FF2F5352F0163877F /* OAuthService.swift */; };
+		946FD5CC80676DBF8184FBF3 /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = E765FA52203B065C4EA7C67D /* SoundEffects.swift */; };
 		94C91B7E5890FAE1CE2CE570 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D09664B66E2198917A7189 /* ContentView.swift */; };
 		98F381252AB13A723A68625B /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E35DFB71D63E45E01E94B4C /* KeychainService.swift */; };
 		9AF695C6B6547CF4D165F2F4 /* AriaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C55CDA7447317DA86881E95 /* AriaApp.swift */; };
@@ -41,17 +78,31 @@
 		9FAA26DC72B517576E37A5F0 /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */; };
 		9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E4D88FF2F5352F0163877F /* OAuthService.swift */; };
 		A04BDB355EFEEF6BF5E6C1C1 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D90B07AF9435CE73C258F1 /* BrowserModel.swift */; };
+		A056DB115F4EC13717DF28A2 /* CallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A246178593940097E1EC67 /* CallView.swift */; };
 		A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B426503A313C3A254962417 /* OutlookService.swift */; };
+		A83AE2F8280A2A51352D4E1D /* LinkReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D73BC94AC72EECEE503BB2B /* LinkReaderView.swift */; };
+		B24EF6F4A0830770D2E42EF2 /* HTMLLinkExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45A12C4351B21B56CC24F4E /* HTMLLinkExtractor.swift */; };
+		B33063B94B7D9D4C37112947 /* BatchActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6D7FEDF4F0B712B1A485FB /* BatchActionBar.swift */; };
+		B8EB93995C71D4B239708B71 /* AccountSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AA68EB5293B863DBD22553 /* AccountSetupView.swift */; };
 		BA2605FE9760B3914F34E3F9 /* FloatingPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */; };
+		C228A8BA7C04632BF37A2BC1 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E8FD170FE17CEACAA514CF /* SpeechService.swift */; };
+		C355BB83EE9C89ED20716FB9 /* OutlookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B426503A313C3A254962417 /* OutlookService.swift */; };
 		C9231612C278101B56E2FE98 /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = E765FA52203B065C4EA7C67D /* SoundEffects.swift */; };
 		CA4E597E246A30EAFCDABA14 /* IMAPSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */; };
 		CA974A5086A68E8818C38394 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDA1A5D66AA254F1357E694 /* SidebarView.swift */; };
+		CECDEBD7D5B4CD4533F1E539 /* UnsubscribeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847A4DE5D3726D5685D3A674 /* UnsubscribeService.swift */; };
+		D07B3BED0670FD69E2329AC0 /* EmailThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */; };
 		D28A27044BBFBBCA71AC66E5 /* EmailMessage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */; };
 		D3350C0B8CA28A348AA7259F /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486023F7D5013E7C5AB1C317 /* VoiceSettingsView.swift */; };
+		D3AC009E4421286F661533E1 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E88C7DED40B575C7878421 /* OnboardingView.swift */; };
+		D60F1C9580C5B5359A52251D /* SupportedLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */; };
+		D9AD2D7EFCFA5154DC694536 /* ContactLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8763A402EC59BC8EFF62EFEE /* ContactLookup.swift */; };
 		DC4830DAEB24CB24B36C4BAD /* EmailDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F3040059CDFB27A236FC1F /* EmailDetailView.swift */; };
 		E13964DEE27E074364690F0C /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A997F53835FF56846A47FF7 /* MenuBarController.swift */; };
 		E78D754B14778AFFA54B5300 /* HTMLLinkExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45A12C4351B21B56CC24F4E /* HTMLLinkExtractor.swift */; };
+		E8E7B776582F911198E445C6 /* MailImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF88CA2798080A5025B2EFE /* MailImportService.swift */; };
 		EEEBE3A1F15AF7055B14440E /* AgentPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752A1A7B6D937F8C65671575 /* AgentPanelView.swift */; };
+		F92B8D8DA4FB70CCF32E25CC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D09664B66E2198917A7189 /* ContentView.swift */; };
 		FAF4A769E64016340E3A4A55 /* IMAPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A22DA53D66B3E27CD58A732 /* IMAPClient.swift */; };
 		FC90E0A3F757A6444A656216 /* EmailMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00FD5036AD038EBCD8958C5A /* EmailMessage.swift */; };
 		FE550594180940D49D91AA67 /* VoiceCommandHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0185F652AE245BEA5C5033A8 /* VoiceCommandHandler.swift */; };
@@ -70,11 +121,13 @@
 
 /* Begin PBXFileReference section */
 		00FD5036AD038EBCD8958C5A /* EmailMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailMessage.swift; sourceTree = "<group>"; };
+		014315007B691ACE56162FF6 /* OralisPublic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OralisPublic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0185F652AE245BEA5C5033A8 /* VoiceCommandHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandHandler.swift; sourceTree = "<group>"; };
 		06E8FD170FE17CEACAA514CF /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		0C55CDA7447317DA86881E95 /* AriaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AriaApp.swift; sourceTree = "<group>"; };
 		15F3040059CDFB27A236FC1F /* EmailDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailDetailView.swift; sourceTree = "<group>"; };
 		1E6D7FEDF4F0B712B1A485FB /* BatchActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchActionBar.swift; sourceTree = "<group>"; };
+		2AA6F32DB2012C58D8A76741 /* OralisPublic.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OralisPublic.entitlements; sourceTree = "<group>"; };
 		2CDA1A5D66AA254F1357E694 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		33D90B07AF9435CE73C258F1 /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
 		37D7D6A514E6F8C6CE1FDDAC /* ComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeView.swift; sourceTree = "<group>"; };
@@ -90,6 +143,7 @@
 		5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailThread.swift; sourceTree = "<group>"; };
 		5D73EE7ABFDAD1B89DF59855 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		5F63247427F1C4045E214CE9 /* Oralis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Oralis.entitlements; sourceTree = "<group>"; };
+		6849998D75389119D786AE69 /* ProxyAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyAuth.swift; sourceTree = "<group>"; };
 		6D73BC94AC72EECEE503BB2B /* LinkReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkReaderView.swift; sourceTree = "<group>"; };
 		752A1A7B6D937F8C65671575 /* AgentPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPanelView.swift; sourceTree = "<group>"; };
 		77F8AA1B10202C2F50BC9E26 /* EmailAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAccount.swift; sourceTree = "<group>"; };
@@ -122,7 +176,8 @@
 		F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelView.swift; sourceTree = "<group>"; };
 		F4D86ADF7D928FB7F81452DB /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
 		FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
-		"TEMP_C8AADD5A-5D1C-405D-9073-310C07215C49" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_81085E39-B62C-467A-A363-D0898270AA02" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_9181A6F9-494A-45A1-963B-64FF25DC17C4" /* Public.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Public.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -158,6 +213,7 @@
 				ECF88CA2798080A5025B2EFE /* MailImportService.swift */,
 				56E4D88FF2F5352F0163877F /* OAuthService.swift */,
 				8B426503A313C3A254962417 /* OutlookService.swift */,
+				6849998D75389119D786AE69 /* ProxyAuth.swift */,
 				E765FA52203B065C4EA7C67D /* SoundEffects.swift */,
 				06E8FD170FE17CEACAA514CF /* SpeechService.swift */,
 				847A4DE5D3726D5685D3A674 /* UnsubscribeService.swift */,
@@ -229,6 +285,7 @@
 			isa = PBXGroup;
 			children = (
 				E2DD5A277FE8D4D213F7BF43 /* Oralis.app */,
+				014315007B691ACE56162FF6 /* OralisPublic.app */,
 				891EC7139D3C83EE029617FB /* OralisTests.xctest */,
 			);
 			name = Products;
@@ -269,14 +326,16 @@
 			children = (
 				3FEE52D4213921C261C5E18C /* Info.plist */,
 				5F63247427F1C4045E214CE9 /* Oralis.entitlements */,
+				2AA6F32DB2012C58D8A76741 /* OralisPublic.entitlements */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		"TEMP_A512348C-113B-4181-8D92-0BCCD258FFA0" /* Aria */ = {
+		"TEMP_32215E76-3FD4-444E-95D7-AE073C1B3C5C" /* Aria */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_C8AADD5A-5D1C-405D-9073-310C07215C49" /* Secrets.xcconfig */,
+				"TEMP_81085E39-B62C-467A-A363-D0898270AA02" /* Secrets.xcconfig */,
+				"TEMP_9181A6F9-494A-45A1-963B-64FF25DC17C4" /* Public.xcconfig */,
 			);
 			path = Aria;
 			sourceTree = "<group>";
@@ -319,6 +378,24 @@
 			productReference = 891EC7139D3C83EE029617FB /* OralisTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		7AA2600DA11780483EC476A0 /* OralisPublic */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5AA422B0FF89189DE84F52D7 /* Build configuration list for PBXNativeTarget "OralisPublic" */;
+			buildPhases = (
+				6CEE53F4C286186A49887542 /* Sources */,
+				EDE333B77764D31000B07AC1 /* Verify no secrets in public build */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OralisPublic;
+			packageProductDependencies = (
+			);
+			productName = OralisPublic;
+			productReference = 014315007B691ACE56162FF6 /* OralisPublic.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -333,6 +410,10 @@
 						ProvisioningStyle = Manual;
 					};
 					6C350C51D87EFE7DE86522A2 = {
+						DevelopmentTeam = NW57L28677;
+						ProvisioningStyle = Manual;
+					};
+					7AA2600DA11780483EC476A0 = {
 						DevelopmentTeam = NW57L28677;
 						ProvisioningStyle = Manual;
 					};
@@ -353,10 +434,33 @@
 			projectRoot = "";
 			targets = (
 				1BCC62210719FB8BB77E807B /* Oralis */,
+				7AA2600DA11780483EC476A0 /* OralisPublic */,
 				6C350C51D87EFE7DE86522A2 /* OralisTests */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		EDE333B77764D31000B07AC1 /* Verify no secrets in public build */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Verify no secrets in public build";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "PLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nfor KEY in ANTHROPIC_API_KEY ELEVENLABS_API_KEY GOOGLE_OAUTH_CLIENT_SECRET; do\n  VALUE=$(/usr/libexec/PlistBuddy -c \"Print :$KEY\" \"$PLIST\" 2>/dev/null || true)\n  if [ -n \"$VALUE\" ]; then\n    echo \"error: $KEY is set in the public build. Public.xcconfig must leave it empty.\"\n    exit 1\n  fi\ndone\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0BEE69FEEE605F61B6E43AFF /* Sources */ = {
@@ -401,6 +505,7 @@
 				9FB99425339C4B50ED807A3F /* OAuthService.swift in Sources */,
 				FFBC2D700FD38BBF34CABC7A /* OnboardingView.swift in Sources */,
 				A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */,
+				4E0523E666A78845FB94385B /* ProxyAuth.swift in Sources */,
 				4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */,
 				CA974A5086A68E8818C38394 /* SidebarView.swift in Sources */,
 				C9231612C278101B56E2FE98 /* SoundEffects.swift in Sources */,
@@ -412,6 +517,63 @@
 				FE550594180940D49D91AA67 /* VoiceCommandHandler.swift in Sources */,
 				5231C2DA0C298164F6141761 /* VoicePreferences.swift in Sources */,
 				D3350C0B8CA28A348AA7259F /* VoiceSettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CEE53F4C286186A49887542 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ED45AE525D101B3A67C8897 /* AIAgentService.swift in Sources */,
+				691CC5DFCB7EF0C46EFE391F /* AccessibilityLabels.swift in Sources */,
+				B8EB93995C71D4B239708B71 /* AccountSetupView.swift in Sources */,
+				10A9221E9ED89203020612A0 /* AgentMessage.swift in Sources */,
+				08CA43C331458B165A1FFE4F /* AgentPanelView.swift in Sources */,
+				67A09CC38C87E7B130DFC0A0 /* AppState.swift in Sources */,
+				1E79D418C0D7A826E45E01B8 /* AriaApp.swift in Sources */,
+				36E65FEA6A19C6483669530C /* AriaCommands.swift in Sources */,
+				734191876A7E92D1064D965E /* AriaError.swift in Sources */,
+				B33063B94B7D9D4C37112947 /* BatchActionBar.swift in Sources */,
+				82AFDD2F5CA655DEA2B27279 /* BrowserModel.swift in Sources */,
+				2260824A1EA2816137A92236 /* BrowserView.swift in Sources */,
+				6A0AE2A34D3019982BD4A950 /* CalendarService.swift in Sources */,
+				A056DB115F4EC13717DF28A2 /* CallView.swift in Sources */,
+				0F0E2B7ABE2F36E5E8137F7D /* ComposeView.swift in Sources */,
+				D9AD2D7EFCFA5154DC694536 /* ContactLookup.swift in Sources */,
+				F92B8D8DA4FB70CCF32E25CC /* ContentView.swift in Sources */,
+				351350F66FAD8DFE8509CC2C /* EmailAccount.swift in Sources */,
+				4A6E8398EC70C8BF8CAC3698 /* EmailDetailView.swift in Sources */,
+				85852450B763CBC41809377F /* EmailListView.swift in Sources */,
+				4D5380639738C4FFD9C514A4 /* EmailMessage+Helpers.swift in Sources */,
+				3BF7E367E04B5FED51008CBE /* EmailMessage.swift in Sources */,
+				5CCBD7F60996946E936ECECD /* EmailService.swift in Sources */,
+				D07B3BED0670FD69E2329AC0 /* EmailThread.swift in Sources */,
+				882EFBFDE7FEEAC61714F72D /* FloatingPanelView.swift in Sources */,
+				15734D77F23B596037CDE7FF /* GmailService.swift in Sources */,
+				B24EF6F4A0830770D2E42EF2 /* HTMLLinkExtractor.swift in Sources */,
+				65AF8A1292BEA433E32FF2BA /* IMAPClient.swift in Sources */,
+				5723134BFD5052B4E3C65DD3 /* IMAPService.swift in Sources */,
+				5EC9402A739745D9AA7F7120 /* IMAPSetupView.swift in Sources */,
+				59529919B2C80421C9EFDF38 /* KeychainService.swift in Sources */,
+				A83AE2F8280A2A51352D4E1D /* LinkReaderView.swift in Sources */,
+				08093307DD90791BDE77F847 /* MacMailImporter.swift in Sources */,
+				E8E7B776582F911198E445C6 /* MailImportService.swift in Sources */,
+				579F46F5E07177B382AA6473 /* MenuBarController.swift in Sources */,
+				934A87F944A5DC70EEFAA7F9 /* OAuthService.swift in Sources */,
+				D3AC009E4421286F661533E1 /* OnboardingView.swift in Sources */,
+				C355BB83EE9C89ED20716FB9 /* OutlookService.swift in Sources */,
+				72A7F5477D1557B675B2546F /* ProxyAuth.swift in Sources */,
+				3CEADF3BFB74ED18253B6396 /* SettingsView.swift in Sources */,
+				6B7B4EC98060A7A4347A9CF4 /* SidebarView.swift in Sources */,
+				946FD5CC80676DBF8184FBF3 /* SoundEffects.swift in Sources */,
+				C228A8BA7C04632BF37A2BC1 /* SpeechService.swift in Sources */,
+				D60F1C9580C5B5359A52251D /* SupportedLanguage.swift in Sources */,
+				165D2B397B554DB67182DB81 /* TalkView.swift in Sources */,
+				CECDEBD7D5B4CD4533F1E539 /* UnsubscribeService.swift in Sources */,
+				3EF9262D95C0AF40A276A2BB /* UpdateChecker.swift in Sources */,
+				786F143FC93E40BA82367AAD /* VoiceCommandHandler.swift in Sources */,
+				27E812D580DE38E7FC7E4491 /* VoicePreferences.swift in Sources */,
+				31E83B8E91D8AA6722123D66 /* VoiceSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -451,7 +613,7 @@
 		};
 		28DAD49A115A641EDE5DAEE0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_C8AADD5A-5D1C-405D-9073-310C07215C49" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_81085E39-B62C-467A-A363-D0898270AA02" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -529,7 +691,7 @@
 		};
 		8C6192BBD32F4CA74B9E89EF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_C8AADD5A-5D1C-405D-9073-310C07215C49" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_81085E39-B62C-467A-A363-D0898270AA02" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -611,12 +773,57 @@
 				);
 				MARKETING_VERSION = 4.0;
 				MICROSOFT_OAUTH_CLIENT_ID = "";
+				OAUTH_REDIRECT_SCHEME = com.oralis.app;
 				ORALIS_PROXY_URL = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.oralis.app;
 				PRODUCT_NAME = Oralis;
 				SDKROOT = macosx;
 			};
 			name = Debug;
+		};
+		B2547A3119220F47A1A974CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_9181A6F9-494A-45A1-963B-64FF25DC17C4" /* Public.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Aria/Resources/OralisPublic.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Oralis;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OAUTH_REDIRECT_SCHEME = com.oralis.public;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oralis.public;
+				PRODUCT_NAME = OralisPublic;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D93638F5BE8464F55AD62366 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_9181A6F9-494A-45A1-963B-64FF25DC17C4" /* Public.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Aria/Resources/OralisPublic.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = Sources/Aria/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Oralis;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OAUTH_REDIRECT_SCHEME = com.oralis.public;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oralis.public;
+				PRODUCT_NAME = OralisPublic;
+				SDKROOT = macosx;
+			};
+			name = Release;
 		};
 		F424BE29A2599FC9EAFAF2D4 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -633,6 +840,7 @@
 				);
 				MARKETING_VERSION = 4.0;
 				MICROSOFT_OAUTH_CLIENT_ID = "";
+				OAUTH_REDIRECT_SCHEME = com.oralis.app;
 				ORALIS_PROXY_URL = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.oralis.app;
 				PRODUCT_NAME = Oralis;
@@ -657,6 +865,15 @@
 			buildConfigurations = (
 				8C6192BBD32F4CA74B9E89EF /* Debug */,
 				28DAD49A115A641EDE5DAEE0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5AA422B0FF89189DE84F52D7 /* Build configuration list for PBXNativeTarget "OralisPublic" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2547A3119220F47A1A974CC /* Debug */,
+				D93638F5BE8464F55AD62366 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

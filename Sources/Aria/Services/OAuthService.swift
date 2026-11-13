@@ -15,7 +15,7 @@ final class OAuthService: NSObject, ObservableObject, ASWebAuthenticationPresent
         static let googleClientID     = Bundle.main.infoDictionary?["GOOGLE_OAUTH_CLIENT_ID"]     as? String ?? ""
         static let googleClientSecret = Bundle.main.infoDictionary?["GOOGLE_OAUTH_CLIENT_SECRET"] as? String ?? ""
         static let microsoftClientID  = Bundle.main.infoDictionary?["MICROSOFT_OAUTH_CLIENT_ID"]  as? String ?? ""
-        static let redirectScheme     = "com.oralis.app"
+        static let redirectScheme     = Bundle.main.infoDictionary?["OAUTH_REDIRECT_SCHEME"] as? String ?? "com.oralis.app"
     }
 
     // MARK: - Token refresh (called by GmailService on 401)
