@@ -30,7 +30,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oralis.app
         PRODUCT_NAME: Oralis
-        OAUTH_REDIRECT_SCHEME: com.oralis.app
         MARKETING_VERSION: "4.0"
         CURRENT_PROJECT_VERSION: "4"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -51,50 +50,6 @@ targets:
     scheme:
       testTargets:
         - OralisTests
-
-  # Public, customer-facing build. Same source as Oralis, but it contains NO API keys:
-  # the AI and the voice go through the Oralis proxy (see proxy/DEPLOY.md), and users
-  # are identified by their Google sign-in. Your personal "Oralis" target is unchanged.
-  OralisPublic:
-    type: application
-    platform: macOS
-    sources:
-      - path: Sources/Aria
-        excludes:
-          - Resources/Oralis.entitlements
-    configFiles:
-      Debug: Public.xcconfig
-      Release: Public.xcconfig
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.oralis.public
-        PRODUCT_NAME: OralisPublic
-        OAUTH_REDIRECT_SCHEME: com.oralis.public
-        MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "1"
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_FILE: Sources/Aria/Resources/Info.plist
-        INFOPLIST_KEY_CFBundleDisplayName: Oralis
-        CODE_SIGN_ENTITLEMENTS: Sources/Aria/Resources/OralisPublic.entitlements
-    entitlements:
-      path: Sources/Aria/Resources/OralisPublic.entitlements
-      properties:
-        com.apple.security.network.client: true
-        com.apple.security.device.audio-input: true
-        com.apple.security.personal-information.addressbook: true
-        com.apple.security.personal-information.calendars: true
-    postBuildScripts:
-      - name: Verify no secrets in public build
-        basedOnDependencyAnalysis: false
-        script: |
-          PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
-          for KEY in ANTHROPIC_API_KEY ELEVENLABS_API_KEY GOOGLE_OAUTH_CLIENT_SECRET; do
-            VALUE=$(/usr/libexec/PlistBuddy -c "Print :$KEY" "$PLIST" 2>/dev/null || true)
-            if [ -n "$VALUE" ]; then
-              echo "error: $KEY is set in the public build. Public.xcconfig must leave it empty."
-              exit 1
-            fi
-          done
 
   OralisTests:
     type: bundle.unit-test

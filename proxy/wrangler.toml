@@ -3,21 +3,8 @@ main = "src/index.js"
 compatibility_date = "2024-11-01"
 
 [vars]
-# Your Google OAuth *client ID* (public, not a secret). The Worker only accepts tokens
-# that Google issued to this client, i.e. tokens from the real Oralis app.
-GOOGLE_CLIENT_ID = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
-
-# Per account, per day
+# Rate limit: max requests per device per day
 DAILY_LIMIT = "150"
-DAILY_TTS_LIMIT = "100"
-# Whole service, per day: a hard ceiling on your bill
-GLOBAL_DAILY_LIMIT = "20000"
-GLOBAL_DAILY_TTS_LIMIT = "10000"
-
-# "true" = only accounts you have added to KV (plan:<hash>) may use the AI (paid users)
-REQUIRE_PLAN = "false"
-# "true" = stop all AI traffic immediately
-KILL_SWITCH = "false"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"

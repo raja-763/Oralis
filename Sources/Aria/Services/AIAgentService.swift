@@ -132,43 +132,27 @@ final class AIAgentService: ObservableObject {
             throw OralisError.apiError("No API key or proxy configured. Add ANTHROPIC_API_KEY to Secrets.xcconfig.")
         }
 
-        // Builds the request; the proxy build identifies the user with their Google token.
-        func makeRequest(proxyToken: String?) -> URLRequest {
-            var req = URLRequest(url: endpoint)
-            req.httpMethod = "POST"
-            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            if usingDirectAPI {
-                req.setValue(AIAgentService.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
-                req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-                let ws = AIAgentService.workspaceID
-                if !ws.isEmpty {
-                    req.setValue(ws, forHTTPHeaderField: "anthropic-workspace-id")
-                }
-            } else {
-                req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
-                if let proxyToken { req.setValue("Bearer \(proxyToken)", forHTTPHeaderField: "Authorization") }
+        var req = URLRequest(url: endpoint)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if usingDirectAPI {
+            req.setValue(AIAgentService.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+            let ws = AIAgentService.workspaceID
+            if !ws.isEmpty {
+                req.setValue(ws, forHTTPHeaderField: "anthropic-workspace-id")
             }
-            req.httpBody = body
-            return req
+        } else {
+            req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
         }
+        req.httpBody = body
 
-        var proxyToken: String?
-        if !usingDirectAPI {
-            proxyToken = await ProxyAuth.token()
-            guard proxyToken != nil else { throw OralisError.apiError(ProxyAuth.signInMessage) }
-        }
-
-        var (data, response): (Data, URLResponse)
+        let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await URLSession.shared.data(for: makeRequest(proxyToken: proxyToken))
+            (data, response) = try await URLSession.shared.data(for: req)
         } catch let error as URLError where error.code == .networkConnectionLost || error.code == .timedOut {
             // A dropped connection is usually momentary; try once more before reporting it.
-            (data, response) = try await URLSession.shared.data(for: makeRequest(proxyToken: proxyToken))
-        }
-        // An expired Google token is refreshed once and the request repeated.
-        if !usingDirectAPI, (response as? HTTPURLResponse)?.statusCode == 401,
-           let fresh = await ProxyAuth.token(refresh: true) {
-            (data, response) = try await URLSession.shared.data(for: makeRequest(proxyToken: fresh))
+            (data, response) = try await URLSession.shared.data(for: req)
         }
         let rawBody = String(data: data, encoding: .utf8) ?? ""
 

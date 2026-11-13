@@ -144,9 +144,6 @@ final class SpeechService: NSObject, ObservableObject {
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             if useProxy {
                 req.setValue(deviceID, forHTTPHeaderField: "X-Device-ID")
-                // The proxy build identifies the user with their Google token.
-                guard let token = await ProxyAuth.token() else { speakApple(text, prefs: preferences); return }
-                req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 req.httpBody = try JSONEncoder().encode(["text": text, "voice_id": voiceID])
             } else {
                 req.setValue(SpeechService.elevenLabsAPIKey, forHTTPHeaderField: "xi-api-key")

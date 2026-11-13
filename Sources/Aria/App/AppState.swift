@@ -10,9 +10,7 @@ final class AppState: ObservableObject {
 
     // MARK: - Accounts
     @Published var accounts: [EmailAccount] = []
-    @Published var selectedAccount: EmailAccount? {
-        didSet { ProxyAuth.setAccount(selectedAccount?.provider == .gmail ? selectedAccount?.id : nil) }
-    }
+    @Published var selectedAccount: EmailAccount?
 
     // MARK: - Inbox
     @Published var threads: [EmailThread] = []
