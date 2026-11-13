@@ -23,6 +23,7 @@ final class AppState: ObservableObject {
         do {
             try await EmailServiceFactory.service(for: account).sendMessage(draft)
             oralisLog("email: sent")
+            SoundEffects.sent()
             readAloud(success)
         } catch {
             oralisLog("email: send failed: \(String(describing: error).prefix(200))")
@@ -316,7 +317,9 @@ final class AppState: ObservableObject {
             threads.removeAll { selectedThreadIDs.contains($0.id) }
             spamThreads.removeAll { selectedThreadIDs.contains($0.id) }
             searchResults.removeAll { selectedThreadIDs.contains($0.id) }
+            if let open = selectedThread, ids.contains(open.id) { selectedThread = nil }
             selectedThreadIDs.removeAll()
+            SoundEffects.deleted()
             announce(ids.count == 1 ? "Moved it to the trash." : "Moved \(ids.count) emails to the trash.")
         } catch {
             oralisLog("delete failed: \(String(describing: error).prefix(200))")
@@ -329,8 +332,11 @@ final class AppState: ObservableObject {
         let service = EmailServiceFactory.service(for: account)
         let ids = Array(selectedThreadIDs)
         do {
+            guard !ids.isEmpty else { announce("I couldn't tell which email you meant."); return }
             try await service.archiveThreads(ids: ids)
             threads.removeAll { selectedThreadIDs.contains($0.id) }
+            searchResults.removeAll { selectedThreadIDs.contains($0.id) }
+            if let open = selectedThread, ids.contains(open.id) { selectedThread = nil }
             selectedThreadIDs.removeAll()
             announce("Archived \(ids.count) emails.")
         } catch {
@@ -591,8 +597,13 @@ final class AppState: ObservableObject {
                   let msg = thread.messages.first
             else { return }
             let service = EmailServiceFactory.service(for: account)
-            try? await service.unsubscribe(from: msg)
-            readAloud("Unsubscribed.")
+            do {
+                try await service.unsubscribe(from: msg)
+                readAloud("Unsubscribed.")
+            } catch {
+                oralisLog("unsubscribe failed: \(String(describing: error).prefix(200))")
+                readAloud("I couldn't unsubscribe from that sender. \(error.localizedDescription)")
+            }
 
         case .listSpam:
             guard let account = selectedAccount else { return }
@@ -623,6 +634,7 @@ final class AppState: ObservableObject {
             do {
                 try await EmailServiceFactory.service(for: account).moveToSpam(ids: uuids)
                 threads.removeAll { uuids.contains($0.id) }
+                searchResults.removeAll { uuids.contains($0.id) }
                 readAloud(uuids.count == 1 ? "Moved it to spam." : "Moved \(uuids.count) emails to spam.")
             } catch {
                 oralisLog("spam: mark failed: \(String(describing: error).prefix(200))")
@@ -653,6 +665,7 @@ final class AppState: ObservableObject {
                 guard !spam.isEmpty else { readAloud("Your spam folder is already empty."); return }
                 try await service.deleteThreads(ids: spam.map(\.id))
                 spamThreads = []
+                SoundEffects.deleted()
                 readAloud("Moved \(spam.count) spam emails to the trash.")
             } catch {
                 oralisLog("spam: empty failed: \(String(describing: error).prefix(200))")
@@ -681,8 +694,13 @@ final class AppState: ObservableObject {
             guard let thread = knownThread(threadID),
                   let invite = thread.messages.first?.calendarInvite
             else { return }
-            try? await CalendarService.shared.addInvite(invite)
-            readAloud("Invite accepted and added to your calendar.")
+            await requestCalendarAccessWithGuidance()
+            do {
+                try await CalendarService.shared.addInvite(invite)
+                readAloud("Invite accepted and added to your calendar.")
+            } catch {
+                readAloud("I couldn't add that invite to your calendar. \(error.localizedDescription)")
+            }
 
         case .declineInvite:
             readAloud("Invite declined.")

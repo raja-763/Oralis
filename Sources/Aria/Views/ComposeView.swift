@@ -76,6 +76,11 @@ struct ComposeView: View {
 
     private func send() async {
         guard let acc = appState.selectedAccount else { return }
+        guard !isSending else { return }
+        guard to.contains("@") else {
+            appState.announce("Please enter a valid recipient email address.")
+            return
+        }
         isSending = true
         let draft = DraftMessage(
             to: [EmailAddress(name: "", address: to)],
@@ -87,6 +92,7 @@ struct ComposeView: View {
         let service = EmailServiceFactory.service(for: acc)
         do {
             try await service.sendMessage(draft)
+            SoundEffects.sent()
             appState.announce("Email sent.")
             dismiss()
         } catch {
