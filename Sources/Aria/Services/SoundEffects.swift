@@ -7,6 +7,9 @@ enum SoundEffects {
     /// Played once an email has been sent.
     static func sent() { play("Hero") }
 
+    /// Played when a conversation ends, in place of any spoken goodbye.
+    static func conversationEnded() { play("Submarine") }
+
     private static func play(_ name: String) {
         // A copy lets the sound overlap with other tones instead of being skipped
         // while the shared instance is still playing.

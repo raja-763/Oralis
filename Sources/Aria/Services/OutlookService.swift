@@ -111,7 +111,7 @@ final class OutlookService: EmailService {
         return list.value.map { $0.toEmailThread(accountID: account.id) }
     }
 
-    func unsubscribe(from message: EmailMessage) async throws {
+    func unsubscribe(from message: EmailMessage) async throws -> UnsubscribeResult {
         try await UnsubscribeService.shared.unsubscribe(from: message, via: account)
     }
 

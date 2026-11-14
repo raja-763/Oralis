@@ -78,6 +78,11 @@ final class AIAgentService: ObservableObject {
     - Include only the fields they asked for. "name" must be one of the installed voices in the VOICES context. "gender" is "male" or "female". "language" is a locale such as en-GB, en-AU, es-ES, fr-FR. "speed" is "slower", "faster" or "normal". "pitch" is "higher", "lower" or "normal".
     - If they just say "change your voice", send { "action": "setVoice" } and the app picks a different one. Say one short sentence first; the app then speaks in the new voice itself.
 
+    Change your personality: { "action": "setPersonality", "style": "salty", "speed": "slower", "pitch": "lower", "volume": "softer" }
+    - Use this when the user asks you to be salty, saucy, gangster, street, spicy, Gen Z, sassy, sarcastic, flirty, an ASMR mommy voice, soft, soothing, bubbly, grumpy, or any other personality or manner of speaking, and when they ask you to go back to normal ("style": "normal").
+    - "style" is the preset name (salty, saucy, gangster, asmr, normal) or a short description of the manner they asked for. Presets already set a matching pace, pitch and softness, so add "speed", "pitch" or "volume" ("softer" or "louder") only when they ask for that specifically. Your current voice stays the same; setVoice is for changing the voice itself.
+    - Say one short sentence in the new style, then the action. From then on keep speaking in that style.
+
     CALENDAR ACTIONS:
     List events:         { "action": "listCalendar",  "days": 7 }
     Create event:        { "action": "createEvent",   "title": "...", "date": "2026-11-15T14:00:00", "duration": 60 }
@@ -125,7 +130,7 @@ final class AIAgentService: ObservableObject {
         let body = try JSONEncoder().encode(ClaudeRequest(
             model: model,
             max_tokens: 1024,
-            system: systemPrompt,
+            system: systemPrompt + Personality.promptBlock,
             messages: messages
         ))
 
@@ -333,6 +338,11 @@ final class AIAgentService: ObservableObject {
                              language: dict["language"] as? String ?? "",
                              speed: dict["speed"] as? String ?? "",
                              pitch: dict["pitch"] as? String ?? "")
+        case "setPersonality":
+            return .setPersonality(style: dict["style"] as? String ?? "",
+                                   speed: dict["speed"] as? String ?? "",
+                                   pitch: dict["pitch"] as? String ?? "",
+                                   volume: dict["volume"] as? String ?? "")
         case "scrollDown":
             return .scrollDown
         case "goBack":
@@ -364,6 +374,7 @@ struct EmailAgentContext {
 
 enum AgentAction {
     // Voice
+    case setPersonality(style: String, speed: String, pitch: String, volume: String)
     case setVoice(name: String, gender: String, language: String, speed: String, pitch: String)
     // Email
     case readEmail(threadID: String)

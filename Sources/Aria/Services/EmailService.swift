@@ -14,7 +14,7 @@ protocol EmailService {
     func starThreads(ids: [UUID], starred: Bool) async throws
     func searchThreads(query: String) async throws -> [EmailThread]
     func fetchSpam(limit: Int) async throws -> [EmailThread]
-    func unsubscribe(from message: EmailMessage) async throws
+    func unsubscribe(from message: EmailMessage) async throws -> UnsubscribeResult
     func moveToSpam(ids: [UUID]) async throws
     func moveToInbox(ids: [UUID]) async throws
 }

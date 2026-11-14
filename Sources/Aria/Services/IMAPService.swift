@@ -66,7 +66,7 @@ final class IMAPService: EmailService {
         return []
     }
 
-    func unsubscribe(from message: EmailMessage) async throws {
+    func unsubscribe(from message: EmailMessage) async throws -> UnsubscribeResult {
         try await UnsubscribeService.shared.unsubscribe(from: message, via: account)
     }
 

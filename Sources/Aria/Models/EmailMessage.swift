@@ -33,6 +33,9 @@ struct EmailMessage: Identifiable, Codable, Equatable {
     // Unsubscribe info parsed from List-Unsubscribe header
     var unsubscribeURL: URL?
     var unsubscribeEmail: String?
+    var unsubscribeEmailSubject: String? = nil
+    /// The sender supports RFC 8058 one-click unsubscribe (List-Unsubscribe-Post header).
+    var unsubscribeOneClick: Bool = false
 
     // Calendar invite attachment, if present
     var calendarInvite: CalendarInvite?
@@ -44,7 +47,12 @@ struct EmailMessage: Identifiable, Codable, Equatable {
     }
 
     var hasUnsubscribeOption: Bool {
-        unsubscribeURL != nil || unsubscribeEmail != nil
+        unsubscribeURL != nil || unsubscribeEmail != nil || bodyUnsubscribeLink != nil
+    }
+
+    /// A link in the body that looks like an unsubscribe page, for senders without the header.
+    var bodyUnsubscribeLink: URL? {
+        links.first { ($0.title + " " + $0.url.absoluteString).lowercased().contains("unsubscribe") }?.url
     }
 }
 

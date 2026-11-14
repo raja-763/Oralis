@@ -6,6 +6,7 @@ struct VoiceSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var prefs         = VoicePreferencesStore.shared.current
     @AppStorage("oralis.talkOver") private var talkOver = true
+    @State private var personalityKey = Personality.presetKey_
     @State private var voices        = OralisVoice.allVoices(for: VoicePreferencesStore.shared.current.language)
     @State private var selectedVoiceID: String = VoicePreferencesStore.shared.current.voiceIdentifier
     @State private var previewText   = "Hello! I'm Oralis, your voice-first assistant."
@@ -366,6 +367,18 @@ struct VoiceSettingsView: View {
                     Toggle("Announce batch action results",
                            isOn: $prefs.announceBatchResults)
                         .accessibilityLabel("Speak a summary after bulk delete, archive, or unsubscribe")
+
+                    Picker("Personality", selection: $personalityKey) {
+                        ForEach(Personality.presets) { Text($0.title).tag($0.key) }
+                        if personalityKey == "custom" { Text("Custom (set by voice)").tag("custom") }
+                    }
+                    .accessibilityLabel("Personality. Changes how Oralis words things and how softly, slowly and low it speaks, using your current voice. You can also just ask Oralis to be salty, saucy or an ASMR mommy.")
+                    .onChange(of: personalityKey) { _, new in
+                        guard let preset = Personality.presets.first(where: { $0.key == new }) else { return }
+                        Personality.apply(preset, to: &prefs)
+                        selectedVoiceID = prefs.voiceIdentifier
+                        save()
+                    }
 
                     Toggle("Let me talk over Oralis to interrupt it",
                            isOn: $talkOver)

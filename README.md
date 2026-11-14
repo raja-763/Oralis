@@ -27,6 +27,13 @@ Oralis is **privacy-first** by design:
 
 ---
 
+## Bring your own keys
+
+Oralis ships with **no API keys**. To use the AI, open **Settings** in the app and paste your own
+Anthropic API key; it stays on your Mac. If you build from source, copy
+`Secrets.xcconfig.example` to `Secrets.xcconfig` (git-ignored) and fill in only what you need.
+Do not share a build you made with your own keys inside it.
+
 ## Features
 
 ### Email (Lumin-inspired)

@@ -463,12 +463,12 @@ final class SpeechService: NSObject, ObservableObject {
         }
     }
 
-    func stopListening() {
+    func stopListening(silent: Bool = false) {
         guard isListening else { return }
         silenceTask?.cancel()
         silenceTask = nil
         // Mic-off sound (silent for the interruption listener)
-        if !bargeInPending { NSSound(named: .init("Pop"))?.play() }
+        if !bargeInPending && !silent { NSSound(named: .init("Pop"))?.play() }
         bargeInPending = false
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)

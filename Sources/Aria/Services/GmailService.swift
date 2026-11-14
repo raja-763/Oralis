@@ -246,7 +246,7 @@ final class GmailService: EmailService {
         return results.compactMap { $0 }
     }
 
-    func unsubscribe(from message: EmailMessage) async throws {
+    func unsubscribe(from message: EmailMessage) async throws -> UnsubscribeResult {
         try await UnsubscribeService.shared.unsubscribe(from: message, via: account)
     }
 
@@ -331,7 +331,8 @@ private struct GmailMessage: Decodable {
         let bodyText = extractPlainText(payload)
         let bodyHTML = extractHTML(payload)
         let links = HTMLLinkExtractor.extract(from: bodyHTML.isEmpty ? bodyText : bodyHTML)
-        let (unsubURL, unsubEmail) = parseUnsubscribe(header("list-unsubscribe"))
+        let (unsubURL, unsubEmail, unsubSubject) = parseUnsubscribe(header("list-unsubscribe"))
+        let oneClick = header("list-unsubscribe-post").lowercased().contains("one-click")
 
         return EmailMessage(
             id: UUID(), remoteID: id, accountID: accountID,
@@ -340,6 +341,7 @@ private struct GmailMessage: Decodable {
             date: date, isRead: isRead, isStarred: isStarred,
             labels: labels, links: links,
             unsubscribeURL: unsubURL, unsubscribeEmail: unsubEmail,
+            unsubscribeEmailSubject: unsubSubject, unsubscribeOneClick: oneClick,
             calendarInvite: nil
         )
     }
@@ -367,20 +369,27 @@ private struct GmailMessage: Decodable {
         return str
     }
 
-    private func parseUnsubscribe(_ header: String) -> (URL?, String?) {
-        // Header looks like: <https://...>, <mailto:...>
+    /// The header lists targets in angle brackets, e.g. <https://x/u?a=1,2>, <mailto:u@x.com?subject=unsubscribe>.
+    /// It may be folded over several lines and URLs may contain commas.
+    private func parseUnsubscribe(_ header: String) -> (URL?, String?, String?) {
         var url: URL?
         var email: String?
-        let parts = header.split(separator: ",")
-        for part in parts {
-            let clean = part.trimmingCharacters(in: .init(charactersIn: " <>"))
-            if clean.hasPrefix("mailto:") {
-                email = String(clean.dropFirst(7))
-            } else if let u = URL(string: clean), u.scheme == "https" || u.scheme == "http" {
-                url = u
+        var subject: String?
+        var search = header[...]
+        while let open = search.firstIndex(of: "<"), let close = search[open...].firstIndex(of: ">") {
+            let target = search[search.index(after: open)..<close]
+                .components(separatedBy: .whitespacesAndNewlines).joined()
+            search = search[search.index(after: close)...]
+            if target.lowercased().hasPrefix("mailto:") {
+                let comps = URLComponents(string: target)
+                let address = comps?.path ?? String(target.dropFirst(7)).components(separatedBy: "?").first ?? ""
+                if address.contains("@") { email = address }
+                subject = comps?.queryItems?.first { $0.name.lowercased() == "subject" }?.value
+            } else if let u = URL(string: target), u.scheme == "https" || u.scheme == "http" {
+                if url == nil { url = u }
             }
         }
-        return (url, email)
+        return (url, email, subject)
     }
 }
 

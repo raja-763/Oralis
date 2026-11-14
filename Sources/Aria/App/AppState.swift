@@ -185,18 +185,26 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Name used in the greeting. Change it with: defaults write com.oralis.app oralis.userName "Name"
+    private var userName: String {
+        let stored = UserDefaults.standard.string(forKey: "oralis.userName") ?? ""
+        return stored.isEmpty ? "Hasnain" : stored
+    }
+
     func startConversationMode() {
         guard !isConversationMode else { return }
-        // No spoken greeting: the conversation loop opens the microphone at once and
-        // the listening chime is the cue to speak.
+        // Greet first; the conversation loop opens the microphone as soon as the greeting ends,
+        // and the user can talk over it.
         isConversationMode = true
+        readAloud("Hi \(userName), how can I help you?")
     }
 
     func stopConversationMode() {
         isConversationMode = false
-        stopListening()
-        NSSound(named: .init("Pop"))?.play()
-        readAloud("Okay, I'll stop listening.")
+        speech.stopSpeaking()
+        stopListening(silent: true)
+        // No spoken goodbye: a sound is the only signal that the conversation ended.
+        SoundEffects.conversationEnded()
     }
 
     // Calendar permission with voice guidance — skips if already granted
@@ -456,8 +464,8 @@ final class AppState: ObservableObject {
         }
     }
 
-    func stopListening() {
-        speech.stopListening()
+    func stopListening(silent: Bool = false) {
+        speech.stopListening(silent: silent)
         isAgentListening = false
         // Resume wake word detection — but never when VoiceOver is running
         if speech.permissionsGranted && !speech.isWakeWordActive && !SpeechService.isVoiceOverActive {
@@ -673,17 +681,30 @@ final class AppState: ObservableObject {
             }
 
         case .unsubscribe(let threadID):
-            guard let account = selectedAccount,
-                  let thread = knownThread(threadID),
-                  let msg = thread.messages.first
-            else { return }
-            let service = EmailServiceFactory.service(for: account)
+            guard let account = selectedAccount, let thread = knownThread(threadID) else {
+                readAloud("I couldn't find that email to unsubscribe from. Ask for your emails and pick one.")
+                return
+            }
+            // Any email in the conversation may carry the unsubscribe details.
+            guard let msg = thread.messages.first(where: \.hasUnsubscribeOption) ?? thread.messages.first else { return }
+            guard msg.hasUnsubscribeOption else {
+                readAloud("That sender doesn't offer an unsubscribe option. I can move it to spam instead if you like.")
+                return
+            }
+            let sender = Self.senderName(thread)
             do {
-                try await service.unsubscribe(from: msg)
-                readAloud("Unsubscribed.")
+                switch try await EmailServiceFactory.service(for: account).unsubscribe(from: msg) {
+                case .unsubscribed:
+                    readAloud("Done. \(sender) accepted the unsubscribe, so you should stop getting those.")
+                case .requestSent:
+                    readAloud("I sent an unsubscribe request to \(sender). It can take a few days to take effect.")
+                case .needsPage(let page):
+                    browser.navigate(to: page.absoluteString)
+                    readAloud("\(sender) needs one more step. I opened their unsubscribe page in Oralis's browser. Ask me to click the unsubscribe or confirm button, and I'll tell you what it says.")
+                }
             } catch {
                 oralisLog("unsubscribe failed: \(String(describing: error).prefix(200))")
-                readAloud("I couldn't unsubscribe from that sender. \(error.localizedDescription)")
+                readAloud("I couldn't unsubscribe from \(sender). \(error.localizedDescription)")
             }
 
         case .listSpam:
@@ -754,6 +775,9 @@ final class AppState: ObservableObject {
             }
 
         // ── Voice ────────────────────────────────────────────────────────
+        case .setPersonality(let style, let speed, let pitch, let volume):
+            applyPersonality(style: style, speed: speed, pitch: pitch, volume: volume)
+
         case .setVoice(let name, let gender, let language, let speed, let pitch):
             applyVoiceChange(name: name, gender: gender, language: language, speed: speed, pitch: pitch)
 
@@ -853,6 +877,36 @@ final class AppState: ObservableObject {
         }.joined(separator: "\n")
     }
 
+    private func applyPersonality(style: String, speed: String, pitch: String, volume: String) {
+        var prefs = speech.preferences
+        let wanted = style.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let preset = Personality.preset(matching: wanted) {
+            Personality.apply(preset, to: &prefs)
+        } else if !wanted.isEmpty {
+            Personality.style = wanted
+            Personality.presetKey_ = "custom"
+        }
+        switch speed.lowercased() {
+        case "slower", "slow": prefs.rate = max(0.1, prefs.rate - 0.07)
+        case "faster", "fast": prefs.rate = min(0.65, prefs.rate + 0.07)
+        default: break
+        }
+        switch pitch.lowercased() {
+        case "higher", "high": prefs.pitch = min(2.0, prefs.pitch + 0.2)
+        case "lower", "low", "deeper": prefs.pitch = max(0.5, prefs.pitch - 0.2)
+        default: break
+        }
+        switch volume.lowercased() {
+        case "softer", "quieter", "soft": prefs.volume = max(0.2, prefs.volume - 0.25)
+        case "louder", "loud": prefs.volume = min(1.0, prefs.volume + 0.25)
+        default: break
+        }
+        speech.preferences = prefs
+        VoicePreferencesStore.shared.current = prefs
+        oralisLog("personality: set (\(Personality.presetKey_), rate \(prefs.rate), pitch \(prefs.pitch), volume \(prefs.volume))")
+        readAloud(Personality.style.isEmpty ? "Back to my normal self." : "How's this?")
+    }
+
     private func applyVoiceChange(name: String, gender: String, language: String, speed: String, pitch: String) {
         var prefs = speech.preferences
         var voiceChanged = false
@@ -942,7 +996,7 @@ final class AppState: ObservableObject {
         // Newest first, with IDs, so the AI can read or act on a specific email at once.
         let preview = threads.prefix(15).enumerated().map { index, t in
             let gist = t.snippet.replacingOccurrences(of: "\n", with: " ").prefix(140)
-            return "\(index + 1). threadID \(t.id.uuidString) | \(t.isRead ? "read" : "UNREAD") | from \(Self.senderName(t)) | \(formatter.string(from: t.latestDate)) | subject: \(t.subject) | preview: \(gist)"
+            return "\(index + 1). threadID \(t.id.uuidString) | \(t.isRead ? "read" : "UNREAD") | from \(Self.senderName(t)) | \(formatter.string(from: t.latestDate)) | subject: \(t.subject)\(t.messages.contains(where: \.hasUnsubscribeOption) ? " | CAN UNSUBSCRIBE" : "") | preview: \(gist)"
         }.joined(separator: "\n")
         var summary = "Inbox: \(threads.count) threads loaded, \(unread) unread. Newest first:\n\(preview)"
         if !spamThreads.isEmpty {
@@ -1012,6 +1066,9 @@ final class AppState: ObservableObject {
         // The model sometimes narrates an action as "[Action: ...]"; that is not for speech.
         result = result.replacingOccurrences(of: "\\[\\s*Actions?\\s*:[^\\]]*\\]", with: "",
                                              options: [.regularExpression, .caseInsensitive])
+        // Personality styles sometimes add stage directions like *winks*; they are not for speech.
+        result = result.replacingOccurrences(of: "\\*[^*\\n]{1,80}\\*", with: "", options: .regularExpression)
+                       .replacingOccurrences(of: "*", with: "")
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
