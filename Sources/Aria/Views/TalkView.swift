@@ -126,12 +126,11 @@ struct TalkView: View {
                     SuggestionChip("Schedule a meeting tomorrow at 3pm")
                 }
                 Group {
-                    Text("Web")
+                    Text("Forms")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .padding(.top, 6)
-                    SuggestionChip("Go to google.com")
-                    SuggestionChip("Read this page")
+                    SuggestionChip("Help me fill in a web form")
                 }
             }
         }

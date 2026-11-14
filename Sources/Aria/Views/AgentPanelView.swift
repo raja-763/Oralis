@@ -166,8 +166,8 @@ struct AgentPanelView: View {
         let context = EmailAgentContext(
             inboxSummary: buildInboxSummary(),
             selectedThread: appState.selectedThread,
-            webPageURL: appState.browser.currentURL,
-            webPageContent: appState.browser.pageText.isEmpty ? nil : String(appState.browser.pageText.prefix(2000)),
+            webPageURL: appState.browser.formSummary.isEmpty ? nil : appState.browser.currentURL,
+            webPageContent: appState.browser.formSummary.isEmpty ? nil : String(appState.browser.formSummary.prefix(1500)),
             calendarSummary: appState.calendarSummary.isEmpty ? nil : appState.calendarSummary
         )
 
@@ -225,8 +225,6 @@ struct AgentPanelView: View {
                     await appState.deleteSelected()
                 }
             }
-        case .openLink(let url):
-            appState.navigationPath.append(url)
         default:
             // All other actions are handled via AppState.sendAgentMessage / execute
             break

@@ -6,6 +6,20 @@ Oralis lets you control your email and calendar entirely by voice — no mouse, 
 
 ---
 
+## Install (free, no security warning)
+
+Open Terminal and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/raja-763/Oralis/main/install.sh | bash
+```
+
+Oralis installs to Applications and opens. Then open **Settings** and paste your own Anthropic
+API key to turn on the AI (and optionally your own ElevenLabs key for natural voices). You can also
+download the DMG from the [Releases page](https://github.com/raja-763/Oralis/releases); its
+"READ ME FIRST" file explains the one-time macOS prompt. Oralis currently supports **Gmail only**.
+See [PUBLISHING.md](PUBLISHING.md) and [PRIVACY.md](PRIVACY.md).
+
 ## ⚠️ Personal Use Only
 
 Oralis is built for **personal accessibility use**. It is not a commercial product, is not intended for redistribution, and comes with no warranty. Use it for your own needs.

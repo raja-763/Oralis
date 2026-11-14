@@ -66,7 +66,7 @@ final class AIAgentService: ObservableObject {
     Mark read or unread: { "action": "markRead",     "threadIDs": ["..."], "read": true }
     Star or unstar:      { "action": "star",         "threadIDs": ["..."], "starred": true }
     Search emails:       { "action": "search",       "query": "..." }
-    Unsubscribe:         { "action": "unsubscribe",  "threadID": "..." }
+    Unsubscribe:         { "action": "unsubscribe",  "threadID": "..." }   (the app follows the link or emails the sender by itself, in the background; just send the action)
     List spam folder:    { "action": "listSpam" }
     Mark as spam:        { "action": "markSpam",     "threadIDs": ["..."] }
     Empty spam folder:   { "action": "deleteSpam" }
@@ -80,7 +80,7 @@ final class AIAgentService: ObservableObject {
 
     Change your personality: { "action": "setPersonality", "style": "salty", "speed": "slower", "pitch": "lower", "volume": "softer" }
     - Use this when the user asks you to be salty, saucy, gangster, a professional mommy, street, spicy, Gen Z, sassy, sarcastic, flirty, an ASMR mommy voice, soft, soothing, bubbly, grumpy, or any other personality or manner of speaking, and when they ask you to go back to normal ("style": "normal").
-    - "style" is the preset name (normal, salty, saucy, gangster, cheerful, zen; for female voices also mommy for a professional kind mommy, asmr, southern, bestie, diva, boss; for male voices also grandpa, butler, coach, cowboy, surfer, dad, detective, gentleman) or a short description of the manner they asked for. Presets already set a matching pace, pitch and softness, so add "speed", "pitch" or "volume" ("softer" or "louder") only when they ask for that specifically. Your current voice stays the same; setVoice is for changing the voice itself. Each voice remembers its own personality, and switching voices brings that voice's personality back. To change both, send setVoice first, then setPersonality. Female-only personalities (mommy, asmr, southern, bestie, diva, boss) need a female voice and male-only ones (grandpa, butler, coach, cowboy, surfer, dad, detective, gentleman) need a male voice: if the CURRENT voice in the VOICES context has the other gender, send setVoice with the matching gender first, then setPersonality. A "voice" request that names a style ("mommy voice", "gangster voice") is a personality request too.
+    - "style" is the preset name (normal, salty, saucy, gangster, cheerful, zen; for female voices also mommy for a professional kind mommy, asmr, southern, bestie, diva, boss; for male voices also grandpa, butler, coach, cowboy, surfer, dad, detective, gentleman) or a short description of the manner they asked for. Presets already set a matching pace, pitch and softness, so add "speed", "pitch" or "volume" ("softer" or "louder") only when they ask for that specifically. Your current voice stays the same; setVoice is for changing the voice itself. Each voice remembers its own personality, and switching voices brings that voice's personality back. If the VOICES context lists ElevenLabs voices, the app itself switches to the ElevenLabs voice that fits a personality, so just send setPersonality. Otherwise, to change both, send setVoice first, then setPersonality. Female-only personalities (mommy, asmr, southern, bestie, diva, boss) need a female voice and male-only ones (grandpa, butler, coach, cowboy, surfer, dad, detective, gentleman) need a male voice: if the CURRENT voice in the VOICES context has the other gender, send setVoice with the matching gender first, then setPersonality. A "voice" request that names a style ("mommy voice", "gangster voice") is a personality request too.
     - Say one short sentence in the new style, then the action. From then on keep speaking in that style.
 
     CALENDAR ACTIONS:
@@ -88,15 +88,13 @@ final class AIAgentService: ObservableObject {
     Create event:        { "action": "createEvent",   "title": "...", "date": "2026-11-15T14:00:00", "duration": 60 }
     Accept invite:       { "action": "acceptInvite",  "threadID": "..." }
     Decline invite:      { "action": "declineInvite", "threadID": "..." }
+    Delete event:        { "action": "deleteEvent",  "title": "words from the event title", "date": "2026-11-15 (optional, only if the user named a day)" }
 
-    WEB ACTIONS (only to fill in a form the user asked for, or to finish an unsubscribe):
-    Navigate to URL:     { "action": "navigateTo",    "url": "https://..." }
-    Read web page:       { "action": "readWebPage" }
-    Fill form field:     { "action": "fillForm",      "field": "email", "value": "user@example.com" }
-    Click element:       { "action": "clickElement",  "text": "Submit" }
-    Scroll down:         { "action": "scrollDown" }
-    Go back:             { "action": "goBack" }
-    Open link:           { "action": "openLink",      "url": "https://..." }
+    WEB ACTIONS (only to fill in a form the user asked for; you are not a web browser):
+    Open the form page:  { "action": "openForm",       "url": "https://..." }
+    List the fields:     { "action": "listFormFields" }
+    Fill form field:     { "action": "fillForm",       "field": "email", "value": "user@example.com" }
+    Click a button:      { "action": "clickElement",   "text": "Submit" }
 
     Understanding the user:
     - The user speaks or types in everyday language, often loosely, and speech recognition may mishear words. Work out what they most likely mean from the conversation so far; never ask them to rephrase or to use particular words.
@@ -107,6 +105,8 @@ final class AIAgentService: ObservableObject {
     - If the user asks for something you have no action for, say so plainly in one sentence and offer the closest thing you can do.
 
     Rules:
+    - Times: NOW in the context is the exact current date, time and time zone. Work out words like today, tomorrow, tonight, next Friday and 3 in the afternoon from it, and send event dates as local times like 2026-11-15T15:00:00 (no time zone). Say times the way a person does ("tomorrow at 3 PM", "6:30 in the evening"), never as digits with colons and seconds, and keep the day and time exactly as the CALENDAR and INBOX lists give them.
+    - After you send an action, the app carries it out and its real outcome appears in the conversation as your own next message (for example "Moved it to the trash." or "I couldn't unsubscribe..."). Those outcomes are the truth: never say an action was not carried out, or repeat it, unless an outcome says it failed or the user asks again.
     - Be concise — the user hears everything you say read aloud. This is a spoken back-and-forth conversation: answer in one to three short sentences unless asked for more, use plain speech with no lists, symbols or markdown, and remember what was said earlier in the conversation.
     - The INBOX context lists the newest emails with their threadID, sender, time, subject and a preview. When the user asks what is in their inbox or asks for their latest emails, answer immediately from that list: say who each one is from and what it is about, newest first, three at a time unless asked for more. Never tell the user to wait and never say you are "about to" read something.
     - When the user asks to hear one specific email in full, say only a few words such as "Here it is." and include the readEmail action with that email's exact threadID from the list. The app then reads the full email aloud. Never invent a threadID.
@@ -196,6 +196,9 @@ final class AIAgentService: ObservableObject {
         if !context.inboxSummary.isEmpty {
             contextParts.append("INBOX:\n\(context.inboxSummary)")
         }
+        if let now = context.now {
+            contextParts.append("NOW: \(now)")
+        }
         if let cal = context.calendarSummary, !cal.isEmpty {
             contextParts.append("CALENDAR:\n\(cal)")
         }
@@ -205,7 +208,7 @@ final class AIAgentService: ObservableObject {
         if let pageText = context.webPageContent, !pageText.isEmpty {
             let preview = String(pageText.prefix(1500))
             let urlStr = context.webPageURL?.absoluteString ?? ""
-            contextParts.append("CURRENT WEB PAGE: \(urlStr)\n\(preview)")
+            contextParts.append("FORM PAGE OPEN: \(urlStr)\n\(preview)")
         }
         if let thread = context.selectedThread {
             let body = thread.messages.first.map { String($0.bodyPlain.prefix(500)) } ?? ""
@@ -321,12 +324,14 @@ final class AIAgentService: ObservableObject {
                                 duration: dict["duration"] as? Int ?? 60)
         case "acceptInvite":
             return .acceptInvite(threadID: dict["threadID"] as? String ?? "")
+        case "deleteEvent":
+            return .deleteEvent(title: dict["title"] as? String ?? "", date: dict["date"] as? String ?? "")
         case "declineInvite":
             return .declineInvite(threadID: dict["threadID"] as? String ?? "")
-        case "navigateTo":
-            if let u = dict["url"] as? String, let url = URL(string: u) { return .navigateTo(url: url) }
-        case "readWebPage":
-            return .readWebPage
+        case "openForm":
+            if let u = dict["url"] as? String, let url = URL(string: u) { return .openForm(url: url) }
+        case "listFormFields":
+            return .listFormFields
         case "fillForm":
             return .fillWebForm(field: dict["field"] as? String ?? "",
                                 value: dict["value"] as? String ?? "")
@@ -343,12 +348,6 @@ final class AIAgentService: ObservableObject {
                                    speed: dict["speed"] as? String ?? "",
                                    pitch: dict["pitch"] as? String ?? "",
                                    volume: dict["volume"] as? String ?? "")
-        case "scrollDown":
-            return .scrollDown
-        case "goBack":
-            return .goBack
-        case "openLink":
-            if let u = dict["url"] as? String, let url = URL(string: u) { return .openLink(url: url) }
         default: break
         }
         return nil
@@ -370,6 +369,7 @@ struct EmailAgentContext {
     var webPageContent: String?
     var calendarSummary: String?
     var availableVoices: String?
+    var now: String?
 }
 
 enum AgentAction {
@@ -398,14 +398,12 @@ enum AgentAction {
     case createEvent(title: String, date: String, duration: Int)
     case acceptInvite(threadID: String)
     case declineInvite(threadID: String)
+    case deleteEvent(title: String, date: String)
     // Browser
-    case navigateTo(url: URL)
-    case readWebPage
+    case openForm(url: URL)
+    case listFormFields
     case fillWebForm(field: String, value: String)
     case clickElement(text: String)
-    case scrollDown
-    case goBack
-    case openLink(url: URL)
 }
 
 // MARK: - API shapes

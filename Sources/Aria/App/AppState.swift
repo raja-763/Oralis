@@ -547,7 +547,9 @@ final class AppState: ObservableObject {
                         oralisLog("command: remaining actions dropped after interruption")
                         break
                     }
+                    isRecordingActionResults = true
                     await execute(action)
+                    isRecordingActionResults = false
                 }
             } catch OralisError.apiError(let msg) where msg.contains("No API key") {
                 let prompt = "To use voice commands, please open Settings and add your Anthropic API key."
@@ -700,12 +702,13 @@ final class AppState: ObservableObject {
             do {
                 switch try await EmailServiceFactory.service(for: account).unsubscribe(from: msg) {
                 case .unsubscribed:
-                    readAloud("Done. \(sender) accepted the unsubscribe, so you should stop getting those.")
+                    readAloud("Done. \(sender) confirmed you're unsubscribed, so you should stop getting those.")
                 case .requestSent:
-                    readAloud("I sent an unsubscribe request to \(sender). It can take a few days to take effect.")
-                case .needsPage(let page):
-                    browser.navigate(to: page.absoluteString)
-                    readAloud("\(sender) needs one more step. I opened their unsubscribe page in Oralis's browser. Ask me to click the unsubscribe or confirm button, and I'll tell you what it says.")
+                    readAloud("I emailed \(sender)'s unsubscribe address for you. It can take a few days to take effect.")
+                case .followedLink:
+                    readAloud("I followed \(sender)'s unsubscribe link and clicked through it. The page didn't clearly confirm, so it may take a day or two.")
+                case .nothingWorked:
+                    readAloud("I opened \(sender)'s unsubscribe link, but the page had nothing I could click. I can move their emails to spam instead if you like.")
                 }
             } catch {
                 oralisLog("unsubscribe failed: \(String(describing: error).prefix(200))")
@@ -799,62 +802,81 @@ final class AppState: ObservableObject {
             let eventDate = parseDate(dateStr) ?? Date().addingTimeInterval(3600)
             do {
                 try await CalendarService.shared.createEvent(title: title, startDate: eventDate, durationMinutes: duration)
-                readAloud("Event '\(title)' added to your calendar.")
+                await loadCalendarSummary()
+                readAloud("Added \(title), \(SpokenTime.range(eventDate, eventDate.addingTimeInterval(TimeInterval(duration * 60)))), to your calendar.")
             } catch {
                 readAloud("Could not create the event: \(error.localizedDescription)")
             }
 
         case .acceptInvite(let threadID):
             guard let thread = knownThread(threadID),
-                  let invite = thread.messages.first?.calendarInvite
-            else { return }
+                  let invite = thread.messages.compactMap(\.calendarInvite).first
+            else {
+                readAloud("I couldn't find a calendar invite in that email.")
+                return
+            }
             await requestCalendarAccessWithGuidance()
             do {
                 try await CalendarService.shared.addInvite(invite)
-                readAloud("Invite accepted and added to your calendar.")
+                readAloud("Done. I added \(invite.title), \(SpokenTime.range(invite.startDate, invite.endDate)), to your calendar.")
             } catch {
                 readAloud("I couldn't add that invite to your calendar. \(error.localizedDescription)")
             }
 
-        case .declineInvite:
-            readAloud("Invite declined.")
+        case .declineInvite(let threadID):
+            // Declining removes the event from the calendar if it was added.
+            guard let thread = knownThread(threadID), let invite = thread.messages.compactMap(\.calendarInvite).first else {
+                readAloud("I couldn't find a calendar invite in that email.")
+                return
+            }
+            await requestCalendarAccessWithGuidance()
+            let removed = (try? await CalendarService.shared.deleteEvents(titleContains: invite.title, on: invite.startDate)) ?? []
+            readAloud(removed.isEmpty
+                      ? "Okay, I haven't added \(invite.title) to your calendar, so there's nothing to remove."
+                      : "Okay, I removed \(invite.title) from your calendar.")
 
-        // ── Browser ──────────────────────────────────────────────────────
-        case .navigateTo(let url):
-            browser.navigate(to: url.absoluteString)
-            readAloud("Navigating to \(url.host ?? url.absoluteString).")
-
-        case .readWebPage:
-            browser.readPageText { [weak self] text in
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    let preview = String(text.prefix(3000))
-                    if preview.isEmpty {
-                        self.readAloud("The page appears to be empty or hasn't loaded yet.")
-                    } else {
-                        self.agentMessages.append(AgentMessage(role: .assistant, content: preview))
-                        self.readAloud(preview)
-                    }
+        case .deleteEvent(let title, let dateStr):
+            guard !title.trimmingCharacters(in: .whitespaces).isEmpty else {
+                readAloud("Tell me which event to delete.")
+                return
+            }
+            await requestCalendarAccessWithGuidance()
+            do {
+                let removed = try await CalendarService.shared.deleteEvents(titleContains: title, on: dateStr.isEmpty ? nil : parseDate(dateStr))
+                await loadCalendarSummary()
+                if removed.isEmpty {
+                    readAloud("I couldn't find an event called \(title) on your calendar.")
+                } else {
+                    SoundEffects.deleted()
+                    readAloud(removed.count == 1 ? "Deleted \(removed[0])." : "Deleted \(removed.count) events: \(removed.joined(separator: "; ")).")
                 }
+            } catch {
+                readAloud("I couldn't delete that event. \(error.localizedDescription)")
             }
 
+        // ── Browser ──────────────────────────────────────────────────────
+        case .openForm(let url):
+            guard browser.openForm(url) else {
+                readAloud("I can only open ordinary web addresses, and only to fill in a form.")
+                return
+            }
+            await browser.waitUntilLoaded()
+            let summary = await browser.refreshFormSummary()
+            readAloud(summary.isEmpty
+                      ? "I opened the page, but I don't see a form on it."
+                      : "I opened the form. \(summary) Tell me what to fill in.")
+
+        case .listFormFields:
+            let summary = await browser.refreshFormSummary()
+            readAloud(summary.isEmpty ? "I don't see a form on this page." : summary)
+
         case .fillWebForm(let field, let value):
-            browser.fillForm(fieldHint: field, value: value)
-            readAloud("Filled in '\(field)' with '\(value)'.")
+            let filled = await browser.fillField(hint: field, value: value)
+            readAloud(filled ? "Filled in \(field)." : "I couldn't find a field called \(field) on this form.")
 
         case .clickElement(let text):
-            browser.clickElement(text: text)
-            readAloud("Clicked '\(text)'.")
-
-        case .scrollDown:
-            browser.scrollDown()
-
-        case .goBack:
-            browser.goBack()
-            readAloud("Going back.")
-
-        case .openLink(let url):
-            NSWorkspace.shared.open(url)
+            let clicked = await browser.click(text: text)
+            readAloud(clicked ? "Clicked \(text)." : "I couldn't find a button called \(text) on this form.")
         }
     }
 
@@ -893,8 +915,9 @@ final class AppState: ObservableObject {
     private func applyPersonality(style: String, speed: String, pitch: String, volume: String) {
         var prefs = speech.preferences
         let wanted = style.trimmingCharacters(in: .whitespacesAndNewlines)
+        var newVoice: String?
         if let preset = Personality.preset(matching: wanted) {
-            Personality.apply(preset, to: &prefs)
+            newVoice = Personality.applyFitting(preset, to: &prefs)
         } else if !wanted.isEmpty {
             Personality.setCustom(String(wanted.prefix(200)), for: prefs)
         }
@@ -916,7 +939,13 @@ final class AppState: ObservableObject {
         speech.preferences = prefs
         VoicePreferencesStore.shared.current = prefs
         oralisLog("personality: set (\(Personality.presetKey_), rate \(prefs.rate), pitch \(prefs.pitch), volume \(prefs.volume))")
-        readAloud(Personality.style.isEmpty ? "Back to my normal self." : "How's this?")
+        if Personality.style.isEmpty {
+            readAloud("Back to my normal self.")
+        } else if let newVoice {
+            readAloud("Hi, it's \(newVoice). How's this?")
+        } else {
+            readAloud("How's this?")
+        }
     }
 
     private func applyVoiceChange(name: String, gender: String, language: String, speed: String, pitch: String) {
@@ -1006,10 +1035,11 @@ final class AppState: ObservableObject {
         EmailAgentContext(
             inboxSummary: inboxSummary(),
             selectedThread: selectedThread,
-            webPageURL: browser.currentURL,
-            webPageContent: browser.pageText.isEmpty ? nil : String(browser.pageText.prefix(2000)),
+            webPageURL: browser.formSummary.isEmpty ? nil : browser.currentURL,
+            webPageContent: browser.formSummary.isEmpty ? nil : String(browser.formSummary.prefix(1500)),
             calendarSummary: calendarSummary.isEmpty ? nil : calendarSummary,
-            availableVoices: voiceListForAI()
+            availableVoices: voiceListForAI(),
+            now: SpokenTime.nowForAI()
         )
     }
 
@@ -1018,12 +1048,10 @@ final class AppState: ObservableObject {
         if isLoadingInbox && threads.isEmpty { return "The inbox is still loading. Tell the user to ask again in a few seconds; do not say it is empty." }
         guard !threads.isEmpty else { return "The inbox is empty." }
         let unread = threads.filter { !$0.isRead }.count
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE d MMM, h:mm a"
         // Newest first, with IDs, so the AI can read or act on a specific email at once.
         let preview = threads.prefix(15).enumerated().map { index, t in
             let gist = t.snippet.replacingOccurrences(of: "\n", with: " ").prefix(140)
-            return "\(index + 1). threadID \(t.id.uuidString) | \(t.isRead ? "read" : "UNREAD") | from \(Self.senderName(t)) | \(formatter.string(from: t.latestDate)) | subject: \(t.subject)\(t.messages.contains(where: \.hasUnsubscribeOption) ? " | CAN UNSUBSCRIBE" : "") | preview: \(gist)"
+            return "\(index + 1). threadID \(t.id.uuidString) | \(t.isRead ? "read" : "UNREAD") | from \(Self.senderName(t)) | \(SpokenTime.when(t.latestDate)) | subject: \(t.subject)\(t.messages.contains(where: \.hasUnsubscribeOption) ? " | CAN UNSUBSCRIBE" : "") | preview: \(gist)"
         }.joined(separator: "\n")
         var summary = "Inbox: \(threads.count) threads loaded, \(unread) unread. Newest first:\n\(preview)"
         if !spamThreads.isEmpty {
@@ -1045,7 +1073,7 @@ final class AppState: ObservableObject {
     private func emailReadParts(thread: EmailThread, msg: EmailMessage, prefs: VoicePreferences) -> String {
         let sender  = thread.participants.first?.display ?? "Unknown sender"
         let subject = thread.subject
-        let date    = msg.date.formatted(date: .abbreviated, time: .shortened)
+        let date    = SpokenTime.when(msg.date)
         let body    = msg.bodyPlain.isEmpty ? "(No body)" : String(msg.bodyPlain.prefix(1500))
 
         switch prefs.emailReadOrder {
@@ -1108,12 +1136,18 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func parseDate(_ s: String) -> Date? {
+    private func parseDate(_ raw: String) -> Date? {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let iso = ISO8601DateFormatter()
+        if let d = iso.date(from: s) { return d }
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let d = iso.date(from: s) { return d }
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "en_US_POSIX")
-        for f in ["yyyy-MM-dd HH:mm", "MM/dd/yyyy HH:mm", "MMMM d, yyyy HH:mm"] {
+        fmt.timeZone = .current
+        // The AI usually sends local times without a time zone, like 2026-11-15T14:00:00.
+        for f in ["yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm",
+                  "yyyy-MM-dd", "MM/dd/yyyy HH:mm", "MMMM d, yyyy HH:mm", "MMMM d, yyyy h:mm a"] {
             fmt.dateFormat = f
             if let d = fmt.date(from: s) { return d }
         }
@@ -1129,7 +1163,14 @@ final class AppState: ObservableObject {
         readAloud(message)
     }
 
+    /// True while an AI action runs: what Oralis says about its outcome is kept in the
+    /// conversation, so the AI knows what really happened and never contradicts it.
+    private var isRecordingActionResults = false
+
     func readAloud(_ message: String) {
+        if isRecordingActionResults, agentMessages.last?.content != message {
+            agentMessages.append(AgentMessage(role: .assistant, content: message))
+        }
         speech.speak(message)
     }
 }

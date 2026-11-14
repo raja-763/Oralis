@@ -34,10 +34,14 @@ final class SpeechService: NSObject, ObservableObject {
             .bool(forKey: "voiceOverOnOffKey") ?? false
     }
 
-    // ElevenLabs direct API key (compiled in via Secrets.xcconfig, never in git)
-    static let elevenLabsAPIKey: String = {
-        Bundle.main.infoDictionary?["ELEVENLABS_API_KEY"] as? String ?? ""
-    }()
+    // ElevenLabs API key: the one the user pastes in Settings (their own account, their own
+    // usage), or a build-time key for a personal build. Never in git.
+    static var elevenLabsAPIKey: String {
+        let user = UserDefaults.standard.string(forKey: "oralis.elevenLabsAPIKey")?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !user.isEmpty { return user }
+        return Bundle.main.infoDictionary?["ELEVENLABS_API_KEY"] as? String ?? ""
+    }
 
     // Optional proxy URL — takes precedence over direct key if set
     static let elevenLabsProxyURL: String = {

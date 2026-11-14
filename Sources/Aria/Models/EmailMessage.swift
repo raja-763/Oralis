@@ -39,6 +39,8 @@ struct EmailMessage: Identifiable, Codable, Equatable {
 
     // Calendar invite attachment, if present
     var calendarInvite: CalendarInvite?
+    /// Gmail attachment holding the .ics, fetched after the thread loads.
+    var calendarAttachmentID: String? = nil
 
     var accessibilityLabel: String {
         let readState = isRead ? "" : "Unread. "
@@ -74,6 +76,7 @@ struct CalendarInvite: Codable, Equatable {
     var location: String
     var meetingURL: URL?         // Zoom / Teams / Meet link
     var icsData: Data            // raw iCalendar data
+    var isAllDay: Bool = false
 
     var accessibilityDescription: String {
         let formatter = DateFormatter()

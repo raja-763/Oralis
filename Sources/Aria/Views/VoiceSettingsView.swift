@@ -7,6 +7,7 @@ struct VoiceSettingsView: View {
     @State private var prefs         = VoicePreferencesStore.shared.current
     @AppStorage("oralis.talkOver") private var talkOver = true
     @State private var perVoiceTick = 0
+    @State private var elevenLabsKey: String = UserDefaults.standard.string(forKey: "oralis.elevenLabsAPIKey") ?? ""
     @State private var voices        = OralisVoice.allVoices(for: VoicePreferencesStore.shared.current.language)
     @State private var selectedVoiceID: String = VoicePreferencesStore.shared.current.voiceIdentifier
     @State private var previewText   = "Hello! I'm Oralis, your voice-first assistant."
@@ -46,9 +47,13 @@ struct VoiceSettingsView: View {
                 sectionHeader("Voice Options", icon: "waveform.circle.fill")
                 VStack(alignment: .leading, spacing: 20) {
                     languageSection
-                    if SpeechService.elevenLabsEnabled { elevenLabsSection }
-                    voicePickerSection
-                    voicePersonalitiesSection
+                    if SpeechService.elevenLabsEnabled || perVoiceTick < 0 {
+                        // Two menus instead of a long list: far fewer keyboard stops.
+                        voiceAndPersonalitySection
+                    } else {
+                        voicePickerSection
+                        voicePersonalitiesSection
+                    }
                     voiceAdjustmentsSection
                 }
                 .padding(.horizontal, 24)
@@ -273,6 +278,98 @@ struct VoiceSettingsView: View {
         }
     }
 
+    // MARK: - 2f. Voice and personality (ElevenLabs): two grouped menus
+
+    private func elevenLabsDescription(_ id: String) -> String? {
+        elevenLabsVoices.first { $0.id == id }?.description
+    }
+
+    private var activeElevenLabsVoice: (id: String, name: String)? {
+        guard let v = Personality.elevenLabsVoices.first(where: { $0.id == prefs.elevenLabsVoiceID }) else { return nil }
+        return (v.id, v.name)
+    }
+
+    private var activePersonalityTitle: String {
+        _ = perVoiceTick
+        let value = Personality.stored(forVoice: Personality.voiceKey(for: prefs)) ?? Personality.presetKey_
+        if value.hasPrefix("custom") { return "Custom" }
+        return Personality.presets.first { $0.key == value }?.title ?? "Normal"
+    }
+
+    private func voiceButton(_ v: (id: String, name: String, audience: Personality.Audience)) -> some View {
+        Button {
+            prefs.useElevenLabs = true
+            prefs.elevenLabsVoiceID = v.id
+            Personality.restore(for: &prefs)   // this voice brings its own personality back
+            perVoiceTick += 1
+            save()
+            appState.speech.speak("Hi, I'm \(v.name). How does this sound?", prefs: prefs)
+        } label: {
+            HStack {
+                Text("\(v.name) — \(elevenLabsDescription(v.id) ?? "")")
+                if prefs.elevenLabsVoiceID == v.id { Image(systemName: "checkmark") }
+            }
+        }
+    }
+
+    private func personalityButton(_ preset: Personality.Preset) -> some View {
+        Button {
+            // Picking a personality also picks the voice that fits it.
+            let newVoice = Personality.applyFitting(preset, to: &prefs)
+            perVoiceTick += 1
+            save()
+            let intro = newVoice.map { "Hi, I'm \($0). " } ?? ""
+            appState.speech.speak(intro + "How does this sound?", prefs: prefs)
+        } label: {
+            HStack {
+                Text(preset.title)
+                if activePersonalityTitle == preset.title { Image(systemName: "checkmark") }
+            }
+        }
+    }
+
+    private var voiceAndPersonalitySection: some View {
+        let voices = Personality.elevenLabsVoices
+        let current = activeElevenLabsVoice
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Voice and personality")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            Text("Pick a voice, then a personality. Each personality chooses a voice that fits it, and each voice remembers its personality.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Menu {
+                Menu("Female voices") {
+                    ForEach(voices.filter { $0.audience == .female }, id: \.id) { voiceButton($0) }
+                }
+                Menu("Male voices") {
+                    ForEach(voices.filter { $0.audience == .male }, id: \.id) { voiceButton($0) }
+                }
+            } label: {
+                menuPickerLabel("Voice: \(current?.name ?? "Choose a voice")",
+                                subtitle: current.flatMap { elevenLabsDescription($0.id) })
+            }
+            .accessibilityLabel("Voice: \(current?.name ?? "none chosen"). Menu with Female voices and Male voices.")
+
+            Menu {
+                Menu("Everyday") {
+                    ForEach(Personality.presets.filter { $0.audience == .any }) { personalityButton($0) }
+                }
+                Menu("Feminine personalities") {
+                    ForEach(Personality.presets.filter { $0.audience == .female }) { personalityButton($0) }
+                }
+                Menu("Masculine personalities") {
+                    ForEach(Personality.presets.filter { $0.audience == .male }) { personalityButton($0) }
+                }
+            } label: {
+                menuPickerLabel("Personality: \(activePersonalityTitle)",
+                                subtitle: "Choosing one switches to a voice that fits it")
+            }
+            .accessibilityLabel("Personality: \(activePersonalityTitle). Menu with Everyday, Feminine personalities and Masculine personalities.")
+        }
+    }
+
     // MARK: - 2e. Personality for each voice
 
     private struct PersonalityRow: Identifiable {
@@ -487,7 +584,7 @@ struct VoiceSettingsView: View {
 
     private var aiKeySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your AI key powers voice commands, email summaries, and smart replies.")
+            Text("Your own Anthropic key powers voice commands, email summaries and smart replies. Create one at console.anthropic.com; you pay Anthropic directly for what you use, usually cents a day.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -516,6 +613,28 @@ struct VoiceSettingsView: View {
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(.orange)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("ElevenLabs API Key (optional)")
+                    .font(.subheadline.weight(.medium))
+                Text("Add your own ElevenLabs key to use their natural voices. Their free plan includes monthly credits, and you pay ElevenLabs directly if you use more. Without a key, Oralis uses the voices built into your Mac.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField("Paste your ElevenLabs key", text: $elevenLabsKey)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel("ElevenLabs API key, optional")
+                    .onChange(of: elevenLabsKey) { _, new in
+                        UserDefaults.standard.set(new.trimmingCharacters(in: .whitespacesAndNewlines),
+                                                  forKey: "oralis.elevenLabsAPIKey")
+                        perVoiceTick += 1   // shows the ElevenLabs voice menus once a key exists
+                    }
+                if !elevenLabsKey.isEmpty {
+                    Label("ElevenLabs voices are now available under Voice and personality.",
+                          systemImage: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
                 }
             }
 

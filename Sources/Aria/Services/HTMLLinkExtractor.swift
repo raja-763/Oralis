@@ -17,7 +17,7 @@ enum HTMLLinkExtractor {
                 guard match.numberOfRanges >= 3,
                       let urlRange   = Range(match.range(at: 1), in: text),
                       let titleRange = Range(match.range(at: 2), in: text),
-                      let url = URL(string: String(text[urlRange]))
+                      let url = URL(string: String(text[urlRange]).replacingOccurrences(of: "&amp;", with: "&"))
                 else { continue }
                 let key = url.absoluteString
                 guard !seen.contains(key), isAllowedScheme(url) else { continue }

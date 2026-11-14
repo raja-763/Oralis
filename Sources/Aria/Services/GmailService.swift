@@ -150,9 +150,25 @@ final class GmailService: EmailService {
     private func fetchThread(id: String) async throws -> EmailThread {
         let data = try await execute("threads/\(id)?format=full")
         let raw = try JSONDecoder().decode(GmailThread.self, from: data)
-        let thread = raw.toEmailThread(accountID: account.id)
+        var thread = raw.toEmailThread(accountID: account.id)
+        // Invites sent as an attached .ics file are fetched so they can be added to the calendar.
+        for i in thread.messages.indices {
+            guard thread.messages[i].calendarInvite == nil, let attachment = thread.messages[i].calendarAttachmentID,
+                  let data = try? await execute("messages/\(thread.messages[i].remoteID)/attachments/\(attachment)"),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let encoded = object["data"] as? String
+            else { continue }
+            thread.messages[i].calendarInvite = ICSParser.parse(GmailService.decodeBase64URL(encoded))
+        }
         GmailService.remember(thread)
         return thread
+    }
+
+    static func decodeBase64URL(_ s: String) -> String {
+        var fixed = s.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        while fixed.count % 4 != 0 { fixed += "=" }
+        guard let data = Data(base64Encoded: fixed, options: .ignoreUnknownCharacters) else { return "" }
+        return String(data: data, encoding: .utf8) ?? ""
     }
 
     func fetchMessage(id: String) async throws -> EmailMessage {
@@ -171,8 +187,24 @@ final class GmailService: EmailService {
     }
 
     func deleteThreads(ids: [UUID]) async throws {
-        // Moves to Trash (recoverable for 30 days) rather than deleting permanently.
-        try await modifyEach(ids, path: "trash")
+        // Moves to Trash (recoverable for 30 days) rather than deleting permanently, and checks
+        // Gmail's answer: an email only counts as deleted if Gmail says it is now in the Trash.
+        var failed = 0
+        for id in ids {
+            do {
+                let data = try await execute("threads/\(try gmailID(for: id))/trash", method: "POST")
+                let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+                let messages = object?["messages"] as? [[String: Any]] ?? []
+                let inTrash = messages.contains { ($0["labelIds"] as? [String])?.contains("TRASH") == true }
+                if !inTrash { failed += 1; oralisLog("delete: Gmail did not report the thread in the trash") }
+            } catch {
+                failed += 1
+                oralisLog("delete: request failed: \(String(describing: error).prefix(160))")
+            }
+        }
+        if failed > 0 {
+            throw OralisError.apiError("\(failed) of \(ids.count) emails could not be moved to the trash.")
+        }
     }
 
     func archiveThreads(ids: [UUID]) async throws {
@@ -309,12 +341,14 @@ private struct GmailMessage: Decodable {
     var internalDate: String?
 
     struct Payload: Decodable {
+        var mimeType: String?
+        var filename: String?
         var headers: [Header]?
         var body: Body?
         var parts: [Payload]?
     }
     struct Header: Decodable { var name: String; var value: String }
-    struct Body: Decodable { var data: String? }
+    struct Body: Decodable { var data: String?; var attachmentId: String? }
 
     func toEmailMessage(accountID: UUID) -> EmailMessage {
         let headers = payload?.headers ?? []
@@ -328,9 +362,15 @@ private struct GmailMessage: Decodable {
         let isRead = !(labelIds?.contains("UNREAD") ?? false)
         let isStarred = labelIds?.contains("STARRED") ?? false
         let labels = labelIds ?? []
-        let bodyText = extractPlainText(payload)
         let bodyHTML = extractHTML(payload)
-        let links = HTMLLinkExtractor.extract(from: bodyHTML.isEmpty ? bodyText : bodyHTML)
+        var bodyText = extractPlainText(payload)
+        if bodyText.isEmpty, !bodyHTML.isEmpty { bodyText = GmailMessage.stripHTML(bodyHTML) }
+        // Links come from the HTML (where unsubscribe links live), plus any bare URLs in the text.
+        var links = HTMLLinkExtractor.extract(from: bodyHTML)
+        let seen = Set(links.map(\.url))
+        links += HTMLLinkExtractor.extract(from: bodyText).filter { !seen.contains($0.url) }
+        let calendarPart = findPart(payload) { ($0.mimeType ?? "").lowercased() == "text/calendar" || ($0.filename ?? "").lowercased().hasSuffix(".ics") }
+        let invite = calendarPart?.body?.data.flatMap { ICSParser.parse(decodeBase64($0)) }
         let (unsubURL, unsubEmail, unsubSubject) = parseUnsubscribe(header("list-unsubscribe"))
         let oneClick = header("list-unsubscribe-post").lowercased().contains("one-click")
 
@@ -342,28 +382,53 @@ private struct GmailMessage: Decodable {
             labels: labels, links: links,
             unsubscribeURL: unsubURL, unsubscribeEmail: unsubEmail,
             unsubscribeEmailSubject: unsubSubject, unsubscribeOneClick: oneClick,
-            calendarInvite: nil
+            calendarInvite: invite, calendarAttachmentID: calendarPart?.body?.attachmentId
         )
     }
 
+    private func findPart(_ p: Payload?, where match: (Payload) -> Bool) -> Payload? {
+        guard let p else { return nil }
+        if match(p) { return p }
+        for part in p.parts ?? [] { if let found = findPart(part, where: match) { return found } }
+        return nil
+    }
+
     private func extractPlainText(_ p: Payload?) -> String {
-        guard let p else { return "" }
-        if p.body?.data != nil, p.parts == nil {
-            return decodeBase64(p.body?.data)
+        if let part = findPart(p, where: { ($0.mimeType ?? "").lowercased() == "text/plain" && $0.body?.data != nil }) {
+            return decodeBase64(part.body?.data)
         }
-        for part in p.parts ?? [] {
-            let result = extractPlainText(part)
-            if !result.isEmpty { return result }
-        }
+        // A single-part message with no explicit type.
+        if let p, p.parts == nil, p.mimeType == nil, p.body?.data != nil { return decodeBase64(p.body?.data) }
         return ""
     }
 
-    private func extractHTML(_ p: Payload?) -> String { "" }
+    private func extractHTML(_ p: Payload?) -> String {
+        guard let part = findPart(p, where: { ($0.mimeType ?? "").lowercased() == "text/html" && $0.body?.data != nil })
+        else { return "" }
+        return decodeBase64(part.body?.data)
+    }
+
+    /// Readable text from an HTML-only email.
+    static func stripHTML(_ html: String) -> String {
+        var s = html
+        for pattern in ["<style[^>]*>.*?</style>", "<script[^>]*>.*?</script>", "<!--.*?-->"] {
+            s = s.replacingOccurrences(of: pattern, with: " ", options: [.regularExpression, .caseInsensitive])
+        }
+        s = s.replacingOccurrences(of: "<(br|/p|/div|/tr|/h[1-6]|/li)[^>]*>", with: "\n", options: [.regularExpression, .caseInsensitive])
+        s = s.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+        for (entity, char) in [("&nbsp;", " "), ("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">"), ("&quot;", "\""), ("&#39;", "'"), ("&rsquo;", "'"), ("&zwnj;", "")] {
+            s = s.replacingOccurrences(of: entity, with: char)
+        }
+        s = s.replacingOccurrences(of: "[ \t]+", with: " ", options: .regularExpression)
+             .replacingOccurrences(of: "\n\\s*\n+", with: "\n", options: .regularExpression)
+        return s.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     private func decodeBase64(_ s: String?) -> String {
         guard let s else { return "" }
-        let fixed = s.replacingOccurrences(of: "-", with: "+")
+        var fixed = s.replacingOccurrences(of: "-", with: "+")
                      .replacingOccurrences(of: "_", with: "/")
+        while fixed.count % 4 != 0 { fixed += "=" }
         guard let data = Data(base64Encoded: fixed, options: .ignoreUnknownCharacters),
               let str = String(data: data, encoding: .utf8) else { return "" }
         return str

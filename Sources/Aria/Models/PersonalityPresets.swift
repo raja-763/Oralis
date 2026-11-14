@@ -94,6 +94,25 @@ extension Personality {
                rate: 0.47, pitch: 0.92, audience: .male),
     ]
 
+    /// The ElevenLabs voice that best fits each gendered personality. The shared
+    /// personalities (normal, salty, ...) keep whichever voice is in use.
+    static let recommendedVoice: [String: String] = [
+        "mommy": "21m00Tcm4TlvDq8ikWAM",      // Rachel: calm, natural
+        "asmr": "EXAVITQu4vr4xnSDxMaL",       // Bella: soft, friendly
+        "southern": "EXAVITQu4vr4xnSDxMaL",   // Bella
+        "bestie": "MF3mGyEYCl7XYWbV9V6O",     // Elli: young, emotional
+        "diva": "AZnzlk1XvdvUeBnXmlld",       // Domi: strong, confident
+        "boss": "AZnzlk1XvdvUeBnXmlld",       // Domi
+        "grandpa": "pNInz6obpgDQGcFmaJgB",    // Adam: deep
+        "butler": "VR6AewLTigWG4xSOukaG",     // Arnold: crisp, authoritative
+        "gentleman": "VR6AewLTigWG4xSOukaG",  // Arnold
+        "coach": "TxGEqnHWrfWFTfGW9XjX",      // Josh: deep, young
+        "cowboy": "yoZ06aMxZJJ28mfd3POQ",     // Sam: raspy
+        "detective": "yoZ06aMxZJJ28mfd3POQ",  // Sam
+        "surfer": "ErXwobaYiN019PkySvjV",     // Antoni: well-rounded
+        "dad": "ErXwobaYiN019PkySvjV",        // Antoni
+    ]
+
     /// Personalities offered for a voice: the shared ones plus those that suit its gender.
     static func presets(forVoiceKey voiceKey: String) -> [Preset] {
         let wanted = audience(forVoiceKey: voiceKey)

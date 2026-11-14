@@ -5,8 +5,6 @@ struct EmailDetailView: View {
     let thread: EmailThread
     @EnvironmentObject var appState: AppState
     @State private var showReplySheet = false
-    @State private var showLinkSheet  = false
-    @State private var selectedLink: EmailLink?
     @State private var isReading     = false
 
     private var message: EmailMessage? { thread.latestMessage }
@@ -53,8 +51,8 @@ struct EmailDetailView: View {
 
                             ForEach(msg.links) { link in
                                 Button {
-                                    selectedLink = link
-                                    showLinkSheet = true
+                                    // Oralis is not a web browser: links open in the user's own browser.
+                                    NSWorkspace.shared.open(link.url)
                                 } label: {
                                     HStack {
                                         Image(systemName: "link")
@@ -68,7 +66,7 @@ struct EmailDetailView: View {
                                     .padding(.vertical, 6)
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Link: \(link.title.isEmpty ? link.url.absoluteString : link.title). Press to open by voice.")
+                                .accessibilityLabel("Link: \(link.title.isEmpty ? link.url.absoluteString : link.title). Opens in your web browser.")
                             }
                         }
                         .background(Color.secondary.opacity(0.08))
@@ -150,9 +148,6 @@ struct EmailDetailView: View {
             if let msg = message {
                 ComposeView(replyTo: msg)
             }
-        }
-        .sheet(item: $selectedLink) { link in
-            LinkReaderView(url: link.url)
         }
         .navigationTitle(thread.subject)
     }

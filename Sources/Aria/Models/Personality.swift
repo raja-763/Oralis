@@ -83,6 +83,21 @@ enum Personality {
         store(preset.key, forVoice: voiceKey(for: prefs))
     }
 
+    /// Applies a preset and, when ElevenLabs is in use, switches to the ElevenLabs voice that
+    /// fits it. Returns the new voice's name if the voice changed.
+    @MainActor @discardableResult
+    static func applyFitting(_ preset: Preset, to prefs: inout VoicePreferences) -> String? {
+        var switched: String?
+        if SpeechService.elevenLabsEnabled, let id = recommendedVoice[preset.key],
+           !(prefs.useElevenLabs && prefs.elevenLabsVoiceID == id) {
+            prefs.useElevenLabs = true
+            prefs.elevenLabsVoiceID = id
+            switched = elevenLabsVoices.first { $0.id == id }?.name
+        }
+        apply(preset, to: &prefs)   // remembered for the voice now in use
+        return switched
+    }
+
     /// Applies a free-form style to the current voice and remembers it for that voice.
     static func setCustom(_ text: String, for prefs: VoicePreferences) {
         style = text

@@ -5,23 +5,36 @@ import Foundation
 /// 2. A GET request to the unsubscribe URL
 /// 3. Sending an email to the unsubscribe address
 enum UnsubscribeResult {
-    case unsubscribed          // the sender accepted a one-click request
-    case requestSent           // an unsubscribe email was sent to the sender
-    case needsPage(URL)        // the sender's page must be opened and confirmed
+    case unsubscribed              // confirmed: one-click accepted, or the page said so
+    case requestSent               // an unsubscribe email was sent to the sender
+    case followedLink(String)      // clicked through the sender's page; no clear confirmation
+    case nothingWorked(String)     // the page had nothing to click
 }
 
+/// Unsubscribes entirely in the background: follows the link in the email and clicks through it
+/// in a hidden page, or sends the unsubscribe email, whichever the sender uses.
 final class UnsubscribeService {
     static let shared = UnsubscribeService()
 
-    /// Only a one-click POST that the sender accepted, or a request email actually sent,
-    /// counts as done. A plain web page needs the person to confirm, so it is handed back.
     func unsubscribe(from message: EmailMessage, via account: EmailAccount) async throws -> UnsubscribeResult {
-        // 1. Sender supports RFC 8058 one-click: a POST unsubscribes without a page.
+        // 1. Sender supports RFC 8058 one-click: a POST unsubscribes without any page.
         if message.unsubscribeOneClick, let url = message.unsubscribeURL, await tryOneClickPost(url: url) {
             oralisLog("unsubscribe: one-click accepted")
             return .unsubscribed
         }
-        // 2. Ask by email, as the sender's header describes.
+
+        // 2. Follow the unsubscribe link and click through it in a hidden page.
+        var pageOutcome: UnsubscribeBrowser.Outcome?
+        if let link = message.unsubscribeURL ?? message.bodyUnsubscribeLink {
+            oralisLog("unsubscribe: following the sender's link in the background")
+            pageOutcome = await UnsubscribeBrowser().run(link)
+            if case .confirmed = pageOutcome {
+                oralisLog("unsubscribe: page confirmed")
+                return .unsubscribed
+            }
+        }
+
+        // 3. The sender's protocol is an email: send it (also used when the page was unclear).
         if let email = message.unsubscribeEmail {
             try await sendUnsubscribeEmail(to: email, from: account,
                                            subject: message.unsubscribeEmailSubject ?? "Unsubscribe",
@@ -29,12 +42,12 @@ final class UnsubscribeService {
             oralisLog("unsubscribe: request email sent")
             return .requestSent
         }
-        // 3. A web page (from the header, or a link in the email) that needs a confirming click.
-        if let page = message.unsubscribeURL ?? message.bodyUnsubscribeLink {
-            oralisLog("unsubscribe: needs the sender's page")
-            return .needsPage(page)
+
+        switch pageOutcome {
+        case .clicked(let summary)?: return .followedLink(summary)
+        case .noAction(let summary)?: return .nothingWorked(summary)
+        default: throw OralisError.unsubscribeFailed("This email has no unsubscribe link or address.")
         }
-        throw OralisError.unsubscribeFailed("This email has no unsubscribe option.")
     }
 
     // MARK: - One-click POST (RFC 8058)
@@ -44,11 +57,15 @@ final class UnsubscribeService {
         req.httpMethod = "POST"
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         req.httpBody = "List-Unsubscribe=One-Click".data(using: .utf8)
-        guard let (_, response) = try? await URLSession.shared.data(for: req),
-              let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode)
-        else { return false }
-        return true
+        guard let (data, response) = try? await URLSession.shared.data(for: req),
+              let http = response as? HTTPURLResponse
+        else {
+            oralisLog("unsubscribe: one-click POST to \(url.host ?? "?") got no response")
+            return false
+        }
+        let body = String(data: data.prefix(2000), encoding: .utf8) ?? ""
+        oralisLog("unsubscribe: one-click POST to \(url.host ?? "?") returned HTTP \(http.statusCode), \(data.count) bytes\(UnsubscribeBrowser.looksUnsubscribed(body) ? ", page says unsubscribed" : "")")
+        return (200...299).contains(http.statusCode)
     }
 
     // MARK: - Send unsubscribe email
