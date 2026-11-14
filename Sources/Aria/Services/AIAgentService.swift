@@ -72,6 +72,12 @@ final class AIAgentService: ObservableObject {
     Empty spam folder:   { "action": "deleteSpam" }
     Move back to inbox:  { "action": "moveToInbox",  "threadIDs": ["..."] }
 
+    VOICE ACTIONS:
+    Change your own voice: { "action": "setVoice", "name": "Daniel", "gender": "male", "language": "en-GB", "speed": "slower", "pitch": "lower" }
+    - Use this whenever the user asks you to change your voice, sound different, sound like a man or woman, speak with an accent, talk slower or faster, or sound higher or deeper.
+    - Include only the fields they asked for. "name" must be one of the installed voices in the VOICES context. "gender" is "male" or "female". "language" is a locale such as en-GB, en-AU, es-ES, fr-FR. "speed" is "slower", "faster" or "normal". "pitch" is "higher", "lower" or "normal".
+    - If they just say "change your voice", send { "action": "setVoice" } and the app picks a different one. Say one short sentence first; the app then speaks in the new voice itself.
+
     CALENDAR ACTIONS:
     List events:         { "action": "listCalendar",  "days": 7 }
     Create event:        { "action": "createEvent",   "title": "...", "date": "2026-11-15T14:00:00", "duration": 60 }
@@ -187,6 +193,9 @@ final class AIAgentService: ObservableObject {
         }
         if let cal = context.calendarSummary, !cal.isEmpty {
             contextParts.append("CALENDAR:\n\(cal)")
+        }
+        if let voices = context.availableVoices, !voices.isEmpty {
+            contextParts.append("VOICES (installed; your current voice is marked):\n\(voices)")
         }
         if let pageText = context.webPageContent, !pageText.isEmpty {
             let preview = String(pageText.prefix(1500))
@@ -318,6 +327,12 @@ final class AIAgentService: ObservableObject {
                                 value: dict["value"] as? String ?? "")
         case "clickElement":
             return .clickElement(text: dict["text"] as? String ?? "")
+        case "setVoice":
+            return .setVoice(name: dict["name"] as? String ?? "",
+                             gender: dict["gender"] as? String ?? "",
+                             language: dict["language"] as? String ?? "",
+                             speed: dict["speed"] as? String ?? "",
+                             pitch: dict["pitch"] as? String ?? "")
         case "scrollDown":
             return .scrollDown
         case "goBack":
@@ -344,9 +359,12 @@ struct EmailAgentContext {
     var webPageURL: URL?
     var webPageContent: String?
     var calendarSummary: String?
+    var availableVoices: String?
 }
 
 enum AgentAction {
+    // Voice
+    case setVoice(name: String, gender: String, language: String, speed: String, pitch: String)
     // Email
     case readEmail(threadID: String)
     case summarize(threadID: String)

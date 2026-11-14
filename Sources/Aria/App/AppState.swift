@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import EventKit
 import SwiftUI
 import Combine
@@ -132,8 +133,17 @@ final class AppState: ObservableObject {
             .combineLatest($isConversationMode, $isAgentListening, $isProcessingResponse)
             .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
             .sink { [weak self] speaking, conversing, listening, processing in
-                guard let self, !speaking, conversing, !listening, !processing else { return }
-                self.startListening()
+                guard let self, conversing else { return }
+                if speaking {
+                    guard SpeechService.talkOverEnabled else { return }
+                    // Keep the mic open while Oralis talks so the user can talk over it.
+                    if !listening, !self.bargeInUnavailable { self.startListening(bargeIn: true) }
+                } else if listening && self.speech.bargeInPending {
+                    // Oralis finished without being interrupted: restart as a normal turn.
+                    self.speech.stopListening()
+                } else if !listening && !processing {
+                    self.startListening()
+                }
             }
             .store(in: &cancellables)
     }
@@ -385,7 +395,26 @@ final class AppState: ObservableObject {
 
     // MARK: - Voice + Agent (Talk screen)
 
-    func startListening() {
+    /// Set if the interruption listener could not start, so it is not retried in a loop.
+    private var bargeInUnavailable = false
+    private var lastBargeInStart = Date.distantPast
+    /// Bumped whenever the user talks over Oralis; actions queued before that are dropped.
+    private var interruptGeneration = 0
+
+    func startListening(bargeIn: Bool = false) {
+        if bargeIn {
+            guard Date().timeIntervalSince(lastBargeInStart) > 1.0 else { return }
+            lastBargeInStart = Date()
+        }
+        speech.onBargeIn = { [weak self] heard in
+            // Only an explicit "stop / wait / cancel / don't" cancels what Oralis was about to do;
+            // a new request alone leaves the earlier steps to finish.
+            let words = heard.lowercased().split(whereSeparator: { !$0.isLetter && $0 != "'" }).map(String.init)
+            let cancel: Set<String> = ["stop", "wait", "cancel", "don't", "dont", "no", "nevermind", "undo", "hold"]
+            if words.contains(where: cancel.contains) || heard.lowercased().contains("never mind") {
+                self?.interruptGeneration += 1
+            }
+        }
         // Pause wake word so both engines don't fight over the mic
         speech.stopWakeWordDetection()
         isAgentListening = true
@@ -409,13 +438,19 @@ final class AppState: ObservableObject {
             let ok = speech.permissionsGranted ? true : await speech.requestPermissions()
             guard ok else {
                 isAgentListening = false
+                if bargeIn { bargeInUnavailable = true; return }
                 readAloud("Microphone access is blocked. Go to System Settings, Privacy and Security, Microphone, and enable Oralis.")
                 return
             }
             do {
-                try await speech.startListening(locale: locale)
+                try await speech.startListening(locale: locale, bargeIn: bargeIn)
             } catch {
                 isAgentListening = false
+                if bargeIn {
+                    oralisLog("speech: interruption listener failed: \(error.localizedDescription)")
+                    bargeInUnavailable = true
+                    return
+                }
                 readAloud("Could not start the microphone: \(error.localizedDescription)")
             }
         }
@@ -488,11 +523,17 @@ final class AppState: ObservableObject {
 
                 let spoken = responseTextWithoutJSON(response.text)
                 agentMessages.append(AgentMessage(role: .assistant, content: spoken))
+                let generation = interruptGeneration
                 readAloud(spoken)
                 // Carry out each requested action in order, letting Oralis finish
                 // speaking between them so one result does not cut off the last.
                 for action in response.actions {
                     await waitForSpeechToFinish()
+                    // The user talked over Oralis: drop what was about to happen.
+                    guard generation == interruptGeneration else {
+                        oralisLog("command: remaining actions dropped after interruption")
+                        break
+                    }
                     await execute(action)
                 }
             } catch OralisError.apiError(let msg) where msg.contains("No API key") {
@@ -712,6 +753,10 @@ final class AppState: ObservableObject {
                 readAloud("I couldn't empty the spam folder. \(error.localizedDescription)")
             }
 
+        // ── Voice ────────────────────────────────────────────────────────
+        case .setVoice(let name, let gender, let language, let speed, let pitch):
+            applyVoiceChange(name: name, gender: gender, language: language, speed: speed, pitch: pitch)
+
         // ── Calendar ─────────────────────────────────────────────────────
         case .listCalendar(let days):
             await requestCalendarAccessWithGuidance()
@@ -784,6 +829,96 @@ final class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Voice changes
+
+    private static func genderWord(_ voice: AVSpeechSynthesisVoice) -> String {
+        switch voice.gender {
+        case .male:   return "male"
+        case .female: return "female"
+        default:      return "neutral"
+        }
+    }
+
+    /// Installed voices in the user's language, listed for the AI so it can pick one by name.
+    private func voiceListForAI() -> String {
+        let prefs = speech.preferences
+        let prefix = prefs.language.split(separator: "-").first.map(String.init) ?? "en"
+        let current = prefs.voiceIdentifier
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix(prefix) }
+            .sorted { $0.quality.rawValue != $1.quality.rawValue ? $0.quality.rawValue > $1.quality.rawValue : $0.name < $1.name }
+            .prefix(40)
+        return voices.map { v in
+            "\(v.name) | \(Self.genderWord(v)) | \(v.language)\(v.identifier == current ? " | CURRENT" : "")"
+        }.joined(separator: "\n")
+    }
+
+    private func applyVoiceChange(name: String, gender: String, language: String, speed: String, pitch: String) {
+        var prefs = speech.preferences
+        var voiceChanged = false
+
+        let wantsVoiceChange = !name.isEmpty || !gender.isEmpty || !language.isEmpty
+            || (speed.isEmpty && pitch.isEmpty)   // "change your voice" alone
+        if wantsVoiceChange {
+            let defaultPrefix = prefs.language.split(separator: "-").first.map(String.init) ?? "en"
+            var pool = AVSpeechSynthesisVoice.speechVoices()
+            if !name.isEmpty {
+                let wanted = name.lowercased()
+                pool = pool.filter { $0.name.lowercased().contains(wanted) }
+            } else {
+                if !language.isEmpty {
+                    let lang = language.lowercased()
+                    let exact = pool.filter { $0.language.lowercased() == lang }
+                    pool = exact.isEmpty ? pool.filter { $0.language.lowercased().hasPrefix(lang.prefix(2)) } : exact
+                } else {
+                    pool = pool.filter { $0.language.hasPrefix(defaultPrefix) }
+                }
+                switch gender.lowercased() {
+                case "male", "man":     pool = pool.filter { $0.gender == .male }
+                case "female", "woman": pool = pool.filter { $0.gender == .female }
+                default: break
+                }
+            }
+            // Never "change" to the voice already in use; prefer the best quality available.
+            let candidates = pool.filter { $0.identifier != prefs.voiceIdentifier }
+            let pick = (candidates.isEmpty ? pool : candidates)
+                .sorted { $0.quality.rawValue > $1.quality.rawValue }.first
+            if let pick {
+                prefs.voiceIdentifier = pick.identifier
+                prefs.useElevenLabs = false   // an explicit voice request means the system voice
+                voiceChanged = true
+            } else {
+                readAloud("I couldn't find an installed voice like that. You can add more voices in System Settings, under Accessibility, Spoken Content.")
+                return
+            }
+        }
+
+        switch speed.lowercased() {
+        case "slower", "slow": prefs.rate = max(0.1, prefs.rate - 0.07)
+        case "faster", "fast": prefs.rate = min(0.65, prefs.rate + 0.07)
+        case "normal":         prefs.rate = AVSpeechUtteranceDefaultSpeechRate
+        default: break
+        }
+        switch pitch.lowercased() {
+        case "higher", "high": prefs.pitch = min(2.0, prefs.pitch + 0.2)
+        case "lower", "low", "deeper": prefs.pitch = max(0.5, prefs.pitch - 0.2)
+        case "normal":         prefs.pitch = 1.0
+        default: break
+        }
+
+        speech.preferences = prefs
+        VoicePreferencesStore.shared.current = prefs
+        oralisLog("voice: changed (voice \(voiceChanged), rate \(prefs.rate), pitch \(prefs.pitch))")
+
+        // Speak the confirmation in the new voice so the user hears the result at once.
+        let current = AVSpeechSynthesisVoice(identifier: prefs.voiceIdentifier)?.name
+        if voiceChanged, let current {
+            readAloud("Okay, this is \(current). How does this sound?")
+        } else {
+            readAloud("Okay, how does this sound?")
+        }
+    }
+
     // MARK: - Helpers
 
     private func buildContext() -> EmailAgentContext {
@@ -792,7 +927,8 @@ final class AppState: ObservableObject {
             selectedThread: selectedThread,
             webPageURL: browser.currentURL,
             webPageContent: browser.pageText.isEmpty ? nil : String(browser.pageText.prefix(2000)),
-            calendarSummary: calendarSummary.isEmpty ? nil : calendarSummary
+            calendarSummary: calendarSummary.isEmpty ? nil : calendarSummary,
+            availableVoices: voiceListForAI()
         )
     }
 

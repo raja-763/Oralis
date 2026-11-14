@@ -5,6 +5,7 @@ import SwiftUI
 struct VoiceSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var prefs         = VoicePreferencesStore.shared.current
+    @AppStorage("oralis.talkOver") private var talkOver = true
     @State private var voices        = OralisVoice.allVoices(for: VoicePreferencesStore.shared.current.language)
     @State private var selectedVoiceID: String = VoicePreferencesStore.shared.current.voiceIdentifier
     @State private var previewText   = "Hello! I'm Oralis, your voice-first assistant."
@@ -365,6 +366,10 @@ struct VoiceSettingsView: View {
                     Toggle("Announce batch action results",
                            isOn: $prefs.announceBatchResults)
                         .accessibilityLabel("Speak a summary after bulk delete, archive, or unsubscribe")
+
+                    Toggle("Let me talk over Oralis to interrupt it",
+                           isOn: $talkOver)
+                        .accessibilityLabel("Keep the microphone open while Oralis speaks so you can interrupt by talking. Turn off if background sound interrupts it.")
                 }
             }
             .onChange(of: prefs) { _, _ in save() }

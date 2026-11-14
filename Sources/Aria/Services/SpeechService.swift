@@ -66,6 +66,7 @@ final class SpeechService: NSObject, ObservableObject {
     func speak(_ text: String, prefs: VoicePreferences) {
         stopSpeaking()
         isSpeaking = true
+        spokenText = text
 
         // Always speak with Oralis's own voice, VoiceOver or not. VoiceOver announcements
         // proved unreliable (silent, or cut off by VoiceOver's own focus speech).
@@ -207,6 +208,49 @@ final class SpeechService: NSObject, ObservableObject {
 
     @Published var isListening = false
     @Published var transcribedText = ""
+
+    // MARK: - Talking over Oralis (barge-in)
+    // While Oralis speaks, the microphone stays open with echo cancellation. If the user
+    // says something that is not what Oralis itself is saying, speech is cut off at once
+    // and what they say becomes the next command.
+    /// True while listening only to detect an interruption; nothing heard is treated as a command yet.
+    private(set) var bargeInPending = false
+    private var spokenText = ""
+    /// Called the moment the user interrupts, so pending actions can be dropped.
+    var onBargeIn: ((String) -> Void)?
+    /// Words heard before the interruption (Oralis's echo, background sound) that are not part of the command.
+    private var bargeInSkipWords = 0
+    static var talkOverEnabled: Bool {
+        UserDefaults.standard.object(forKey: "oralis.talkOver") as? Bool ?? true
+    }
+
+    private static func normalized(_ word: String) -> String {
+        word.lowercased().filter { $0.isLetter || $0.isNumber }
+    }
+
+    /// Index of the first word that Oralis is not saying itself, or nil if all of it is echo.
+    private func firstNovelWordIndex(in heard: String) -> Int? {
+        let spoken = Set(spokenText.split(whereSeparator: { $0.isWhitespace }).map { SpeechService.normalized(String($0)) })
+        let words = heard.split(whereSeparator: { $0.isWhitespace }).map { SpeechService.normalized(String($0)) }
+        return words.firstIndex { !$0.isEmpty && !spoken.contains($0) }
+    }
+
+    /// Strict on purpose: background voices and TV must not count. Either a clear
+    /// stop word, or a real phrase of several words Oralis is not saying itself.
+    private func isInterruption(_ heard: String) -> Bool {
+        guard let start = firstNovelWordIndex(in: heard) else { return false }
+        let words = heard.split(whereSeparator: { $0.isWhitespace }).map { SpeechService.normalized(String($0)) }
+        let novel = words[start...].filter { !$0.isEmpty }
+        let stopWords: Set<String> = ["stop", "wait", "pause", "cancel", "hold", "quiet", "enough"]
+        return novel.count >= 4 || novel.contains(where: stopWords.contains)
+    }
+
+    /// The command without the words heard before the interruption.
+    private func commandText(from heard: String) -> String {
+        guard bargeInSkipWords > 0 else { return heard }
+        let parts = heard.split(whereSeparator: { $0.isWhitespace })
+        return parts.dropFirst(bargeInSkipWords).joined(separator: " ")
+    }
     var onFinalResult: ((String) -> Void)?
     var onListeningStopped: (() -> Void)?
     private var silenceTask: Task<Void, Never>?
@@ -318,7 +362,7 @@ final class SpeechService: NSObject, ObservableObject {
         AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     }
 
-    func startListening(locale: String = "en-US") async throws {
+    func startListening(locale: String = "en-US", bargeIn: Bool = false) async throws {
         guard !isListening else { return }
 
         // Re-create engine every session — reusing a stopped engine can deadlock on some Macs.
@@ -336,13 +380,30 @@ final class SpeechService: NSObject, ObservableObject {
         if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
 
         let inputNode = audioEngine.inputNode
+        if bargeIn {
+            // Echo cancellation, so Oralis's own voice from the speakers is not heard as the user.
+            do { try inputNode.setVoiceProcessingEnabled(true) }
+            catch { oralisLog("speech: echo cancellation unavailable: \(error.localizedDescription)") }
+        }
         // Use inputFormat (not outputFormat) for the microphone tap.
         let format = inputNode.inputFormat(forBus: 0)
         guard format.sampleRate > 0 else {
             throw OralisError.apiError("No audio input device found. Check System Settings → Sound → Input.")
         }
+        // Echo cancellation delivers a many-channel buffer; the recognizer needs plain mono,
+        // so only the processed first channel is passed on.
+        let monoFormat = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: 1)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
-            req.append(buffer)
+            if bargeIn, buffer.format.channelCount > 1, let monoFormat,
+               let source = buffer.floatChannelData,
+               let mono = AVAudioPCMBuffer(pcmFormat: monoFormat, frameCapacity: buffer.frameLength),
+               let target = mono.floatChannelData {
+                mono.frameLength = buffer.frameLength
+                memcpy(target[0], source[0], Int(buffer.frameLength) * MemoryLayout<Float>.size)
+                req.append(mono)
+            } else {
+                req.append(buffer)
+            }
         }
 
         audioEngine.prepare()
@@ -353,15 +414,33 @@ final class SpeechService: NSObject, ObservableObject {
         try await Task.detached(priority: .userInitiated) { try engine.start() }.value
 
         isListening = true
+        bargeInPending = bargeIn
+        bargeInSkipWords = 0
+        if bargeIn { oralisLog("speech: interruption listener on (format \(Int(format.sampleRate)) Hz, \(format.channelCount) ch)") }
 
-        // Mic-on sound
-        NSSound(named: .init("Ping"))?.play()
+        // Mic-on sound (not for the silent interruption listener)
+        if !bargeIn { NSSound(named: .init("Ping"))?.play() }
 
         recognitionTask = recognizer.recognitionTask(with: req) { [weak self] result, error in
             guard let self else { return }
             if let result {
                 Task { @MainActor in
-                    self.transcribedText = result.bestTranscription.formattedString
+                    let raw = result.bestTranscription.formattedString
+                    if self.bargeInPending {
+                        // Only a deliberate interruption counts; echo and background sound are ignored.
+                        guard self.isInterruption(raw) else {
+                            oralisLog("speech: ignored sound while speaking (\(raw.count) characters)")
+                            return
+                        }
+                        oralisLog("speech: interrupted by the user")
+                        self.bargeInPending = false
+                        // Everything heard before the first real word is echo or background.
+                        self.bargeInSkipWords = self.firstNovelWordIndex(in: raw) ?? 0
+                        self.onBargeIn?(self.commandText(from: raw))
+                        self.stopSpeaking()
+                    }
+                    let heard = self.commandText(from: raw)
+                    self.transcribedText = heard
                     // The recognizer never finalizes on its own while the mic stays open,
                     // so treat one second without new words as the end of the command.
                     if !result.isFinal, !self.transcribedText.isEmpty {
@@ -374,7 +453,7 @@ final class SpeechService: NSObject, ObservableObject {
                     }
                     if result.isFinal {
                         self.silenceTask?.cancel()
-                        self.onFinalResult?(result.bestTranscription.formattedString)
+                        self.onFinalResult?(self.commandText(from: result.bestTranscription.formattedString))
                     }
                 }
             }
@@ -388,8 +467,9 @@ final class SpeechService: NSObject, ObservableObject {
         guard isListening else { return }
         silenceTask?.cancel()
         silenceTask = nil
-        // Mic-off sound
-        NSSound(named: .init("Pop"))?.play()
+        // Mic-off sound (silent for the interruption listener)
+        if !bargeInPending { NSSound(named: .init("Pop"))?.play() }
+        bargeInPending = false
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
