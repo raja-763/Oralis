@@ -11,6 +11,7 @@
 		0423CC31C27FB0D80EE42846 /* AriaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207A038822F464D5BCBD081 /* AriaError.swift */; };
 		0A8B10D649C648690A0FFF1B /* MacMailImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E094D3F57113A33060225A /* MacMailImporter.swift */; };
 		0BDE5CD1CBB6E97328E80644 /* IMAPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D86ADF7D928FB7F81452DB /* IMAPService.swift */; };
+		17940DCF0117EF04AB620F83 /* PersonalityPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36A76CFFF8F61E6AFC45CFE /* PersonalityPresets.swift */; };
 		1A238CF5D769FA89E9E78AD8 /* EmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F303C52D7717CA453241976 /* EmailService.swift */; };
 		211ADB3FFEFDAB755DCE6FBE /* EmailThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */; };
 		241DAA507DB357E4460E1250 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB6112205F262C145049272 /* TalkView.swift */; };
@@ -117,6 +118,7 @@
 		D7E9A285D0DE608F2F21EA5C /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		DD5B9411195D55BAB72097DF /* IMAPSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPSetupView.swift; sourceTree = "<group>"; };
 		E2DD5A277FE8D4D213F7BF43 /* Oralis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Oralis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E36A76CFFF8F61E6AFC45CFE /* PersonalityPresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalityPresets.swift; sourceTree = "<group>"; };
 		E6E88C7DED40B575C7878421 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		E765FA52203B065C4EA7C67D /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
 		EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedLanguage.swift; sourceTree = "<group>"; };
@@ -124,7 +126,7 @@
 		F201EFBA6A1EB8487D6F220D /* FloatingPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelView.swift; sourceTree = "<group>"; };
 		F4D86ADF7D928FB7F81452DB /* IMAPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMAPService.swift; sourceTree = "<group>"; };
 		FE2E3BF5C6B0A0416048E43C /* AccessibilityLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityLabels.swift; sourceTree = "<group>"; };
-		"TEMP_1841179C-2CDF-4E00-9EB9-90388A626CB3" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_D24ED918-078D-4F41-8FD1-8D81F6515F41" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -137,6 +139,7 @@
 				4AC77F506E9CB08A0F065FB7 /* EmailMessage+Helpers.swift */,
 				5AEC9CEC052EE3558CCFE080 /* EmailThread.swift */,
 				D6A381FF60A479B11B04AEF6 /* Personality.swift */,
+				E36A76CFFF8F61E6AFC45CFE /* PersonalityPresets.swift */,
 				EA62EF3434BFF13B9AA6CE7D /* SupportedLanguage.swift */,
 				510646DB5B4BDD204A4BD0A1 /* VoicePreferences.swift */,
 			);
@@ -276,10 +279,10 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		"TEMP_4C6716F6-9BAE-406B-95DF-70855BB6FE7F" /* Aria */ = {
+		"TEMP_C9BAB28D-1AFE-4D01-AC18-40026B4F08DB" /* Aria */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_1841179C-2CDF-4E00-9EB9-90388A626CB3" /* Secrets.xcconfig */,
+				"TEMP_D24ED918-078D-4F41-8FD1-8D81F6515F41" /* Secrets.xcconfig */,
 			);
 			path = Aria;
 			sourceTree = "<group>";
@@ -405,6 +408,7 @@
 				FFBC2D700FD38BBF34CABC7A /* OnboardingView.swift in Sources */,
 				A4B1FAE9DBDFBC5103323A3F /* OutlookService.swift in Sources */,
 				954585E01BF96D3F9E79E806 /* Personality.swift in Sources */,
+				17940DCF0117EF04AB620F83 /* PersonalityPresets.swift in Sources */,
 				4F601CB843B422D1A2F29810 /* SettingsView.swift in Sources */,
 				CA974A5086A68E8818C38394 /* SidebarView.swift in Sources */,
 				C9231612C278101B56E2FE98 /* SoundEffects.swift in Sources */,
@@ -455,7 +459,7 @@
 		};
 		28DAD49A115A641EDE5DAEE0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_1841179C-2CDF-4E00-9EB9-90388A626CB3" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_D24ED918-078D-4F41-8FD1-8D81F6515F41" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -533,7 +537,7 @@
 		};
 		8C6192BBD32F4CA74B9E89EF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_1841179C-2CDF-4E00-9EB9-90388A626CB3" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_D24ED918-078D-4F41-8FD1-8D81F6515F41" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

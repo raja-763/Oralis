@@ -6,7 +6,7 @@ struct VoiceSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var prefs         = VoicePreferencesStore.shared.current
     @AppStorage("oralis.talkOver") private var talkOver = true
-    @State private var personalityKey = Personality.presetKey_
+    @State private var perVoiceTick = 0
     @State private var voices        = OralisVoice.allVoices(for: VoicePreferencesStore.shared.current.language)
     @State private var selectedVoiceID: String = VoicePreferencesStore.shared.current.voiceIdentifier
     @State private var previewText   = "Hello! I'm Oralis, your voice-first assistant."
@@ -48,6 +48,7 @@ struct VoiceSettingsView: View {
                     languageSection
                     if SpeechService.elevenLabsEnabled { elevenLabsSection }
                     voicePickerSection
+                    voicePersonalitiesSection
                     voiceAdjustmentsSection
                 }
                 .padding(.horizontal, 24)
@@ -202,6 +203,9 @@ struct VoiceSettingsView: View {
                     ForEach(elevenLabsVoices, id: \.id) { voice in
                         Button {
                             prefs.elevenLabsVoiceID = voice.id
+                            Personality.restore(for: &prefs)
+                            perVoiceTick += 1
+                            save()
                             previewElevenLabs(voice.id)
                         } label: {
                             HStack {
@@ -241,6 +245,9 @@ struct VoiceSettingsView: View {
                     Button {
                         selectedVoiceID = voice.id
                         prefs.voiceIdentifier = voice.id
+                        Personality.restore(for: &prefs)   // this voice brings its own personality back
+                        perVoiceTick += 1
+                        save()
                         previewVoice(id: voice.id)
                     } label: {
                         HStack {
@@ -264,6 +271,105 @@ struct VoiceSettingsView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Color.accentColor)
         }
+    }
+
+    // MARK: - 2e. Personality for each voice
+
+    private struct PersonalityRow: Identifiable {
+        let key: String      // Personality.voiceKey form
+        let name: String
+        var id: String { key }
+    }
+
+    private var activeVoiceKey: String { Personality.voiceKey(for: prefs) }
+
+    private var personalityRows: [PersonalityRow] {
+        var rows: [PersonalityRow] = []
+        func name(forKey key: String) -> String {
+            if key.hasPrefix("eleven:") {
+                let id = String(key.dropFirst(7))
+                return "ElevenLabs " + (Personality.elevenLabsVoices.first { $0.id == id }?.name ?? "voice")
+            }
+            return voices.first { $0.id == key }?.name
+                ?? AVSpeechSynthesisVoice(identifier: key)?.name ?? key
+        }
+        // The voice in use first, then the ElevenLabs voices (when enabled), then every
+        // Apple voice that already has a personality.
+        rows.append(PersonalityRow(key: activeVoiceKey, name: name(forKey: activeVoiceKey) + " (in use)"))
+        if SpeechService.elevenLabsEnabled {
+            for v in Personality.elevenLabsVoices where "eleven:" + v.id != activeVoiceKey {
+                rows.append(PersonalityRow(key: "eleven:" + v.id, name: "ElevenLabs " + v.name))
+            }
+        }
+        let others = voices.map(\.id).filter { Personality.stored(forVoice: $0) != nil && $0 != activeVoiceKey }
+        rows += others.map { PersonalityRow(key: $0, name: name(forKey: $0)) }
+        return rows
+    }
+
+    private func personalityBinding(for key: String) -> Binding<String> {
+        Binding(
+            get: {
+                _ = perVoiceTick
+                let value = Personality.stored(forVoice: key)
+                    ?? (key == activeVoiceKey ? Personality.presetKey_ : "normal")
+                return value.hasPrefix("custom") ? "custom" : value
+            },
+            set: { new in
+                guard let preset = Personality.presets.first(where: { $0.key == new }) else { return }
+                if key == activeVoiceKey {
+                    Personality.apply(preset, to: &prefs)   // also remembers it for this voice
+                    save()
+                } else {
+                    Personality.store(new, forVoice: key)
+                }
+                perVoiceTick += 1
+            }
+        )
+    }
+
+    private func personalityPicker(for row: PersonalityRow) -> some View {
+        let options = Personality.presets(forVoiceKey: row.key)
+        let current = personalityBinding(for: row.key).wrappedValue
+        return HStack {
+            Text(row.name)
+            Spacer()
+            Picker("\(row.name) personality", selection: personalityBinding(for: row.key)) {
+                ForEach(options) { Text($0.title).tag($0.key) }
+                // A personality set earlier (or by voice) that is not in this voice's list still shows.
+                if let extra = Personality.presets.first(where: { $0.key == current }),
+                   !options.contains(where: { $0.key == current }) {
+                    Text(extra.title).tag(extra.key)
+                }
+                if current == "custom" { Text("Custom (set by voice)").tag("custom") }
+            }
+            .labelsHidden()
+            .frame(width: 200)
+            .accessibilityLabel("Personality for \(row.name)")
+        }
+    }
+
+    private var voicePersonalitiesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Personality for each voice")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            Text("Each voice has its own set of personalities that suit it, and remembers the one you pick. Switching voices brings that voice's personality with it. You can also just ask Oralis, for example \"be a wise grandpa\" or \"be a bubbly bestie\".")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ForEach(personalityRows) { personalityPicker(for: $0) }
+
+            DisclosureGroup("All voices") {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(filteredVoices.filter { v in !personalityRows.contains { $0.key == v.id } }) { v in
+                        personalityPicker(for: PersonalityRow(key: v.id, name: v.name))
+                    }
+                }
+                .padding(.top, 4)
+            }
+            .accessibilityLabel("Set a personality for any other installed voice")
+        }
+        .onChange(of: prefs.voiceIdentifier) { _, _ in perVoiceTick += 1 }
     }
 
     // MARK: - 2d. Speed / pitch / volume sliders
@@ -367,18 +473,6 @@ struct VoiceSettingsView: View {
                     Toggle("Announce batch action results",
                            isOn: $prefs.announceBatchResults)
                         .accessibilityLabel("Speak a summary after bulk delete, archive, or unsubscribe")
-
-                    Picker("Personality", selection: $personalityKey) {
-                        ForEach(Personality.presets) { Text($0.title).tag($0.key) }
-                        if personalityKey == "custom" { Text("Custom (set by voice)").tag("custom") }
-                    }
-                    .accessibilityLabel("Personality. Changes how Oralis words things and how softly, slowly and low it speaks, using your current voice. You can also just ask Oralis to be salty, saucy or an ASMR mommy.")
-                    .onChange(of: personalityKey) { _, new in
-                        guard let preset = Personality.presets.first(where: { $0.key == new }) else { return }
-                        Personality.apply(preset, to: &prefs)
-                        selectedVoiceID = prefs.voiceIdentifier
-                        save()
-                    }
 
                     Toggle("Let me talk over Oralis to interrupt it",
                            isOn: $talkOver)

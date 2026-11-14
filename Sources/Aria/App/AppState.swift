@@ -99,6 +99,10 @@ final class AppState: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init() {
+        // The voice in use starts with its own remembered personality.
+        var startup = speech.preferences
+        Personality.restore(for: &startup)
+        speech.preferences = startup
         loadAccounts()
         // Each permission is requested only when its feature is first used, never at
         // launch. The calendar is read here only if access was already granted.
@@ -210,6 +214,7 @@ final class AppState: ObservableObject {
     // Calendar permission with voice guidance — skips if already granted
     func requestCalendarAccessWithGuidance() async {
         let current = EKEventStore.authorizationStatus(for: .event)
+        oralisLog("calendar: access status \(current.rawValue) (0 undecided, 1 restricted, 2 denied, 3 full access, 4 add-only)")
         // Already granted — nothing to do
         if current == .fullAccess || current == .authorized { return }
         // Denied before — just open Settings silently
@@ -872,9 +877,17 @@ final class AppState: ObservableObject {
             .filter { $0.language.hasPrefix(prefix) }
             .sorted { $0.quality.rawValue != $1.quality.rawValue ? $0.quality.rawValue > $1.quality.rawValue : $0.name < $1.name }
             .prefix(40)
-        return voices.map { v in
-            "\(v.name) | \(Self.genderWord(v)) | \(v.language)\(v.identifier == current ? " | CURRENT" : "")"
-        }.joined(separator: "\n")
+        var lines = voices.map { v in
+            "\(v.name) | \(Self.genderWord(v)) | \(v.language)\(v.identifier == current && !prefs.useElevenLabs ? " | CURRENT" : "")"
+        }
+        if SpeechService.elevenLabsEnabled {
+            let activeID = prefs.useElevenLabs ? prefs.elevenLabsVoiceID : ""
+            let eleven = Personality.elevenLabsVoices.map { v in
+                "\(v.name) | \(v.audience == .male ? "male" : "female") | ElevenLabs\(v.id == activeID ? " | CURRENT" : "")"
+            }
+            lines = eleven + lines
+        }
+        return lines.joined(separator: "\n")
     }
 
     private func applyPersonality(style: String, speed: String, pitch: String, volume: String) {
@@ -883,8 +896,7 @@ final class AppState: ObservableObject {
         if let preset = Personality.preset(matching: wanted) {
             Personality.apply(preset, to: &prefs)
         } else if !wanted.isEmpty {
-            Personality.style = wanted
-            Personality.presetKey_ = "custom"
+            Personality.setCustom(String(wanted.prefix(200)), for: prefs)
         }
         switch speed.lowercased() {
         case "slower", "slow": prefs.rate = max(0.1, prefs.rate - 0.07)
@@ -913,6 +925,19 @@ final class AppState: ObservableObject {
 
         let wantsVoiceChange = !name.isEmpty || !gender.isEmpty || !language.isEmpty
             || (speed.isEmpty && pitch.isEmpty)   // "change your voice" alone
+        // A named ElevenLabs voice (like Rachel) switches to that voice.
+        if !name.isEmpty, SpeechService.elevenLabsEnabled,
+           let eleven = Personality.elevenLabsVoices.first(where: { $0.name.lowercased() == name.lowercased()
+                                                                    || name.lowercased().contains($0.name.lowercased()) }) {
+            prefs.useElevenLabs = true
+            prefs.elevenLabsVoiceID = eleven.id
+            Personality.restore(for: &prefs)
+            speech.preferences = prefs
+            VoicePreferencesStore.shared.current = prefs
+            oralisLog("voice: changed to ElevenLabs voice")
+            readAloud("Hi, I'm \(eleven.name). How does this sound?")
+            return
+        }
         if wantsVoiceChange {
             let defaultPrefix = prefs.language.split(separator: "-").first.map(String.init) ?? "en"
             var pool = AVSpeechSynthesisVoice.speechVoices()
@@ -940,6 +965,8 @@ final class AppState: ObservableObject {
             if let pick {
                 prefs.voiceIdentifier = pick.identifier
                 prefs.useElevenLabs = false   // an explicit voice request means the system voice
+                // Each voice keeps its own personality; the new voice brings its back.
+                Personality.restore(for: &prefs)
                 voiceChanged = true
             } else {
                 readAloud("I couldn't find an installed voice like that. You can add more voices in System Settings, under Accessibility, Spoken Content.")

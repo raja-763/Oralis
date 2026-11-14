@@ -14,6 +14,7 @@ enum SoundEffects {
         // A copy lets the sound overlap with other tones instead of being skipped
         // while the shared instance is still playing.
         let sound = NSSound(named: .init(name))?.copy() as? NSSound
-        sound?.play()
+        let started = sound?.play() ?? false
+        oralisLog("sound: \(name) \(started ? "played" : "FAILED to play")")
     }
 }

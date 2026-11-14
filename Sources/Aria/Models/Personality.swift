@@ -4,34 +4,6 @@ import AVFoundation
 /// How Oralis talks: a style for its wording, plus a matching delivery (pace, pitch,
 /// softness) applied to whichever voice is in use. The voice itself is never changed.
 enum Personality {
-    struct Preset: Identifiable {
-        let key: String
-        let title: String
-        /// Instruction given to the AI about wording.
-        let style: String
-        let rate: Float
-        let pitch: Float
-        let volume: Float
-        var id: String { key }
-    }
-
-    static let presets: [Preset] = [
-        Preset(key: "normal", title: "Normal", style: "",
-               rate: AVSpeechUtteranceDefaultSpeechRate, pitch: 1.0, volume: 1.0),
-        Preset(key: "salty", title: "Salty",
-               style: "salty: dry, sarcastic and a little grumpy, with sharp playful sass and eye-rolling humor, but never mean and without strong profanity",
-               rate: AVSpeechUtteranceDefaultSpeechRate, pitch: 0.9, volume: 1.0),
-        Preset(key: "saucy", title: "Saucy",
-               style: "saucy: cheeky, flirty and witty, with playful teasing and double meanings kept tasteful and PG-13",
-               rate: 0.45, pitch: 0.95, volume: 1.0),
-        Preset(key: "gangster", title: "Gangster",
-               style: "gangster: tough, streetwise, confident swagger with spicy attitude and heavy Gen Z slang (no cap, fr, bet, lowkey, deadass, bussin, slay, rizz, cooked, W and L), talking big and hyping the user up; keep it playful and PG-13, with no slurs, no real threats or violence, and never mimic any race or ethnicity",
-               rate: 0.53, pitch: 0.82, volume: 1.0),
-        Preset(key: "asmr", title: "ASMR mommy",
-               style: "ASMR mommy: very gentle, soft-spoken, warm and nurturing, with slow soothing phrasing, calming reassurance and affectionate words like sweetie, tasteful and non-sexual",
-               rate: 0.38, pitch: 0.85, volume: 0.6),
-    ]
-
     private static let key = "oralis.persona"
     private static let presetKey = "oralis.personaPreset"
 
@@ -50,17 +22,83 @@ enum Personality {
     static func preset(matching text: String) -> Preset? {
         let t = text.lowercased()
         guard !t.isEmpty else { return nil }
-        return presets.first { t == $0.key || t == $0.title.lowercased() }
-            ?? presets.first { $0.key != "normal" && t.contains($0.key) }
+        if let exact = presets.first(where: { t == $0.key || t == $0.title.lowercased() }) { return exact }
+        // A phrase like "soft ASMR mommy": the longest matching title wins, then any key.
+        let byTitle = presets.filter { $0.key != "normal" && t.contains($0.title.lowercased()) }
+            .max { $0.title.count < $1.title.count }
+        return byTitle ?? presets.first { $0.key != "normal" && t.contains($0.key) }
     }
 
-    /// Applies a preset's wording and delivery to the given preferences.
-    static func apply(_ preset: Preset, to prefs: inout VoicePreferences) {
+    // MARK: - Per-voice personalities
+
+    /// Each voice remembers its own personality. Keyed by the Apple voice identifier,
+    /// or "eleven:<id>" for an ElevenLabs voice.
+    private static let perVoiceKey = "oralis.personaByVoice"
+
+    static func voiceKey(for prefs: VoicePreferences) -> String {
+        prefs.useElevenLabs && !prefs.elevenLabsVoiceID.isEmpty
+            ? "eleven:\(prefs.elevenLabsVoiceID)" : prefs.voiceIdentifier
+    }
+
+    private static var perVoice: [String: String] {
+        get { UserDefaults.standard.dictionary(forKey: perVoiceKey) as? [String: String] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: perVoiceKey) }
+    }
+
+    /// A preset key, or "custom:<style>"; nil if this voice has none yet.
+    static func stored(forVoice key: String) -> String? { perVoice[key] }
+
+    static func store(_ value: String, forVoice key: String) {
+        var all = perVoice
+        all[key] = value
+        perVoice = all
+    }
+
+    /// The personality now in effect, in storable form.
+    private static var currentValue: String {
+        presetKey_ == "custom" ? "custom:" + style : presetKey_
+    }
+
+    private static func applyPreset(_ preset: Preset, to prefs: inout VoicePreferences) {
         style = preset.style
         presetKey_ = preset.key
         prefs.rate = preset.rate
         prefs.pitch = preset.pitch
         prefs.volume = preset.volume
+    }
+
+    /// Makes `value` (a preset key or "custom:<style>") the active personality.
+    static func activate(_ value: String, to prefs: inout VoicePreferences) {
+        if value.hasPrefix("custom:") {
+            style = String(value.dropFirst(7))
+            presetKey_ = "custom"
+        } else if let preset = presets.first(where: { $0.key == value }) {
+            applyPreset(preset, to: &prefs)
+        }
+    }
+
+    /// Applies a preset to the current voice and remembers it for that voice.
+    static func apply(_ preset: Preset, to prefs: inout VoicePreferences) {
+        applyPreset(preset, to: &prefs)
+        store(preset.key, forVoice: voiceKey(for: prefs))
+    }
+
+    /// Applies a free-form style to the current voice and remembers it for that voice.
+    static func setCustom(_ text: String, for prefs: VoicePreferences) {
+        style = text
+        presetKey_ = "custom"
+        store("custom:" + style, forVoice: voiceKey(for: prefs))
+    }
+
+    /// Call after the voice changes: the new voice brings back its own personality.
+    /// A voice with none yet keeps the current one, and remembers it.
+    static func restore(for prefs: inout VoicePreferences) {
+        let key = voiceKey(for: prefs)
+        if let value = stored(forVoice: key) {
+            activate(value, to: &prefs)
+        } else {
+            store(currentValue, forVoice: key)
+        }
     }
 
     /// Added to the AI's instructions. Empty when no personality is set.

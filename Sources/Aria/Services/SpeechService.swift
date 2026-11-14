@@ -67,6 +67,8 @@ final class SpeechService: NSObject, ObservableObject {
         stopSpeaking()
         isSpeaking = true
         spokenText = text
+        speakStarted = Date()
+        oralisLog("speech: speaking \(text.count) characters")
 
         // Always speak with Oralis's own voice, VoiceOver or not. VoiceOver announcements
         // proved unreliable (silent, or cut off by VoiceOver's own focus speech).
@@ -216,6 +218,7 @@ final class SpeechService: NSObject, ObservableObject {
     /// True while listening only to detect an interruption; nothing heard is treated as a command yet.
     private(set) var bargeInPending = false
     private var spokenText = ""
+    private var speakStarted = Date()
     /// Called the moment the user interrupts, so pending actions can be dropped.
     var onBargeIn: ((String) -> Void)?
     /// Words heard before the interruption (Oralis's echo, background sound) that are not part of the command.
@@ -489,6 +492,7 @@ extension SpeechService: AVSpeechSynthesizerDelegate {
             speakingTimeoutTask?.cancel()
             speakingTimeoutTask = nil
             isSpeaking = false
+            oralisLog("speech: finished after \(String(format: "%.1f", Date().timeIntervalSince(speakStarted))) s")
         }
     }
 }
