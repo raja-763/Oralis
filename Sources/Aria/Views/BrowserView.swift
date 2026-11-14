@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-/// Voice-controlled in-app web browser.
+/// The page Oralis opens when asked to fill in a web form.
 /// The agent can navigate, read pages, fill forms, and click elements by voice.
 struct BrowserView: View {
     @EnvironmentObject var appState: AppState
@@ -92,9 +92,9 @@ struct BrowserView: View {
                     .padding(.top, 40)
 
                 VStack(spacing: 8) {
-                    Text("Voice Web Browser")
+                    Text("Form Filling")
                         .font(.title3.weight(.semibold))
-                    Text("Navigate, read pages, and fill forms entirely by voice.")
+                    Text("Ask Oralis to fill in a web form and it does it by voice.")
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -104,12 +104,8 @@ struct BrowserView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .accessibilityAddTraits(.isHeader)
-                    SuggestionChip("Go to google.com")
-                    SuggestionChip("Read this page")
                     SuggestionChip("Fill in my name")
                     SuggestionChip("Click the submit button")
-                    SuggestionChip("Scroll down")
-                    SuggestionChip("Go back")
                 }
                 .frame(maxWidth: 320, alignment: .leading)
             }

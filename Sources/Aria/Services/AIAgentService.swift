@@ -1,7 +1,7 @@
 import Foundation
 
 /// Wraps the Anthropic Claude API to provide a conversational assistant for
-/// email, calendar, and voice-controlled web browsing.
+/// email, calendar, and filling in web forms when asked.
 ///
 /// Authentication priority:
 ///   1. Direct Anthropic API key (ANTHROPIC_API_KEY in Secrets.xcconfig)
@@ -47,7 +47,7 @@ final class AIAgentService: ObservableObject {
 
     private let systemPrompt = """
     You are Oralis, a voice-first accessible AI assistant for macOS.
-    You help blind and visually-impaired users control email, browse the web, and manage their calendar — all by voice.
+    You help blind and visually-impaired users control email and manage their calendar by voice, and fill in web forms when they ask.
 
     IMPORTANT: Always respond in the same language the user used to ask the question.
 
@@ -89,7 +89,7 @@ final class AIAgentService: ObservableObject {
     Accept invite:       { "action": "acceptInvite",  "threadID": "..." }
     Decline invite:      { "action": "declineInvite", "threadID": "..." }
 
-    WEB BROWSER ACTIONS:
+    WEB ACTIONS (only to fill in a form the user asked for, or to finish an unsubscribe):
     Navigate to URL:     { "action": "navigateTo",    "url": "https://..." }
     Read web page:       { "action": "readWebPage" }
     Fill form field:     { "action": "fillForm",      "field": "email", "value": "user@example.com" }
@@ -103,7 +103,7 @@ final class AIAgentService: ObservableObject {
     - Resolve references yourself: "the second one", "that one", "the last one you read", "the one from my bank", "all of those", "it" refer to emails you listed or discussed. Match senders and subjects loosely (partial names, nicknames, misheard spellings).
     - If a request could mean two different emails or actions, ask one short question. Otherwise just do it.
     - The reply, forward and draft actions SEND the email immediately. Before sending, say who it is going to and read the wording back, and ask "Shall I send it?". Only include the action after the user agrees. If they ask for changes, revise and read it back again.
-    - You handle email, calendar and web pages only. You cannot send text messages or iMessages.
+    - You handle email and calendar, and you use the web only when the user asks you to fill in a form (open the page they name, then fill and submit it). You do not browse, search or read the web for general information or news; if asked, say you only use the web to fill in forms. You cannot send text messages or iMessages.
     - If the user asks for something you have no action for, say so plainly in one sentence and offer the closest thing you can do.
 
     Rules:

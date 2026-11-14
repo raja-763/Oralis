@@ -2,7 +2,7 @@
 
 **A voice-first macOS assistant for blind and visually-impaired users.**
 
-Oralis lets you control email, browse the web, and manage your calendar entirely by voice — no mouse, no reading required. Press a keyboard shortcut, speak naturally, and Oralis handles the rest.
+Oralis lets you control your email and calendar entirely by voice — no mouse, no reading required. Press a keyboard shortcut, speak naturally, and Oralis handles the rest. It uses the web only when you ask it to fill in a form.
 
 ---
 
@@ -21,7 +21,7 @@ Oralis is **privacy-first** by design:
 - **AI is opt-in** — the AI assistant only activates when you speak to it; your emails are never sent anywhere automatically
 - **AI queries go to Anthropic's Claude API directly** — Anthropic's privacy policy applies; no data is stored by Oralis
 - **ElevenLabs voice synthesis** is processed on their servers per their privacy policy; no audio is stored
-- **Web browsing stays local** — Oralis does not log sites you visit or forms you fill
+- **Web access only when you ask** — Oralis opens a web page only to fill in a form you asked for, and does not log sites you visit or forms you fill
 - **Calendar access is on-device only** — via macOS EventKit; calendar data never leaves your Mac
 - **No account required** — Oralis works for TTS and STT without signing in to anything
 
@@ -54,13 +54,13 @@ Do not share a build you made with your own keys inside it.
 - **Create events** by voice ("Add a meeting tomorrow at 3pm")
 - **Accept or decline** meeting invites from email
 
-### Voice-Controlled Web Browser
+### Filling in Web Forms (only when you ask)
 
-- **Navigate** to any website by voice ("Go to nytimes.com")
-- **Read and summarize** web pages aloud
-- **Fill out forms** by describing the fields ("Fill in my email address")
-- **Click buttons and links** by name ("Click the submit button")
-- **Scroll** and navigate back/forward by voice
+Oralis is not a web browser and does not browse or read the web for you. When you ask it to
+fill in a form, it opens the page you name and:
+
+- **Fills out the form** by the fields you describe ("Fill in my email address")
+- **Clicks buttons** by name ("Click the submit button") to finish the form
 
 ### 70+ Languages
 
@@ -97,7 +97,7 @@ Oralis speaks and listens in over 70 languages including English, Spanish, Frenc
 
 ## AI Assistant (Optional)
 
-For the AI features (summarize, draft, triage, web reading), add your Anthropic API key to `Secrets.xcconfig`:
+For the AI features (summarize, draft, triage), add your Anthropic API key to `Secrets.xcconfig`:
 
 ```
 ANTHROPIC_API_KEY = sk-ant-...your key here...
